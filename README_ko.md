@@ -2,7 +2,7 @@
 
 > 이 문서는 이중 언어 문서입니다. 각 섹션에서 영어 원문이 먼저 나오고, **[한국어]** 표시 아래에 한국어 번역이 이어집니다.
 
-> 원본: README.md @ 5072b4647c2899076de3e7168ff3cf776a445b16
+> 원본: README.md @ 55600e6a33ba49bb74f97e94fc5e83b06e4979a3
 
 ---
 
@@ -1390,4 +1390,4 @@ If you'd like to go further, [sponsor the project](https://github.com/sponsors/c
 
 ---
 
-한국어 사용법 가이드: [docs/ko/USAGE.md](docs/ko/USAGE.md) · Kimi 연결 가이드: [docs/ko/KIMI-SETUP.md](docs/ko/KIMI-SETUP.md)
+한국어 사용법 가이드: [docs/ko/USAGE.md](docs/ko/USAGE.md) · 모델 두뇌 교체 가이드: [docs/ko/MODEL-SETUP.md](docs/ko/MODEL-SETUP.md) · Kimi 연결 가이드: [docs/ko/KIMI-SETUP.md](docs/ko/KIMI-SETUP.md)
