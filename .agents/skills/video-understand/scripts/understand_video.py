@@ -363,7 +363,7 @@ def _transcribe_with_cli(wav_path, model_name, whisper_bin):
             log("Warning: whisper CLI produced no JSON output")
             return None, None
 
-        with open(os.path.join(tmp_dir, json_files[0]), "r") as f:
+        with open(os.path.join(tmp_dir, json_files[0]), "r", encoding="utf-8") as f:
             data = json.load(f)
 
         segments = []
