@@ -32,7 +32,7 @@ class GoldenScenario:
 
     @classmethod
     def load(cls, path: Path) -> "GoldenScenario":
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             data = json.load(f)
         return cls(
             name=data["name"],
@@ -55,7 +55,7 @@ class GoldenScenario:
             "tags": self.tags,
         }
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
 
 

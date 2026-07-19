@@ -476,7 +476,7 @@ mix_output = str(ASSETS_DIR / "final_mix.wav")
 # Combine all narration into one track first
 concat_narration = str(ASSETS_DIR / "narration_concat.wav")
 narration_list = str(ASSETS_DIR / "narration_list.txt")
-with open(narration_list, "w") as f:
+with open(narration_list, "w", encoding="utf-8") as f:
     for sid, _, _, _, _ in SECTIONS:
         safe = tts_files[sid].replace("\\", "/")
         f.write(f"file '{safe}'\n")
