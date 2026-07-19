@@ -2,6 +2,8 @@
 
 > 원본: (한국어 오리지널 — 대응 원본 없음)
 
+> Other models (GLM, etc.) and the general env-var pattern: see [`docs/MODEL-SETUP.md`](../MODEL-SETUP.md) / [`docs/ko/MODEL-SETUP.md`](MODEL-SETUP.md). (다른 모델(GLM 등)과 공통 환경 변수 패턴은 [`docs/MODEL-SETUP.md`](../MODEL-SETUP.md) / [`docs/ko/MODEL-SETUP.md`](MODEL-SETUP.md)를 참고하십시오.)
+
 # Running OpenMontage with Kimi (Kimi로 OpenMontage 실행하기)
 
 This guide shows how to run OpenMontage with Moonshot AI's Kimi models as the agent brain instead of Claude.

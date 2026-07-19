@@ -675,6 +675,8 @@ All platform files point to the shared `AGENT_GUIDE.md` (operating guide and age
 
 > **Coming soon:** Local LLM support via **Ollama** and **LM Studio** — run the full production pipeline without any cloud LLM.
 
+Already possible today: swap Claude for **Kimi**, **GLM**, or any other Anthropic-compatible model — see [`docs/MODEL-SETUP.md`](docs/MODEL-SETUP.md).
+
 ---
 
 ## Contributing
