@@ -26,6 +26,7 @@ PAIRS = [
     ("PROJECT_CONTEXT.md", "docs/ko/PROJECT_CONTEXT.md"),
     ("docs/apple-silicon-mps.md", "docs/ko/apple-silicon-mps.md"),
     ("docs/SPONSORS.md", "docs/ko/SPONSORS.md"),
+    ("docs/MODEL-SETUP.md", "docs/ko/MODEL-SETUP.md"),
 ]
 TOKEN_RE = re.compile(r"https?://\S+|[A-Za-z0-9_./-]+\.(?:py|md|ts|js|json|env|sh|yaml|yml|mp4|wav|mp3|png|toml)")
 
