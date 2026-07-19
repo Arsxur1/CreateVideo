@@ -97,3 +97,6 @@ venv/
 
 # Backlot local cache (thumbnails)
 .backlot/
+
+# Personal, machine-specific setup notes — never shared/committed
+LOCAL-*.md
