@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>평범한 날의 아름다움을 발견하는 법 — 씬 플랜</title>
+<style>
+  :root{
+    --bg:#FAF6F0; --surface:#FFFFFF; --ink:#2A2722; --muted:#857C70; --line:#E8E0D4;
+    --green:#2D4A3E; --green-soft:#E4ECE7; --peach:#C97B5E; --peach-soft:#F6E7DE;
+    --sage:#8BA888; --sage-soft:#EAF0E6; --gold:#B8893E;
+    --blocked-bg:#FBEEE6; --blocked-bd:#D8A48F;
+    --ok-bg:#EAF0E6; --ok-bd:#A9C2A4;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR','Segoe UI',sans-serif;
+    line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1040px; margin:0 auto; padding:56px 28px 80px}
+
+  /* Header */
+  .eyebrow{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:var(--peach); font-weight:700; margin-bottom:14px}
+  h1{font-size:38px; line-height:1.25; margin:0 0 10px; font-weight:800; letter-spacing:-.01em; color:var(--green)}
+  .subtitle{font-size:17px; color:var(--muted); margin:0 0 26px; max-width:62ch}
+  .meta{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px}
+  .chip{font-size:12.5px; padding:5px 12px; border-radius:999px; background:var(--surface); border:1px solid var(--line); color:var(--ink); font-weight:600}
+  .chip.accent{background:var(--green); color:#fff; border-color:var(--green)}
+
+  /* Timeline */
+  .timeline-box{margin:40px 0 8px; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px 22px 16px}
+  .tl-label{font-size:11.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:14px}
+  .timeline{display:flex; height:46px; border-radius:8px; overflow:hidden; border:1px solid var(--line)}
+  .seg{display:flex; align-items:center; justify-content:center; color:#fff; font-size:12px; font-weight:700; border-right:1px solid rgba(255,255,255,.28); transition:transform .15s}
+  .seg:last-child{border-right:none}
+  .seg:hover{transform:scaleY(1.08)}
+  .seg.broll{background:var(--peach)}
+  .seg.text_card{background:var(--green)}
+  .seg.animation{background:var(--sage)}
+  .seg.hero{box-shadow:inset 0 -4px 0 var(--gold)}
+  .axis{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:8px; font-variant-numeric:tabular-nums}
+  .legend{display:flex; gap:18px; margin-top:14px; flex-wrap:wrap}
+  .legend span{font-size:12.5px; color:var(--muted); display:inline-flex; align-items:center; gap:7px}
+  .dot{width:11px; height:11px; border-radius:3px; display:inline-block}
+
+  /* Scene cards */
+  .scenes{margin-top:34px; display:grid; gap:18px}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px 24px; position:relative; overflow:hidden}
+  .card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:5px}
+  .card.broll::before{background:var(--peach)}
+  .card.text_card::before{background:var(--green)}
+  .card.animation::before{background:var(--sage)}
+  .card.hero{border-color:var(--gold); box-shadow:0 6px 24px rgba(184,137,62,.14)}
+  .card.hero::before{width:7px; background:linear-gradient(var(--gold),var(--peach))}
+
+  .card-head{display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:12px}
+  .sc-id{font-size:13px; font-weight:800; color:var(--green); letter-spacing:.04em}
+  .time{font-size:12px; font-variant-numeric:tabular-nums; background:var(--bg); border:1px solid var(--line); padding:3px 10px; border-radius:6px; color:var(--ink); font-weight:600}
+  .type{font-size:11.5px; font-weight:700; padding:3px 10px; border-radius:6px; letter-spacing:.03em}
+  .type.broll{background:var(--peach-soft); color:#9C5440}
+  .type.text_card{background:var(--green-soft); color:var(--green)}
+  .type.animation{background:var(--sage-soft); color:#5E7A5B}
+  .role{font-size:11.5px; color:var(--muted); font-weight:600; margin-left:auto}
+  .hero-badge{font-size:11px; font-weight:800; color:var(--gold); letter-spacing:.12em; text-transform:uppercase}
+
+  .desc{font-size:16px; color:var(--ink); margin:6px 0 14px; max-width:80ch}
+  .intent{font-size:13.5px; color:var(--muted); margin:0 0 12px}
+  .intent b{color:var(--ink); font-weight:700}
+
+  .shot{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0}
+  .shot span{font-size:11.5px; background:var(--bg); border:1px solid var(--line); padding:3px 9px; border-radius:5px; color:var(--muted)}
+
+  .assets{margin-top:10px}
+  .asset{display:flex; align-items:flex-start; gap:9px; font-size:13px; padding:9px 12px; border-radius:8px; margin-top:7px}
+  .asset.blocked{background:var(--blocked-bg); border:1px solid var(--blocked-bd)}
+  .asset.ok{background:var(--ok-bg); border:1px solid var(--ok-bd)}
+  .asset .ico{font-size:14px; line-height:1.4}
+  .asset .label{font-weight:700; font-size:11px; letter-spacing:.06em; text-transform:uppercase; display:block; margin-bottom:2px}
+  .asset.blocked .label{color:#9C5440}
+  .asset.ok .label{color:#5E7A5B}
+  .asset .txt{color:var(--ink); font-size:13px}
+
+  /* Assets summary */
+  .summary{margin-top:40px; background:var(--green); color:#E8EFEA; border-radius:16px; padding:30px 32px}
+  .summary h2{margin:0 0 14px; font-size:21px; color:#fff; font-weight:800}
+  .summary p{margin:0 0 12px; font-size:14.5px; color:#D6E0D8}
+  .summary b{color:#fff}
+  .unlock{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px}
+  .unlock span{background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.2); padding:7px 13px; border-radius:8px; font-size:13px; color:#fff}
+
+  .closer{margin-top:40px; text-align:center; font-size:18px; color:var(--green); font-weight:600; font-style:italic; letter-spacing:.01em; padding:24px; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+
+  footer{margin-top:40px; font-size:12px; color:var(--muted); border-top:1px solid var(--line); padding-top:18px}
+  footer code{background:var(--bg); padding:2px 7px; border-radius:4px; font-size:11.5px; color:var(--ink)}
+
+  @media print{
+    body{background:#fff}
+    .card{break-inside:avoid; box-shadow:none}
+    .wrap{max-width:100%; padding:20px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Scene Plan · Storyboard</div>
+  <h1>평범한 날의 아름다움을 발견하는 법</h1>
+  <p class="subtitle">주제 <b>인생은 아름답다, 푸르름에 살고 싶다</b> — Mary Oliver · 윤동주 · 마르쿠스 아우렐리우스 · carpe diem의 오역을 한 호흡으로 엮은 72초 서사.</p>
+  <div class="meta">
+    <span class="chip accent">72초</span>
+    <span class="chip">11씬</span>
+    <span class="chip">animated-explainer</span>
+    <span class="chip">premium-minimalist</span>
+    <span class="chip">render_runtime: remotion</span>
+    <span class="chip">한국어 내레이션</span>
+  </div>
+
+  <!-- Timeline -->
+  <div class="timeline-box">
+    <div class="tl-label">Timeline · 0s → 72s</div>
+    <div class="timeline" id="tl"></div>
+    <div class="axis"><span>0s</span><span>18s</span><span>36s</span><span>54s</span><span>72s</span></div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--peach)"></i>broll</span>
+      <span><i class="dot" style="background:var(--green)"></i>text_card</span>
+      <span><i class="dot" style="background:var(--sage)"></i>animation</span>
+      <span><i class="dot" style="background:var(--gold)"></i>⭐ hero moment</span>
+    </div>
+  </div>
+
+  <!-- Scenes -->
+  <div class="scenes">
+
+    <div class="card broll">
+      <div class="card-head">
+        <span class="sc-id">SC01</span><span class="time">0–7s</span><span class="type broll">broll</span>
+        <span class="role">establish_context</span>
+      </div>
+      <p class="desc">풀잎 위 메뚜기 한 마리 극접 클로즈업. 아침 햇살, 이슬. 천천히 초점이 당겨지며 화면이 깨어난다. 잔잔한 앰비언트 음악 인.</p>
+      <p class="intent"><b>의도:</b> 호흡을 가라앉히고 '주의력'의 대상(작은 것 하나)을 제시.</p>
+      <div class="shot">
+        <span>extreme close-up</span><span>dolly_in</span><span>85mm</span><span>golden hour</span><span>shallow DoF</span><span>warm</span>
+      </div>
+      <div class="assets">
+        <div class="asset blocked"><span class="ico">🔒</span><div><span class="label">이미지 생성 필요</span><span class="txt">풀잎 위 메뚜기 극접 — 아침 햇살·이슬, 얕은 심도, premium-minimalist 팔레트. 사진적.</span></div></div>
+      </div>
+    </div>
+
+    <div class="card broll">
+      <div class="card-head">
+        <span class="sc-id">SC02</span><span class="time">7–13s</span><span class="type broll">broll</span>
+        <span class="role">build_tension</span>
+      </div>
+      <p class="desc">석녘 바다 → 비행기 창밖 구름 → 버킷리스트 종이 순차 크로스컷. 점점 빨라지다 '스쳐 지나간다'는 느낌으로 흐려짐.</p>
+      <p class="intent"><b>의도:</b> 관객의 버킷리스트 심리를 시각화 — '특별한 순간'의 환상과 그 소멸.</p>
+      <div class="shot">
+        <span>wide</span><span>tracking_right</span><span>35mm</span><span>golden hour</span><span>medium DoF</span><span>warm</span>
+      </div>
+      <div class="assets">
+        <div class="asset blocked"><span class="ico">🔒</span><div><span class="label">이미지 생성 필요</span><span class="txt">석녘 바다 와이드샷(딥 오렌지/피치 하늘) + 비행기 창밖 구름빛.</span></div></div>
+      </div>
+    </div>
+
+    <div class="card text_card">
+      <div class="card-head">
+        <span class="sc-id">SC03</span><span class="time">13–18s</span><span class="type text_card">text_card</span>
+        <span class="role">evidence</span>
+      </div>
+      <p class="desc">화면 중앙에 통계를 우아하게 띄움: <b>"큰 사건의 행복 효과 ≈ 수개월 내 원래 수준 회귀"</b> (Diener 2006). 숫자가 count-up으로 나타났다 사라짐.</p>
+      <p class="intent"><b>의도:</b> 헤지닉 트레드밀 — '더 많이'가 답 아님을 데이터로.</p>
+      <div class="assets">
+        <div class="asset ok"><span class="ico">✅</span><div><span class="label">zero-key (무생성 렌더 가능)</span><span class="txt">Remotion StatCard 컴포넌트로 바로 렌더.</span></div></div>
+      </div>
+    </div>
+
+    <div class="card animation">
+      <div class="card-head">
+        <span class="sc-id">SC04</span><span class="time">18–25s</span><span class="type animation">animation</span>
+        <span class="role">introduce_subject</span>
+      </div>
+      <p class="desc">세 평범한 장면(찻잔 피어오르는 김, 창가 먼지 입자, 비 맺힌 유리)이 흐릿하다가 '알아채는 순간' 선명해지며 반복. savoring(맛보기) 개념 시각화.</p>
+      <p class="intent"><b>의도:</b> savoring = 주의력의 '초점 맞춤'을 몸으로 체감.</p>
+      <div class="assets">
+        <div class="asset ok"><span class="ico">✅</span><div><span class="label">zero-key</span><span class="txt">Remotion blur→sharp 펄스 모션.</span></div></div>
+      </div>
+    </div>
+
+    <div class="card text_card">
+      <div class="card-head">
+        <span class="sc-id">SC05</span><span class="time">25–32s</span><span class="type text_card">text_card</span>
+        <span class="role">deliver_payload</span>
+      </div>
+      <p class="desc">통계 카드: <b>"savoring = 측정 가능한, 훈련 가능 기술"</b> (Bryant 2021). '훈련 가능'에 밑줄 애니메이션.</p>
+      <p class="intent"><b>의도:</b> 핵심 전환 — 아름다움은 재능이 아니라 훈련.</p>
+      <div class="assets">
+        <div class="asset ok"><span class="ico">✅</span><div><span class="label">zero-key</span><span class="txt">Remotion StatCard + 밑줄 draw-on.</span></div></div>
+      </div>
+    </div>
+
+    <div class="card text_card">
+      <div class="card-head">
+        <span class="sc-id">SC06</span><span class="time">32–39s</span><span class="type text_card">text_card</span>
+        <span class="role">emotional_beat</span>
+      </div>
+      <p class="desc">윤동주 「서시」 행을 세로 타이포로 한 화면: <b>"별을 노래하는 마음으로 / 모든 죽어가는 것을 사랑해야지"</b>. 딥 네이비 그라데이션 배경, 글자가 한 자 한 자 떠오름.</p>
+      <p class="intent"><b>의도:</b> 한국 시적 뿌리 — 죽어가는 것을 사랑하는 주의력.</p>
+      <div class="assets">
+        <div class="asset ok"><span class="ico">✅</span><div><span class="label">zero-key</span><span class="txt">Remotion 세로 타이포 순차 fade-in. 배경은 생성 아님(그라데이션).</span></div></div>
+      </div>
+    </div>
+
+    <div class="card animation">
+      <div class="card-head">
+        <span class="sc-id">SC07</span><span class="time">39–46s</span><span class="type animation">animation</span>
+        <span class="role">emotional_beat</span>
+      </div>
+      <p class="desc">마르쿠스 아우렐리우스 인용 <b>"삶의 아름다움을 음미하라"</b>가 필사체로 화면에 써지는 draw-on 애니메이션. 따뜻한 갈색 필사지 질감.</p>
+      <p class="intent"><b>의도:</b> 2천 년 전에도 같은 통찰 — 시대 초월 합창.</p>
+      <div class="assets">
+        <div class="asset ok"><span class="ico">✅</span><div><span class="label">zero-key</span><span class="txt">Remotion stroke-by-stroke draw-on.</span></div></div>
+      </div>
+    </div>
+
+    <div class="card animation hero">
+      <div class="card-head">
+        <span class="sc-id">SC08</span><span class="time">46–53s</span><span class="type animation">animation</span>
+        <span class="hero-badge">⭐ Hero Moment</span>
+        <span class="role">deliver_payload</span>
+      </div>
+      <p class="desc">화면에 <b>CARPE</b> → 한 손이 꽃을 움켜쥐려 하다 멈춤 → 다시 살며시 꽃을 따는 동작으로 바뀜. 따는 순간 꽃잎이 활짝 피어남. 시각적 절정.</p>
+      <p class="intent"><b>의도:</b> 오역 시각화 — '붙잡다'에서 '따다'로의 전환이 곧 메시지.</p>
+      <div class="assets">
+        <div class="asset ok"><span class="ico">✅</span><div><span class="label">zero-key</span><span class="txt">Remotion grasp→pluck→bloom 모션 (피치/딥 그린 팔레트).</span></div></div>
+      </div>
+    </div>
+
+    <div class="card text_card">
+      <div class="card-head">
+        <span class="sc-id">SC09</span><span class="time">53–60s</span><span class="type text_card">text_card</span>
+        <span class="role">comparison</span>
+      </div>
+      <p class="desc">대비 comparison 카드: 좌 <b>"붙잡아라 (seize)"</b> · 우 <b>"꽃을 따다 (pluck)"</b>. 우측이 서서히 강조. 라틴어 <i>carpere</i> 라벨.</p>
+      <p class="intent"><b>의도:</b> 언어학적 반전을 대비로 고정.</p>
+      <div class="assets">
+        <div class="asset ok"><span class="ico">✅</span><div><span class="label">zero-key</span><span class="txt">Remotion ComparisonCard, 우측 grow 강조.</span></div></div>
+      </div>
+    </div>
+
+    <div class="card broll">
+      <div class="card-head">
+        <span class="sc-id">SC10</span><span class="time">60–66s</span><span class="type broll">broll</span>
+        <span class="role">resolution</span>
+      </div>
+      <p class="desc">평범한 일상의 따뜻한 한 장면 — 도시 골목 발밑 잡초 사이 핀 작은 야생화. 슬로우 모션. 점차 아웃포커스로 빠짐.</p>
+      <p class="intent"><b>의도:</b> 메시지를 일상으로 환원 — 꽃은 여기 피어있다.</p>
+      <div class="shot">
+        <span>close-up</span><span>static</span><span>50mm</span><span>golden hour</span><span>shallow DoF</span><span>warm</span>
+      </div>
+      <div class="assets">
+        <div class="asset blocked"><span class="ico">🔒</span><div><span class="label">이미지 생성 필요</span><span class="txt">발밑 야생화 클로즈업 — 따뜻한 역광, 얕은 심도, premium-minimalist 팔레트.</span></div></div>
+      </div>
+    </div>
+
+    <div class="card text_card">
+      <div class="card-head">
+        <span class="sc-id">SC11</span><span class="time">66–72s</span><span class="type text_card">text_card</span>
+        <span class="role">call_to_action</span>
+      </div>
+      <p class="desc">제목 행 타이포 등장: <b>"인생은 아름답다 — 당신이 머무는 곳에"</b>. 페이드인 후 정지, 음악만 남기며 천천히 페이드아웃.</p>
+      <p class="intent"><b>의도:</b> 핵심 메시지를 한 줄로 각인.</p>
+      <div class="assets">
+        <div class="asset ok"><span class="ico">✅</span><div><span class="label">zero-key</span><span class="txt">Remotion hero 타이포 fade-in→hold→fade-out.</span></div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Assets summary -->
+  <div class="summary">
+    <h2>🔒 assets 단계 — 이미지 3장이 필요합니다</h2>
+    <p>11씬 중 <b>8씬은 zero-key</b> — Remotion 텍스트·애니메이션으로 외부 자산 없이 렌더 가능합니다. 이미지 생성이 필요한 건 <b>SC01 · SC02 · SC10</b> (모두 실사 자연 — 메뚜기·석녘바다·야생화)뿐.</p>
+    <p>현재 이 머신엔 이미지 생성 프로바이더가 없어 assets 단계가 멈춰 있습니다. 아래 중 하나면 잠금해제:</p>
+    <div class="unlock">
+      <span>PEXELS_API_KEY — 무료 실사 스톡 (이 씬에 가장 적합, 추천)</span>
+      <span>FAL_KEY — FLUX AI 이미지</span>
+      <span>사용자 직접 촬영 제공</span>
+    </div>
+  </div>
+
+  <div class="closer">"평범한 하루에도, 꽃은 피어 있습니다. 다만, 딸 줄 알아야 할 뿐."</div>
+
+  <footer>
+    <div><b>원본 artifact:</b> <code>projects/beautiful-green-life/artifacts/scene_plan.json</code></div>
+    <div><b>파이프라인:</b> animated-explainer · <b>선택 콘셉트:</b> c3 · <b>생성:</b> 2026-07-20 (demo run, assets 직전까지)</div>
+    <div style="margin-top:6px; color:#a89e90">OpenMontage — 본 문서는 scene_plan.json을 시각화한 정적 스토리보드입니다.</div>
+  </footer>
+
+</div>
+
+<script>
+  // Build proportional timeline segments
+  const scenes = [
+    ["SC01",0,7,"broll",false],["SC02",7,13,"broll",false],
+    ["SC03",13,18,"text_card",false],["SC04",18,25,"animation",false],
+    ["SC05",25,32,"text_card",false],["SC06",32,39,"text_card",false],
+    ["SC07",39,46,"animation",false],["SC08",46,53,"animation",true],
+    ["SC09",53,60,"text_card",false],["SC10",60,66,"broll",false],
+    ["SC11",66,72,"text_card",false]
+  ];
+  const tl = document.getElementById("tl");
+  scenes.forEach(s=>{
+    const [id,st,en,type,hero] = s;
+    const seg = document.createElement("div");
+    seg.className = "seg " + type + (hero?" hero":"");
+    seg.style.flexGrow = (en-st);
+    seg.title = id + " · " + st + "–" + en + "s · " + type + (hero?" · HERO":"");
+    seg.textContent = id.replace("SC","");
+    tl.appendChild(seg);
+  });
+</script>
+</body>
+</html>

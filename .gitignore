@@ -100,3 +100,8 @@ venv/
 
 # Personal, machine-specific setup notes — never shared/committed
 LOCAL-*.md
+
+# Reference ebook/library dumps (copyrighted PDFs, huge — not repo content)
+docs/forskills/
+docs/reference/*.pdf
+/tmp/forskills-translation

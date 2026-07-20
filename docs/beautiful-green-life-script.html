@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>평범한 날의 아름다움을 발견하는 법 — 대본</title>
+<style>
+  :root{
+    --bg:#FAF6F0; --surface:#FFFFFF; --ink:#2A2722; --muted:#857C70; --line:#E8E0D4;
+    --green:#2D4A3E; --green-soft:#E4ECE7; --peach:#C97B5E; --peach-soft:#F6E7DE;
+    --sage:#8BA888; --sage-soft:#EAF0E6; --gold:#B8893E; --quote-bg:#F3EFE8;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR','Segoe UI',sans-serif;
+    line-height:1.65; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:56px 28px 80px}
+
+  .eyebrow{font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:var(--peach); font-weight:700; margin-bottom:14px}
+  h1{font-size:38px; line-height:1.25; margin:0 0 10px; font-weight:800; letter-spacing:-.01em; color:var(--green)}
+  .subtitle{font-size:17px; color:var(--muted); margin:0 0 26px; max-width:62ch}
+  .meta{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px}
+  .chip{font-size:12.5px; padding:5px 12px; border-radius:999px; background:var(--surface); border:1px solid var(--line); color:var(--ink); font-weight:600}
+  .chip.accent{background:var(--green); color:#fff; border-color:var(--green)}
+
+  /* Voice performance panel */
+  .vp{margin:34px 0 10px; background:var(--green); color:#E8EFEA; border-radius:16px; padding:28px 32px}
+  .vp h2{margin:0 0 6px; font-size:13px; letter-spacing:.18em; text-transform:uppercase; color:#BFD3C5; font-weight:700}
+  .vp .intent{font-size:18px; line-height:1.55; color:#fff; font-weight:600; margin:0 0 18px; max-width:70ch}
+  .vp-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px}
+  .vp-item{background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:10px; padding:13px 15px}
+  .vp-item .k{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#A8C2B6; font-weight:700; margin-bottom:5px}
+  .vp-item .v{font-size:14px; color:#fff; line-height:1.5}
+  .sample-tag{display:inline-block; margin-top:14px; font-size:12px; background:var(--gold); color:#fff; padding:4px 11px; border-radius:6px; font-weight:700}
+
+  /* Timeline */
+  .timeline-box{margin:30px 0 8px; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px}
+  .tl-label{font-size:11.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:14px}
+  .timeline{display:flex; height:42px; border-radius:8px; overflow:hidden; border:1px solid var(--line)}
+  .seg{display:flex; align-items:center; justify-content:center; color:#fff; font-size:12.5px; font-weight:700; border-right:1px solid rgba(255,255,255,.28)}
+  .seg:last-child{border-right:none}
+  .seg.s1{background:var(--peach)} .seg.s2{background:#D49272} .seg.s3{background:var(--sage)} .seg.s4{background:var(--green)} .seg.s5{background:var(--gold)} .seg.s6{background:#6E8A6B}
+  .axis{display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:8px; font-variant-numeric:tabular-nums}
+
+  /* Section cards */
+  .scenes{margin-top:34px; display:grid; gap:22px}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:0; overflow:hidden}
+  .card-head{display:flex; align-items:center; gap:12px; flex-wrap:wrap; padding:16px 24px; border-bottom:1px solid var(--line); background:var(--quote-bg)}
+  .sc-id{font-size:13px; font-weight:800; color:var(--green); letter-spacing:.04em}
+  .label{font-size:14.5px; font-weight:700; color:var(--ink)}
+  .time{font-size:12px; font-variant-numeric:tabular-nums; background:var(--surface); border:1px solid var(--line); padding:3px 10px; border-radius:6px; color:var(--ink); font-weight:600; margin-left:auto}
+  .pace-chip{font-size:11px; font-weight:700; padding:3px 9px; border-radius:5px; background:var(--sage-soft); color:#5E7A5B}
+
+  .narration{padding:24px 28px 8px; font-size:21px; line-height:1.75; color:var(--ink); font-weight:500; letter-spacing:-.005em}
+  .narration em{font-style:normal; color:var(--peach); font-weight:800; background:linear-gradient(transparent 68%, var(--peach-soft) 68%); padding:0 2px}
+  .narration .br{display:block; height:10px}
+
+  .body{padding:8px 28px 24px}
+  .delivery{display:flex; gap:8px; flex-wrap:wrap; margin:10px 0}
+  .delivery span{font-size:12px; background:var(--bg); border:1px solid var(--line); padding:3px 10px; border-radius:6px; color:var(--muted); font-weight:600}
+  .delivery span b{color:var(--ink)}
+  .note{font-size:13.5px; color:var(--green); font-style:italic; margin:8px 0; padding-left:12px; border-left:3px solid var(--sage)}
+  .visual{margin-top:12px}
+  .visual .vlabel{font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); font-weight:700; margin-bottom:6px}
+  .vchip{display:inline-block; font-size:12.5px; background:var(--sage-soft); border:1px solid #C3D4BF; color:#4E6A4B; padding:4px 11px; border-radius:6px; margin:0 5px 5px 0}
+  .grounding{margin-top:14px; font-size:12.5px; color:var(--muted); padding-top:10px; border-top:1px dashed var(--line)}
+  .grounding b{color:var(--ink)}
+  .tts{margin-top:12px; font-size:12px; color:var(--muted); background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:10px 13px}
+  .tts code{font-family:'SF Mono','Consolas',monospace; font-size:11.5px; color:var(--green); word-break:break-all}
+  .tts .tlabel{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--peach); font-weight:700; display:block; margin-bottom:5px}
+
+  .pron{margin-top:30px; background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:22px 26px}
+  .pron h3{margin:0 0 14px; font-size:13px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:700}
+  .pron-grid{display:flex; flex-wrap:wrap; gap:10px}
+  .pron .p{font-size:13px; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:8px 13px}
+  .pron .p b{color:var(--green)}
+  .pron .p span{color:var(--muted); margin-left:6px; font-style:italic}
+
+  .closer{margin-top:44px; text-align:center; font-size:17px; color:var(--green); font-weight:600; font-style:italic; padding:24px 0; border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+
+  footer{margin-top:36px; font-size:12px; color:var(--muted); padding-top:18px}
+  footer code{background:var(--bg); padding:2px 7px; border-radius:4px; font-size:11.5px; color:var(--ink)}
+
+  @media print{
+    body{background:#fff}
+    .card{break-inside:avoid}
+    .wrap{max-width:100%; padding:20px}
+    .narration{font-size:18px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="eyebrow">Production Script · Narration</div>
+  <h1>평범한 날의 아름다움을 발견하는 법</h1>
+  <p class="subtitle">72초 한국어 서사 내레이션. 시적이되 과장 없는 호흡으로 — Mary Oliver의 메뚜기에서 carpe diem의 오역까지 한 줄로 이어지는 여정.</p>
+  <div class="meta">
+    <span class="chip accent">72초</span>
+    <span class="chip">6섹션</span>
+    <span class="chip">contemplative (~125wpm)</span>
+    <span class="chip">한국어</span>
+    <span class="chip">TTS: Piper (오프라인 무료)</span>
+  </div>
+
+  <!-- Voice performance plan -->
+  <div class="vp">
+    <h2>Voice Performance Plan</h2>
+    <p class="intent">차분하고 서정적인 에세이 내레이션. 시적이되 과장 없이, 한 문장 한 문장 여운을 두어 전달. 듣는 사람이 스스로 멈춰 생각하게 만드는 호흡.</p>
+    <div class="vp-grid">
+      <div class="vp-item"><div class="k">Pacing</div><div class="v">contemplative · ~125wpm</div></div>
+      <div class="vp-item"><div class="k">Energy Curve</div><div class="v">낮고 또렷하게 시작 → s3 설명 무게 → s4 잔잔한 고점 → s5 또렷한 반전 → s6 여운 있게 가라앉음</div></div>
+      <div class="vp-item"><div class="k">Pause Policy</div><div class="v">문장 사이 0.4–0.7초 · 인용구 앞 0.6초 · 핵심 단어 앞 짧은 정지</div></div>
+      <div class="vp-item"><div class="k">Provider Notes</div><div class="v">Piper 속도 약간 낮춤 · 차분한 한국어 보이스. Chirp3 가능 시 instructions 파라미터로 서정 호흡 전달.</div></div>
+    </div>
+    <span class="sample-tag">TTS 샘플 구간: s5 (carpe diem 반전)</span>
+  </div>
+
+  <!-- Timeline -->
+  <div class="timeline-box">
+    <div class="tl-label">Timeline · 6 sections · 0s → 72s</div>
+    <div class="timeline" id="tl"></div>
+    <div class="axis"><span>0s</span><span>18s</span><span>36s</span><span>54s</span><span>72s</span></div>
+  </div>
+
+  <!-- Sections -->
+  <div class="scenes">
+
+    <!-- s1 -->
+    <div class="card">
+      <div class="card-head"><span class="sc-id">s1</span><span class="label">Hook · 메리 올리버의 메뚜기</span><span class="pace-chip">slow</span><span class="time">0–7s</span></div>
+      <div class="narration">시인 메리 올리버는, 메뚜기 한 마리를 바라보느라, 시 한 편을 <em>통째로</em> 썼습니다.</div>
+      <div class="body">
+        <div class="delivery"><span><b>energy:</b> calm, attentive</span><span><b>emphasis:</b> 통째로</span><span><b>pause_after:</b> 0.6s</span></div>
+        <div class="note">첫 문장이 전체 분위기를 결정. 서두르지 않는다.</div>
+        <div class="visual"><div class="vlabel">Visual</div><span class="vchip">풀잎 위 메뚜기 극접 클로즈업</span><span class="vchip">하단 타이포: 'Mary Oliver, The Summer Day'</span></div>
+        <div class="grounding"><b>근거:</b> Mary Oliver, <i>The Summer Day</i> (Library of Congress) · research_brief data_point</div>
+        <div class="tts"><span class="tlabel">TTS-ready (SSML)</span><code>시인 메리 올리버는, 메뚜기 한 마리를 바라보느라, 시 한 편을 &lt;break time="0.3s"/&gt; 통째로 썼습니다.</code></div>
+      </div>
+    </div>
+
+    <!-- s2 -->
+    <div class="card">
+      <div class="card-head"><span class="sc-id">s2</span><span class="label">Setup · 우리가 놓치는 방식</span><span class="pace-chip">measured</span><span class="time">7–18s</span></div>
+      <div class="narration">우리는 아름다움이 <em>특별한 순간</em>에 찾아온다고 믿습니다. 석녘의 바다, 먼 여행, 버킷리스트의 마지막 항목. 하지만 그런 순간은 <em>드물고</em>, 더 자주, <em>스쳐</em> 지나갑니다.</div>
+      <div class="body">
+        <div class="delivery"><span><b>energy:</b> reflective</span><span><b>emphasis:</b> 특별한 순간 · 드물고 · 스쳐</span><span><b>pause:</b> 0.3s / 0.5s</span></div>
+        <div class="note">관객이 자신의 버킷리스트를 떠올리게 두는 호흡.</div>
+        <div class="visual"><div class="vlabel">Visual</div><span class="vchip">석녘→여행→체크리스트 크로스컷</span><span class="vchip">stat: '큰 사건 행복효과 ≈ 수개월 내 회귀 (Diener 2006)'</span></div>
+        <div class="grounding"><b>근거:</b> Diener, Lucas &amp; Scollon (2006) <i>Beyond the Hedonic Treadmill</i> (PubMed 16719675)</div>
+        <div class="tts"><span class="tlabel">TTS-ready</span><code>우리는 아름다움이 특별한 순간에 찾아온다고 믿습니다. 석녘의 바다, 먼 여행, 버킷리스트의 마지막 항목. 하지만 그런 순간은 드물고, 더 자주, 스쳐 지나갑니다.</code></div>
+      </div>
+    </div>
+
+    <!-- s3 -->
+    <div class="card">
+      <div class="card-head"><span class="sc-id">s3</span><span class="label">Build · 주의력은 근육 (savoring)</span><span class="pace-chip">measured</span><span class="time">18–32s</span></div>
+      <div class="narration">심리학자 프레드 브라이언트는, 삶의 아름다움을 느끼는 힘이 <em>근육</em>과 같다고 했습니다. '<em>맛보기</em>'라는 이 주의력은 훈련할수록 커집니다. 큰 사건이 아니라, 작은 것을 알아채는 <em>횟수</em>가, 하루의 무게를 바꿉니다.</div>
+      <div class="body">
+        <div class="delivery"><span><b>energy:</b> warm, instructive</span><span><b>emphasis:</b> 근육 · 맛보기 · 횟수</span><span><b>pause:</b> 0.4s / 0.4s</span></div>
+        <div class="note">설명이지만 딱딱하지 않게. 청중에게 주는 선물 같은 어조.</div>
+        <div class="visual"><div class="vlabel">Visual</div><span class="vchip">흐릿→선명 일상 모션 (찻잔 김·먼지·비)</span><span class="vchip">stat: 'savoring = 훈련 가능 기술 (Bryant 2021)'</span></div>
+        <div class="grounding"><b>근거:</b> Bryant, F. B. (2021) <i>Savoring</i> (PMC8712667)</div>
+        <div class="tts"><span class="tlabel">TTS-ready</span><code>심리학자 프레드 브라이언트는, 삶의 아름다움을 느끼는 힘이 근육과 같다고 했습니다. '맛보기'라는 이 주의력은 훈련할수록 커집니다. 큰 사건이 아니라, 작은 것을 알아채는 횟수가, 하루의 무게를 바꿉니다.</code></div>
+      </div>
+    </div>
+
+    <!-- s4 -->
+    <div class="card">
+      <div class="card-head"><span class="sc-id">s4</span><span class="label">Build · 윤동주 + 마르쿠스 아우렐리우스</span><span class="pace-chip">slow</span><span class="time">32–46s</span></div>
+      <div class="narration">윤동주는 썼습니다. '별을 노래하는 마음으로, 모든 죽어가는 것을 <em>사랑해야지</em>.' 이천 년 전 로마 황제 마르쿠스 아우렐리우스도 말했습니다. '삶의 아름다움을 <em>음미하라</em>.' 두 사람 모두 알고 있었습니다. 아름다움은 찾는 것이 아니라, <em>머무는 것</em>이라는 걸.</div>
+      <div class="body">
+        <div class="delivery"><span><b>energy:</b> reverent</span><span><b>emphasis:</b> 사랑해야지 · 음미하라 · 머무는 것</span><span><b>pause:</b> 0.6s / 0.5s</span></div>
+        <div class="note">두 인용을 병치하되, 같은 무게로. 국적·시대를 넘는 합창처럼.</div>
+        <div class="visual"><div class="vlabel">Visual</div><span class="vchip">윤동주 서시 세로 타이포 (밤하늘)</span><span class="vchip">마르쿠스 인용 가로 필사체</span></div>
+        <div class="grounding"><b>근거:</b> 윤동주 「서시」 (한국일보) · Marcus Aurelius <i>Meditations</i></div>
+        <div class="tts"><span class="tlabel">TTS-ready (SSML)</span><code>&lt;break time="0.6s"/&gt; 윤동주는 썼습니다. '별을 노래하는 마음으로, 모든 죽어가는 것을 사랑해야지.' &lt;break time="0.5s"/&gt; 이천 년 전 로마 황제 마르쿠스 아우렐리우스도 말했습니다. '삶의 아름다움을 음미하라.'</code></div>
+      </div>
+    </div>
+
+    <!-- s5 -->
+    <div class="card" style="border-color:var(--gold); box-shadow:0 6px 24px rgba(184,137,62,.12)">
+      <div class="card-head" style="background:#F7EEDD"><span class="sc-id">s5</span><span class="label">Climax · carpe diem의 오역</span><span class="pace-chip" style="background:#F3E2C9;color:#8A6420">measured · ⭐샘플</span><span class="time">46–60s</span></div>
+      <div class="narration">우리는 '카르페 디엠'을 '오늘을 <em>붙잡아라</em>'로 배웠습니다. 하지만 라틴어 '카르페레'는, '<em>꽃을 따다</em>'라는 뜻입니다. 움켜쥐는 것이 아니라, <em>살며시</em>, 거두어 드리는 것. 붙잡으면 시들지만, 따는 사람에게는 <em>피어</em> 있습니다.</div>
+      <div class="body">
+        <div class="delivery"><span><b>energy:</b> lucid, turning</span><span><b>emphasis:</b> 붙잡아라 · 꽃을 따다 · 살며시 · 피어</span><span><b>pause:</b> 0.4s / 0.5s</span></div>
+        <div class="note">핵심 반전. 오역 클로징의 뉘앙스가 가장 민감한 구간 — TTS 샘플용.</div>
+        <div class="visual"><div class="vlabel">Visual</div><span class="vchip">CARPE → 꽃 움켜쥐다 → 살며시 따는 모션 (꽃잎 bloom)</span><span class="vchip">comparison: '붙잡아라(seize) vs 꽃을 따다(pluck)'</span></div>
+        <div class="grounding"><b>근거:</b> carpe diem mistranslation — Chi Luu / Britannica (carpere = pluck)</div>
+        <div class="tts"><span class="tlabel">TTS-ready (SSML)</span><code>우리는 '카르페 디엠'을 '오늘을 붙잡아라'로 배웠습니다. &lt;break time="0.4s"/&gt; 하지만 라틴어 '카르페레'는, &lt;break time="0.3s"/&gt; '꽃을 따다'라는 뜻입니다. 움켜쥐는 것이 아니라, 살며시, 거두어 드리는 것.</code></div>
+      </div>
+    </div>
+
+    <!-- s6 -->
+    <div class="card">
+      <div class="card-head"><span class="sc-id">s6</span><span class="label">Landing · 평범한 하루에도</span><span class="pace-chip">slow</span><span class="time">60–72s</span></div>
+      <div class="narration"><em>평범한</em> 하루에도, 꽃은 피어 있습니다. 다만, <em>딸 줄</em> 알아야 할 뿐. 인생은 <em>아름답습니다</em> — 당신이 머무는, <em>그 자리</em>에서.</div>
+      <div class="body">
+        <div class="delivery"><span><b>energy:</b> tender, resolving</span><span><b>emphasis:</b> 평범한 · 딸 줄 · 아름답습니다 · 그 자리</span><span><b>pause:</b> 0.5s / 0.8s</span></div>
+        <div class="note">여운을 남기는 마무리. 마지막 음이 끝난 뒤 음악만 1~2초 더.</div>
+        <div class="visual"><div class="vlabel">Visual</div><span class="vchip">평범한 일상 따뜻한 장면 슬로우</span><span class="vchip">제목 타이포: '인생은 아름답다 — 당신이 머무는 곳에'</span></div>
+        <div class="grounding"><b>근거:</b> research_summary — 'micro-dose of attention' thesis</div>
+        <div class="tts"><span class="tlabel">TTS-ready (SSML)</span><code>평범한 하루에도, 꽃은 피어 있습니다. &lt;break time="0.5s"/&gt; 다만, 딸 줄 알아야 할 뿐. &lt;break time="0.8s"/&gt; 인생은 아름답습니다 — 당신이 머무는, 그 자리에서.</code></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Pronunciation -->
+  <div class="pron">
+    <h3>Pronunciation Guides</h3>
+    <div class="pron-grid">
+      <div class="p"><b>carpe diem</b><span>카르-페 디-엠</span></div>
+      <div class="p"><b>carpere</b><span>카르-페-레</span></div>
+      <div class="p"><b>savoring</b><span>세이버링</span></div>
+      <div class="p"><b>마르쿠스 아우렐리우스</b><span>마르-쿠스 아우-렐-리-우스</span></div>
+    </div>
+  </div>
+
+  <div class="closer">"평범한 하루에도, 꽃은 피어 있습니다. 다만, 딸 줄 알아야 할 뿐."</div>
+
+  <footer>
+    <div><b>원본 artifact:</b> <code>projects/beautiful-green-life/artifacts/script.json</code></div>
+    <div><b>선택 콘셉트:</b> c3 · <b>총길이:</b> 72초 · <b>생성:</b> 2026-07-20 (demo run)</div>
+    <div style="margin-top:6px; color:#a89e90">OpenMontage — 본 문서는 script.json을 시각화한 정적 리딩 대본입니다. 모든 사실 인용은 research_brief에 추적 가능합니다.</div>
+  </footer>
+
+</div>
+
+<script>
+  const secs=[["s1",0,7],["s2",7,18],["s3",18,32],["s4",32,46],["s5",46,60],["s6",60,72]];
+  const tl=document.getElementById("tl");
+  secs.forEach(s=>{
+    const[id,st,en]=s; const seg=document.createElement("div");
+    seg.className="seg "+id; seg.style.flexGrow=(en-st);
+    seg.title=id+" · "+st+"–"+en+"s"; seg.textContent=id;
+    tl.appendChild(seg);
+  });
+</script>
+</body>
+</html>
