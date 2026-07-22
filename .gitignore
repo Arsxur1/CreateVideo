@@ -101,8 +101,9 @@ venv/
 # Personal, machine-specific setup notes — never shared/committed
 LOCAL-*.md
 
-# Reference ebook/library dumps (copyrighted PDFs, huge — not repo content)
-docs/forskills/
+# Reference ebook/library dumps (copyrighted PDFs, huge — not repo content).
+# Use /* (not /) so the ko/ negation below can re-include translated outputs.
+docs/forskills/*
 !docs/forskills/ko/
 docs/reference/*.pdf
 /tmp/forskills-translation
