@@ -300,7 +300,7 @@ foreach ($group in $groups) {
         if ($ResumeChunks) {
             $existingPath = Get-ExistingResponsePath -GroupKey $group.Name -OneBasedIndex $oneBasedIndex -WorkDir $workDir
             if ($existingPath) {
-                $content = [System.IO.File]::ReadAllText($existingPath)
+                $content = [System.IO.File]::ReadAllText($existingPath, [System.Text.UTF8Encoding]::new($false))
                 if (Test-ValidKoreanResponse -Content $content) {
                     $reuseResponse = $content
                     $chunkStats.reused++
