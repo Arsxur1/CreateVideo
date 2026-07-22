@@ -103,5 +103,6 @@ LOCAL-*.md
 
 # Reference ebook/library dumps (copyrighted PDFs, huge — not repo content)
 docs/forskills/
+!docs/forskills/ko/
 docs/reference/*.pdf
 /tmp/forskills-translation
