@@ -4,7 +4,10 @@ param(
     [switch]$Resume,
     [string]$Only = '',
     [switch]$ResumeChunks,
-    [switch]$DryRun
+    [switch]$DryRun,
+    [string]$InputFile = '',
+    [string]$OutputName = '',
+    [string]$WorkSubdir = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -227,10 +230,36 @@ if (Test-Path $statusPath) {
     if ($saved) { $status = $saved }
 }
 
-$groups = Get-ChildItem -File $sourceDir |
+# Extract mode: process single input file
+$extractMode = $false
+if ($InputFile) {
+    $extractMode = $true
+    $InputFile = (Resolve-Path $InputFile -ErrorAction Stop).Path
+    $inputFileObj = Get-Item -LiteralPath $InputFile -ErrorAction Stop
+    $groupKey = $inputFileObj.BaseName
+    $targetName = if ($OutputName) { $OutputName } else { "$($inputFileObj.BaseName).ko.txt" }
+    $targetPath = Join-Path $outputDir $targetName
+
+    # Create isolated work subdirectory for this extract
+    $workSubdirName = if ($WorkSubdir) { $workSubdir } else { $groupKey }
+    $workDir = Join-Path $workDir $workSubdirName
+    New-Item -ItemType Directory -Force -Path $workDir | Out-Null
+
+    # Create synthetic group object matching Group-Object structure
+    $groups = @(
+        @{
+            Name  = $groupKey
+            Group = @($inputFileObj)
+        }
+    )
+    Write-Host "EXTRACT MODE: processing '$($inputFileObj.Name)' as group '$groupKey' with work dir: $workDir"
+} else {
+    # Original directory-scan mode
+    $groups = Get-ChildItem -File $sourceDir |
     Where-Object { $_.DirectoryName -eq $sourceDir } |
     Group-Object -Property { Get-GroupKey $_ } |
     Sort-Object Name
+}
 
 if ($Only) {
     $filtered = $groups | Where-Object { $_.Name -like "$($Only)*" }
@@ -244,14 +273,21 @@ if ($Only) {
 $processed = 0
 foreach ($group in $groups) {
     if (($MaxSourceGroups -gt 0) -and ($processed -ge $MaxSourceGroups)) { break }
-    $files = $group.Group
-    $source = @($files | Where-Object Extension -eq '.txt' | Sort-Object Length -Descending | Select-Object -First 1)
-    if (-not $source) { $source = @($files | Where-Object Extension -eq '.docx' | Select-Object -First 1) }
-    if (-not $source) { $source = @($files | Where-Object Extension -eq '.pdf' | Select-Object -First 1) }
-    if (-not $source) { continue }
-    $source = $source[0]
-    $targetName = "$($source.BaseName).ko.txt"
-    $targetPath = Join-Path $outputDir $targetName
+
+    # In extract mode, source and target are already set
+    if ($extractMode) {
+        $source = $inputFileObj
+        # targetName and targetPath are already set in extract mode block
+    } else {
+        $files = $group.Group
+        $source = @($files | Where-Object Extension -eq '.txt' | Sort-Object Length -Descending | Select-Object -First 1)
+        if (-not $source) { $source = @($files | Where-Object Extension -eq '.docx' | Select-Object -First 1) }
+        if (-not $source) { $source = @($files | Where-Object Extension -eq '.pdf' | Select-Object -First 1) }
+        if (-not $source) { continue }
+        $source = $source[0]
+        $targetName = "$($source.BaseName).ko.txt"
+        $targetPath = Join-Path $outputDir $targetName
+    }
 
     if ((Test-Path $targetPath) -and -not $Resume) {
         Write-Host "SKIP complete output: $targetName"
