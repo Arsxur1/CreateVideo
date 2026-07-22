@@ -15,6 +15,7 @@ if (-not (Test-Path $outputDir)) {
 }
 
 # Chapters to extract: (ChapterNumber, StartLine, EndLine, Title)
+# Note: Chapter 37 endLine will be detected dynamically to avoid including end-of-book index matter
 $chapters = @(
     @(8, 16206, 19287, "Motivation"),
     @(9, 19288, 21505, "Emotion"),
@@ -31,7 +32,7 @@ $chapters = @(
     @(27, 60475, 63118, "Social Conflict"),
     @(31, 71677, 74216, "Influence and Leadership"),
     @(36, 85047, 87195, "Language and Conversations"),
-    @(37, 87196, 97389, "Cultural Psychology")
+    @(37, 87196, -1, "Cultural Psychology")  # -1 = detect end of chapter, not EOF
 )
 
 # Calculate source file hash for provenance
@@ -44,6 +45,41 @@ $extractionDate = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 
 Write-Host "Reading source file..."
 $lines = Get-Content -Path $sourceFile -Encoding UTF8
+
+# Detect end-of-book index matter for last chapter
+# Look for Author Index or Subject Index patterns after chapter 37 starts
+$lastChapterIndex = $chapters.Count - 1
+$lastChapter = $chapters[$lastChapterIndex]
+if ($lastChapter[2] -eq -1) {
+    Write-Host "  Detecting end-of-book index boundary for Chapter $($lastChapter[0])..."
+    $lastChapterStart = $lastChapter[1]
+    $lastChapterTitle = $lastChapter[3]
+
+    # For this specific source file (374516625-Handbook-of-Social-Psychology.txt),
+    # the Author Index starts at line 89717. This is the first index after Chapter 37 content.
+    # Chapter 37 should include its references but exclude the Author Index and subsequent matter.
+    $knownAuthorIndexLine = 89717
+
+    # Verify the known line still looks like an index header
+    $endLine = $lines.Count  # Default to EOF
+    if ($lastChapterStart -le $knownAuthorIndexLine -and $knownAuthorIndexLine -le $lines.Count) {
+        $lineAtKnownPos = $lines[$knownAuthorIndexLine - 1]  # 0-indexed
+        # Remove spaces for matching (OCR creates spaced text like "A u thor Index")
+        $normalizedLine = $lineAtKnownPos -replace '\s', ''
+        if ($normalizedLine -match 'AuthorIndex' -or $normalizedLine -match 'SubjectIndex' -or ($lineAtKnownPos -match 'Index' -and $lineAtKnownPos.Length -gt 10)) {
+            $endLine = $knownAuthorIndexLine - 1  # End before the index line
+            Write-Host "    Using known Author Index boundary at line $knownAuthorIndexLine, capping Chapter $($lastChapter[0]) at line $endLine"
+        } else {
+            Write-Host "    WARNING: Known boundary line $knownAuthorIndexLine does not contain expected index text"
+            Write-Host "    Line content: $lineAtKnownPos"
+            Write-Host "    Falling back to EOF (last line of source)"
+        }
+    } else {
+        Write-Host "    WARNING: Known boundary line $knownAuthorIndexLine is out of range"
+        Write-Host "    Falling back to EOF (last line of source)"
+    }
+    $chapters[$lastChapterIndex] = @($lastChapter[0], $lastChapter[1], $endLine, $lastChapterTitle)
+}
 
 Write-Host "Extracting $($chapters.Count) chapters..."
 
