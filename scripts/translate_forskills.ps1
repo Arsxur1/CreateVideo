@@ -377,7 +377,7 @@ SOURCE TEXT END
             Write-Host "  chunk $oneBasedIndex/$($chunks.Count)"
             $promptFile = Join-Path $workDir ("{0}-{1:D5}.prompt.txt" -f $group.Name, $oneBasedIndex)
             [System.IO.File]::WriteAllText($promptFile, $prompt, [System.Text.UTF8Encoding]::new($false))
-            $cmdLine = 'codex exec --ephemeral --ignore-rules --color never -s read-only -o "{0}" < "{1}"' -f $currentResponsePath, $promptFile
+            $cmdLine = 'codex exec --ephemeral --ignore-rules --color never -s read-only -m gpt-5.6-terra -o "{0}" < "{1}"' -f $currentResponsePath, $promptFile
             cmd.exe /c $cmdLine
             if ($LASTEXITCODE -ne 0 -or -not (Test-Path $currentResponsePath)) {
                 throw "Codex translation failed for $($source.Name), chunk $oneBasedIndex."
