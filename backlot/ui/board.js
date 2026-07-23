@@ -222,18 +222,19 @@ function renderDrawer(s) {
   for (const name of names) {
     const artifact = s.artifacts[name];
     if (!artifact) continue;
+    // decision_log is global (right-rail Decisions panel), not a per-stage doc.
+    if (name === "decision_log") continue;
+    const reading = renderStageReading(st, name, artifact, s);
+    if (!reading) continue;
     shown = true;
-    body.append(
-      el("div", { class: "d-cat", style: "font-family:var(--mono);font-size:calc(9.5px * var(--fs-scale));color:var(--text-3);letter-spacing:.1em;text-transform:uppercase;margin:6px 0 4px" }, name),
-      el("pre", {}, JSON.stringify(artifact, null, 2)),
-    );
+    body.append(reading);
   }
   if (!shown) {
     body.append(el("div", { class: "hint" },
       st.status === "pending" ? "This stage hasn't run yet." : "No canonical artifact found on disk for this stage."));
   }
 
-  return el("div", { class: "drawer" },
+  return el("div", { class: `drawer${shown ? " has-reading" : ""}` },
     el("div", { class: "drawer-head" },
       el("h3", {}, `${st.name} — ${st.status}`),
       st.gate_skipped ? el("span", { class: "gate-chip" }, "⚑ GATE SKIPPED") : null,
@@ -246,53 +247,460 @@ function renderDrawer(s) {
 }
 
 // ---------------------------------------------------------------------------
-// script card
+// ---------------------------------------------------------------------------
+// stage reading dispatcher — what the drawer shows when a stage is clicked.
+// script & scene_plan have bespoke warm-paper renderers; every other stage's
+// artifact is rendered readably by renderGenericReading (spec-driven), with
+// the raw JSON kept as a collapsible <details> at the bottom.
 // ---------------------------------------------------------------------------
 
-function scriptSections(script, limit) {
-  const sections = script.sections || [];
-  const shown = limit ? sections.slice(0, limit) : sections;
-  const nodes = [];
-  for (const sec of shown) {
-    nodes.push(el("div", { class: "sp-slug" },
-      `${(sec.id || "").toUpperCase()} — ${sec.label || "Section"} `,
-      el("span", { class: "tc" }, `${fmtDuration(sec.start_seconds)} – ${fmtDuration(sec.end_seconds)}`)));
-    if (sec.text) nodes.push(el("div", { class: "sp-action" }, sec.text));
-    if (sec.speaker_directions) nodes.push(el("div", { class: "sp-paren" }, `(${sec.speaker_directions})`));
-    const cues = sec.enhancement_cues || [];
-    if (cues.length) {
-      nodes.push(el("div", { style: "margin-left:42px" },
-        cues.map((c) => el("span", { class: "sp-cue" }, `▸ ${c.type} · ${String(c.description || "").slice(0, 60)}`))));
+function renderStageReading(st, name, artifact, s) {
+  if (name === "script") return renderScriptCard(s);
+  if (name === "scene_plan") return renderStoryboard(s);
+  return renderGenericReading(st, name, artifact, s);
+}
+
+// Declarative per-artifact spec: how to surface each non-bespoke stage's
+// artifact as a warm-paper doc. Adding a stage = one entry. Fields are
+// [dottedKeyPath, label, fmt] where fmt ∈ text|money|duration|list|count.
+// Scalars (text/money/duration/count) render as chips; lists render as
+// warm asset-box stacks. Unknown artifacts (e.g. final_review) and any
+// artifact without an entry fall through to a generic key-value dump.
+const READING_SPEC = {
+  research_brief: {
+    title: (a) => a.topic,
+    lead: (a) => a.research_summary,
+    fields: [
+      ["angles_discovered", "Angles discovered", "list"],
+      ["data_points", "Data points", "list"],
+      ["sources", "Sources", "list"],
+    ],
+  },
+  proposal_packet: {
+    title: (a) => {
+      const sel = (a.selected_concept || {}).concept_id;
+      const c = (a.concept_options || []).find((o) => o.id === sel || o.concept_id === sel);
+      return (c && (c.title || c.name)) || "Production proposal";
+    },
+    lead: (a) => (a.selected_concept || {}).rationale,
+    fields: [
+      ["cost_estimate.total_estimated_usd", "Estimated cost", "money"],
+      ["production_plan.render_runtime", "Runtime", "text"],
+      ["production_plan.pipeline", "Pipeline", "text"],
+      ["concept_options", "Concepts", "list"],
+    ],
+  },
+  brief: {
+    title: (a) => a.title || a.core_message,
+    lead: (a) => a.hook,
+    fields: [
+      ["target_platform", "Platform", "text"],
+      ["target_duration_seconds", "Duration", "duration"],
+      ["tone", "Tone", "text"],
+      ["key_points", "Key points", "list"],
+    ],
+  },
+  asset_manifest: {
+    title: () => "Generated assets",
+    fields: [
+      ["total_cost_usd", "Generation cost", "money"],
+      ["assets", "Assets", "list"],
+    ],
+  },
+  edit_decisions: {
+    title: () => "Edit decisions",
+    fields: [
+      ["render_runtime", "Runtime", "text"],
+      ["cuts", "Cuts", "list"],
+      ["audio.music", "Music", "text"],
+      ["slideshow_risk_score.verdict", "Slideshow risk", "text"],
+    ],
+  },
+  render_report: {
+    title: () => "Render report",
+    fields: [
+      ["render_time_seconds", "Render time", "duration"],
+      ["render_grammar", "Grammar", "text"],
+      ["outputs", "Outputs", "list"],
+      ["warnings", "Warnings", "list"],
+      ["verification_notes", "Verification", "list"],
+    ],
+  },
+  publish_log: {
+    title: () => "Publish log",
+    fields: [["entries", "Destinations", "list"]],
+  },
+};
+
+function resolvePath(obj, path) {
+  if (obj == null) return undefined;
+  if (!String(path).includes(".")) return obj[path];
+  return String(path).split(".").reduce((acc, key) => (acc == null ? acc : acc[key]), obj);
+}
+
+function humanizeKey(k) {
+  return String(k).replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function readingItemLabel(it) {
+  if (it == null) return "";
+  if (typeof it !== "object") return String(it);
+  return it.title || it.name || it.platform || it.destination || it.hook
+    || it.id || it.status || it.path || it.tool_name || "";
+}
+function readingItemDesc(it) {
+  if (it == null || typeof it !== "object") return "";
+  return it.description || it.hook || it.url || it.reason || it.rationale
+    || it.format || it.type || it.approach || "";
+}
+
+// A list field → stacked warm asset boxes (reuses .reading .asset.ok).
+function readingListBlock(label, items) {
+  const arr = Array.isArray(items) ? items : [];
+  if (!arr.length) return null;
+  const CAP = 20;
+  const rows = arr.slice(0, CAP).map((it) => {
+    const t = readingItemLabel(it);
+    const d = readingItemDesc(it);
+    return el("div", { class: "asset ok" },
+      el("span", { class: "ico" }, "•"),
+      el("div", {},
+        t ? el("span", { class: "alabel" }, t) : null,
+        d ? el("span", { class: "txt" }, d) : null));
+  });
+  const over = arr.length - CAP;
+  if (over > 0) rows.push(el("div", { class: "asset" },
+    el("span", { class: "ico" }, "…"),
+    el("div", {}, el("span", { class: "txt" }, `${over} more`))));
+  return el("div", { class: "gfield" },
+    el("div", { class: "glabel" }, `${label} · ${arr.length}`),
+    el("div", { class: "assets" }, ...rows));
+}
+
+// A scalar field → a chip for the meta row. Objects are not chip-shaped.
+function readingScalarChip(label, value, fmt) {
+  if (value == null || value === "") return null;
+  let text;
+  if (fmt === "money") text = fmtMoney(value);
+  else if (fmt === "duration") text = fmtDuration(value);
+  else if (typeof value === "object") return null;
+  else text = String(value);
+  if (text == null || text === "") return null;
+  return el("span", { class: "rchip" }, `${label}: ${text}`);
+}
+
+function renderGenericReading(st, name, artifact, s) {
+  const spec = READING_SPEC[name] || {};
+  const title = (spec.title ? spec.title(artifact, s) : null)
+    || artifact.title || artifact.topic || s.title;
+  const lead = spec.lead ? spec.lead(artifact, s) : null;
+  const lang = ((artifact.metadata && artifact.metadata.language) || "en");
+
+  const root = el("section", { class: "reading reading-generic" });
+  root.append(el("div", { class: "r-toolbar" },
+    el("button", {
+      class: "r-btn primary", type: "button", title: "이 문서를 HTML로 다운로드",
+      onclick: () => downloadReading(root, `${slug(s.project_id)}-${name}.html`, title, lang),
+    }, "↓ HTML 다운로드")));
+
+  root.append(el("div", { class: "eyebrow" }, `${st.name} · ${name}.json`));
+  root.append(el("h1", {}, title));
+  if (lead) root.append(el("p", { class: "subtitle" }, lead));
+
+  const chips = [];
+  const blocks = [];
+  for (const field of (spec.fields || [])) {
+    const [path, label, fmt] = field;
+    const value = resolvePath(artifact, path);
+    if (fmt === "list") {
+      const b = readingListBlock(label, value);
+      if (b) blocks.push(b);
+    } else {
+      const c = readingScalarChip(label, value, fmt);
+      if (c) chips.push(c);
     }
   }
-  if (limit && sections.length > limit) {
-    nodes.push(el("div", { class: "sp-fade" }, `… ${sections.length - limit} more sections`));
+
+  // Unknown artifact (no spec entry) → generic readable dump of every key.
+  if (!spec.fields) {
+    for (const [k, v] of Object.entries(artifact || {})) {
+      if (v == null || k === "metadata") continue;
+      if (Array.isArray(v)) {
+        const b = readingListBlock(humanizeKey(k), v);
+        if (b) blocks.push(b);
+      } else if (typeof v === "object") {
+        const b = readingListBlock(humanizeKey(k),
+          Object.entries(v).map(([kk, vv]) => ({ name: kk, description: typeof vv === "object" ? "" : String(vv) })));
+        if (b) blocks.push(b);
+      } else {
+        const c = readingScalarChip(humanizeKey(k), v, "text");
+        if (c) chips.push(c);
+      }
+    }
   }
-  return nodes;
+
+  if (chips.length) root.append(el("div", { class: "meta" }, ...chips));
+  if (blocks.length) root.append(el("div", { class: "gfields" }, ...blocks));
+
+  // Raw JSON safety net for power users / debugging.
+  root.append(el("details", {},
+    el("summary", {}, "Raw JSON"),
+    el("pre", {}, JSON.stringify(artifact, null, 2))));
+
+  root.append(buildReadingFooter(s, `projects/${s.project_id}/artifacts/${name}.json`,
+    [`${st.name} stage · ${name} artifact`]));
+  return root;
+}
+
+// reading views — warm paper documents for script & scene plan
+// (design system in reading.css, namespaced under .reading). The standalone
+// HTML download clones the live document so screen == file, always.
+// ---------------------------------------------------------------------------
+
+const TYPE_COLORS = {
+  broll: "#C97B5E", text_card: "#2D4A3E", animation: "#8BA888",
+  talking_head: "#6E8A6B", diagram: "#7B8FA8", character_scene: "#9B7BA8",
+  transition: "#B8893E", generated: "#C98E5E", screen_recording: "#5E7A8A",
+};
+const TYPE_LABELS = {
+  broll: "b-roll", text_card: "text card", animation: "animation",
+  talking_head: "talking head", diagram: "diagram", character_scene: "character scene",
+  transition: "transition", generated: "generated", screen_recording: "screen recording",
+};
+const CUE_LABELS = {
+  overlay: "오버레이", broll: "B-roll", diagram: "다이어그램",
+  stat_card: "통계 카드", code_snippet: "코드", animation: "애니메이션",
+};
+
+function escapeHTML(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => (
+    { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+function slug(id) {
+  return String(id || "project").replace(/[^a-z0-9-]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "project";
+}
+function axisTicks(total) {
+  const t = Number(total);
+  if (!Number.isFinite(t) || t <= 0) return [0];
+  const out = [];
+  for (let k = 0; k <= 4; k++) out.push(Math.round((t * k) / 4));
+  return out;
+}
+function buildAxis(total) {
+  return el("div", { class: "axis" }, ...axisTicks(total).map((t) => el("span", {}, `${t}s`)));
+}
+// Wrap emphasis words in <em> (peach highlighter). Terms sorted longest-first
+// so a phrase wins over its substring. Text is split into nodes — no innerHTML.
+function highlightEmphasis(text, words) {
+  const frag = document.createDocumentFragment();
+  const str = String(text || "");
+  const terms = (words || []).map((w) => String(w)).filter(Boolean).sort((a, b) => b.length - a.length);
+  let i = 0;
+  while (i < str.length) {
+    let hit = null;
+    for (const t of terms) { if (t && str.startsWith(t, i)) { hit = t; break; } }
+    if (hit) { frag.append(el("em", {}, hit)); i += hit.length; }
+    else { frag.append(str[i]); i += 1; }
+  }
+  return frag;
+}
+
+// ---- standalone HTML export (clone the live doc → portable file) ----
+let _readingCssText = null;
+async function readingCssText() {
+  if (_readingCssText !== null) return _readingCssText;
+  try {
+    const res = await fetch("/ui/reading.css", { cache: "no-cache" });
+    _readingCssText = await res.text();
+  } catch { _readingCssText = ""; }
+  return _readingCssText;
+}
+function docHTML(title, bodyHTML, cssText, lang) {
+  return `<!DOCTYPE html>\n<html lang="${escapeHTML(lang || "en")}">\n<head>\n`
+    + `<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1.0">\n`
+    + `<title>${escapeHTML(title)}</title>\n<style>${cssText}</style>\n</head>\n<body>\n${bodyHTML}\n</body>\n</html>`;
+}
+function blobToDataURL(blob) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(String(r.result));
+    r.onerror = rej;
+    r.readAsDataURL(blob);
+  });
+}
+// Inline every <img>/<video> as a data URL so the downloaded doc is portable
+// (opens correctly with no server). Videos → their cached poster JPEG.
+async function inlineMedia(root) {
+  await Promise.all([...root.querySelectorAll("img")].map(async (img) => {
+    try {
+      const res = await fetch(img.src);
+      if (!res.ok) return;
+      img.src = await blobToDataURL(await res.blob());
+    } catch { /* leave as-is */ }
+  }));
+  await Promise.all([...root.querySelectorAll("video")].map(async (v) => {
+    try {
+      const res = await fetch(v.dataset.posterSrc || v.src);
+      if (!res.ok) return;
+      const img = el("img", { alt: "" });
+      img.src = await blobToDataURL(await res.blob());
+      v.replaceWith(img);
+    } catch { /* leave as-is */ }
+  }));
+}
+function triggerDownload(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const a = el("a", { href: url, download: filename });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
+async function downloadReading(rootEl, filename, title, lang) {
+  if (!rootEl) return;
+  const clone = rootEl.cloneNode(true);
+  clone.classList.add("reading-doc");
+  clone.querySelectorAll(".r-toolbar").forEach((t) => t.remove());
+  await inlineMedia(clone);
+  const html = docHTML(title, clone.outerHTML, await readingCssText(), lang);
+  triggerDownload(new Blob([html], { type: "text/html;charset=utf-8" }), filename);
+}
+
+function vpItem(k, v) { return el("div", { class: "vp-item" }, el("div", { class: "k" }, k), el("div", { class: "v" }, v)); }
+function deliverySpan(k, v) { return el("span", {}, el("b", {}, `${k}: `), v); }
+function collectPron(sections) {
+  const map = new Map();
+  for (const sec of sections || []) {
+    for (const p of sec.pronunciation_guides || []) {
+      if (p && p.word && !map.has(p.word)) map.set(p.word, p.phonetic || "");
+    }
+  }
+  return [...map.entries()].map(([word, phonetic]) => ({ word, phonetic }));
+}
+function buildReadingFooter(s, artifactPath, extras) {
+  const rows = [el("div", {}, el("b", {}, "원본 artifact: "), el("code", {}, artifactPath))];
+  const ex = (extras || []).filter(Boolean);
+  if (ex.length) rows.push(el("div", {}, ...ex.map((e, i) => [i ? " · " : "", e]).flat()));
+  rows.push(el("div", { class: "foot-dim" }, `OpenMontage Backlot · ${s.title}`));
+  return el("footer", {}, ...rows);
+}
+
+function buildScriptTimeline(sections) {
+  const total = sections.reduce((m, sec) => Math.max(m, Number(sec.end_seconds) || 0), 0);
+  const box = el("div", { class: "timeline-box" },
+    el("div", { class: "tl-label" }, `Timeline · ${sections.length} sections · 0s → ${Math.round(total)}s`));
+  const tl = el("div", { class: "timeline" });
+  sections.forEach((sec, i) => {
+    const dur = Math.max(0.001, (Number(sec.end_seconds) || 0) - (Number(sec.start_seconds) || 0));
+    const seg = el("div", {
+      class: `seg sc-s${(i % 6) + 1}`,
+      title: `${sec.id || ""} · ${sec.start_seconds}–${sec.end_seconds}s`,
+    });
+    seg.style.flexGrow = String(dur);
+    seg.textContent = (sec.id || `s${i + 1}`).toUpperCase();
+    tl.append(seg);
+  });
+  box.append(tl, buildAxis(total));
+  return box;
 }
 
 function renderScriptCard(s) {
   const script = s.artifacts.script;
   if (!script) return null;
-  const scriptStage = s.stages.find((x) => x.name === "script");
-  const status = scriptStage ? scriptStage.status : "unknown";
-  const stamp = status === "completed"
-    ? el("span", { class: "script-status script-approved" }, "APPROVED")
-    : status === "awaiting_human"
-      ? el("span", { class: "script-status script-pending" }, "PENDING APPROVAL")
-      : status === "in_progress"
-        ? el("span", { class: "script-status script-draft" }, "DRAFTING")
-        : null;
+  const vp = script.voice_performance || {};
+  const sections = script.sections || [];
+  const meta = script.metadata || {};
+  const lang = meta.language || "en";
+  const sampleId = vp.sample_section_id;
 
-  const card = el("div", { class: "script-card script-preview", title: "Click to expand full script", onclick: openScriptModal },
-    stamp,
-    el("div", { class: "sp-title" }, script.title || s.title),
-    el("div", { class: "sp-meta" },
-      `script · ${fmtDuration(script.total_duration_seconds)} · ${(script.sections || []).length} sections`),
-    ...scriptSections(script, 4),
-    el("span", { class: "sp-expand" }, "⤢ EXPAND SCRIPT"),
-  );
-  return card;
+  const root = el("section", { class: "reading reading-script" });
+  root.append(el("div", { class: "r-toolbar" },
+    el("button", {
+      class: "r-btn primary", type: "button", title: "이 대본을 HTML로 다운로드",
+      onclick: () => downloadReading(root, `${slug(s.project_id)}-script.html`, script.title || s.title, lang),
+    }, "↓ HTML 다운로드")));
+
+  root.append(el("div", { class: "eyebrow" }, "Production Script · Narration"));
+  root.append(el("h1", {}, script.title || s.title));
+  if (vp.performance_intent) root.append(el("p", { class: "subtitle" }, vp.performance_intent));
+
+  const chips = [
+    script.total_duration_seconds ? el("span", { class: "rchip accent" }, `${script.total_duration_seconds}초`) : null,
+    el("span", { class: "rchip" }, `${sections.length}섹션`),
+    vp.pacing_profile ? el("span", { class: "rchip" }, vp.pacing_profile) : null,
+    meta.pacing_wpm_estimate ? el("span", { class: "rchip" }, `~${meta.pacing_wpm_estimate}wpm`) : null,
+    lang ? el("span", { class: "rchip" }, lang === "ko" ? "한국어" : lang) : null,
+  ].filter(Boolean);
+  if (chips.length) root.append(el("div", { class: "meta" }, ...chips));
+
+  if (vp.performance_intent || vp.energy_curve || vp.pause_policy || vp.pacing_profile || vp.provider_notes) {
+    const grid = el("div", { class: "vp-grid" });
+    if (vp.pacing_profile) grid.append(vpItem("Pacing", vp.pacing_profile));
+    if (vp.energy_curve) grid.append(vpItem("Energy Curve", vp.energy_curve));
+    if (vp.pause_policy) grid.append(vpItem("Pause Policy", vp.pause_policy));
+    const provKeys = Object.keys(vp.provider_notes || {});
+    if (provKeys.length) grid.append(vpItem("Provider Notes",
+      el("div", { class: "vp-providers" },
+        provKeys.map((k) => el("div", { class: "vp-prov" }, el("b", {}, k), vp.provider_notes[k])))));
+    const panel = el("div", { class: "vp" },
+      el("h2", {}, "Voice Performance Plan"),
+      vp.performance_intent ? el("p", { class: "intent" }, vp.performance_intent) : null,
+      grid);
+    if (sampleId) panel.append(el("span", { class: "sample-tag" }, `TTS 샘플 구간: ${sampleId}`));
+    root.append(panel);
+  }
+
+  root.append(buildScriptTimeline(sections));
+
+  const scenesEl = el("div", { class: "scenes" });
+  sections.forEach((sec, i) => {
+    const dc = sec.delivery_cues || {};
+    const isSample = sampleId && sec.id === sampleId;
+    const card = el("div", { class: `card${isSample ? " sample" : ""}` });
+    card.append(el("div", { class: "card-head" },
+      el("span", { class: "sc-id" }, (sec.id || `s${i + 1}`).toUpperCase()),
+      sec.label ? el("span", { class: "label" }, sec.label) : null,
+      dc.pace ? el("span", { class: `pace-chip${isSample ? " sample" : ""}` }, `${dc.pace}${isSample ? " · ⭐샘플" : ""}`) : null,
+      el("span", { class: "time" }, `${sec.start_seconds}–${sec.end_seconds}s`)));
+    card.append(el("div", { class: "narration" }, highlightEmphasis(sec.text, dc.emphasis_words)));
+
+    const body = el("div", { class: "body" });
+    const delivery = [];
+    if (dc.energy) delivery.push(deliverySpan("energy", dc.energy));
+    if (dc.emphasis_words && dc.emphasis_words.length) delivery.push(deliverySpan("emphasis", dc.emphasis_words.join(" · ")));
+    if (dc.pause_before_seconds) delivery.push(deliverySpan("pause_before", `${dc.pause_before_seconds}s`));
+    if (dc.pause_after_seconds) delivery.push(deliverySpan("pause_after", `${dc.pause_after_seconds}s`));
+    if (delivery.length) body.append(el("div", { class: "delivery" }, ...delivery));
+    if (dc.delivery_note) body.append(el("div", { class: "note" }, dc.delivery_note));
+
+    const cues = sec.enhancement_cues || [];
+    if (cues.length) {
+      const vis = el("div", { class: "visual" }, el("div", { class: "vlabel" }, "Visual"));
+      for (const c of cues) vis.append(el("span", { class: "vchip" }, `${CUE_LABELS[c.type] || c.type} · ${c.description || ""}`));
+      body.append(vis);
+    }
+    if (sec.source_ref) body.append(el("div", { class: "grounding" }, el("b", {}, "근거: "), sec.source_ref));
+    if (dc.provider_text) body.append(el("div", { class: "tts" },
+      el("span", { class: "tlabel" }, "TTS-ready"), el("code", {}, dc.provider_text)));
+    if (body.childNodes.length) card.append(body);
+    scenesEl.append(card);
+  });
+  root.append(scenesEl);
+
+  const pron = collectPron(sections);
+  if (pron.length) root.append(el("div", { class: "pron" },
+    el("h3", {}, "Pronunciation Guides"),
+    el("div", { class: "pron-grid" },
+      ...pron.map((p) => el("div", { class: "p" }, el("b", {}, p.word), el("span", {}, p.phonetic))))));
+
+  const lastText = sections.length ? sections[sections.length - 1].text : "";
+  if (lastText) root.append(el("div", { class: "closer" }, `"${shortText(lastText, 140)}"`));
+
+  root.append(buildReadingFooter(s, `projects/${s.project_id}/artifacts/script.json`, [
+    meta.pipeline ? `파이프라인: ${meta.pipeline}` : null,
+    meta.selected_concept ? `콘셉트: ${meta.selected_concept}` : null,
+  ]));
+  return root;
 }
 
 function humanize(value) {
@@ -401,7 +809,7 @@ function artifactReviewContent(name, artifact) {
         reviewFact("sections", (artifact.sections || []).length),
       ]),
       first && first.text ? el("p", { class: "approval-lead" }, shortText(first.text, 220)) : null,
-      el("p", { class: "approval-guidance" }, "The complete script preview is shown directly below."),
+      el("p", { class: "approval-guidance" }, "Open the script stage in the rail to read the full document."),
     ].filter(Boolean);
   }
   if (name === "scene_plan") {
@@ -413,7 +821,7 @@ function artifactReviewContent(name, artifact) {
         reviewFact("duration", end ? fmtDuration(end) : null),
       ]),
       titledItems(scenes),
-      el("p", { class: "approval-guidance" }, "Review timing and shot coverage in the storyboard below."),
+      el("p", { class: "approval-guidance" }, "Open the scene_plan stage in the rail to review timing and coverage."),
     ].filter(Boolean);
   }
   if (name === "asset_manifest") {
@@ -426,7 +834,7 @@ function artifactReviewContent(name, artifact) {
         reviewFact("generation cost", artifact.total_cost_usd != null ? fmtMoney(artifact.total_cost_usd) : null),
       ]),
       titledItems(assets),
-      el("p", { class: "approval-guidance" }, "Inspect every generated take in the filmstrip below before approving compose."),
+      el("p", { class: "approval-guidance" }, "Open the assets stage in the rail to inspect every generated take."),
     ].filter(Boolean);
   }
   if (name === "edit_decisions") {
@@ -527,44 +935,9 @@ function renderApprovalReview(s) {
   );
 }
 
-function openScriptModal() {
-  const script = state && state.artifacts.script;
-  if (!script) return;
-  modal.innerHTML = "";
-  modal.append(
-    el("span", { class: "modal-close", onclick: closeModal }, "ESC · CLOSE"),
-    el("div", { class: "modal-page" },
-      el("div", { class: "script-card", style: "cursor:default" },
-        el("div", { class: "sp-title" }, script.title || state.title),
-        el("div", { class: "sp-meta" },
-          `script · ${fmtDuration(script.total_duration_seconds)} · ${(script.sections || []).length} sections`),
-        ...scriptSections(script, 0),
-        el("div", { class: "sp-fade" }, "END"),
-      )),
-  );
-  modal.classList.add("open");
-}
-
-function openNarrModal(card) {
-  modal.innerHTML = "";
-  const meta = [sceneLabel(card.id), card.section_label, fmtDuration(card.duration_seconds)]
-    .filter(Boolean).join(" · ");
-  modal.append(
-    el("span", { class: "modal-close", onclick: closeModal }, "ESC · CLOSE"),
-    el("div", { class: "modal-page" },
-      el("div", { class: "script-card", style: "cursor:default" },
-        el("div", { class: "sp-meta" }, meta),
-        card.narration ? el("div", { class: "sp-action", style: "margin-left:0" }, card.narration) : null,
-        card.shot_intent ? el("div", { class: "sp-paren", style: "margin-left:0" }, `Intent — ${card.shot_intent}`) : null,
-        card.description ? el("div", { class: "sp-paren", style: "margin-left:0" }, card.description) : null,
-      )),
-  );
-  modal.classList.add("open");
-}
-
-function closeModal() { modal.classList.remove("open"); }
-document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
-modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(); });
+// The script & scene-plan reading views render full and inline (reading.css),
+// so the old expand/narration modal is retired. The <audio id="player"> element
+// in board.html is still used for in-card narration playback.
 
 // ---------------------------------------------------------------------------
 // right rail: decisions, activity
@@ -668,148 +1041,254 @@ function sceneLabel(id) {
   return String(id).toUpperCase().slice(0, 10);
 }
 
-function sceneCard(s, card) {
-  const dur = card.duration_seconds;
-  const width = Math.max(132, Math.min(300, 70 + (dur || 3) * 26));
-  const wrap = el("div", { class: "scene-card", style: `width:${width}px` });
+function sceneTypeLabel(t) { return TYPE_LABELS[t] || (t ? String(t).replaceAll("_", " ") : ""); }
 
-  const slate = el("div", { class: "sc-slate" },
-    el("span", { class: "num" }, sceneLabel(card.id)),
-    card.takes.length > 1 ? el("span", { class: "take" }, `T${card.takes.length}`) : null,
-    card.hero_moment ? el("span", { class: "hero" }, "★ HERO") : null,
-    el("span", { class: "dur" }, fmtDuration(dur)),
-  );
-  wrap.append(slate);
+function buildSceneTimeline(scenes) {
+  const total = scenes.reduce((m, c) => Math.max(m, Number(c.end_seconds) || 0), 0);
+  const box = el("div", { class: "timeline-box" },
+    el("div", { class: "tl-label" }, `Timeline · 0s → ${Math.round(total)}s`));
+  const tl = el("div", { class: "timeline" });
+  scenes.forEach((c) => {
+    const dur = Math.max(0.001, (Number(c.end_seconds) || 0) - (Number(c.start_seconds) || 0));
+    const seg = el("div", {
+      class: `seg t-${c.type}${c.hero_moment ? " hero" : ""}`,
+      title: `${c.id || ""} · ${c.start_seconds}–${c.end_seconds}s · ${c.type || ""}${c.hero_moment ? " · HERO" : ""}`,
+    });
+    seg.style.flexGrow = String(dur);
+    seg.textContent = String(c.id || "").toUpperCase().replace(/^SC/i, "");
+    tl.append(seg);
+  });
+  box.append(tl, buildAxis(total));
+  const types = [...new Set(scenes.map((c) => c.type).filter(Boolean))];
+  const legend = el("div", { class: "legend" },
+    ...types.map((t) => el("span", {},
+      el("i", { class: "dot", style: `background:${TYPE_COLORS[t] || "#999"}` }), sceneTypeLabel(t))),
+    el("span", {}, el("i", { class: "dot hero", style: "background:var(--r-gold)" }), "⭐ hero moment"));
+  box.append(legend);
+  return box;
+}
 
-  // visual slot
-  let thumb;
-  if (card.generating) {
-    thumb = el("div", { class: "thumb generating" },
+// Live media slot (warm-styled): image / video / generating / missing.
+// `media` is the storyboard-join card (carries visual/takes/audio/generating);
+// `scene` is the raw scene_plan scene (carries required_assets for the fallback).
+function sceneMedia(s, media, scene) {
+  if (!media) return null;
+  if (media.generating) {
+    return el("div", { class: "r-media generating" },
       el("div", { class: "shimmer" }),
       el("div", { class: "gen-label" },
         el("span", {}, "◉ GENERATING"),
-        el("span", { class: "sub" }, card.generating_tool || "")));
-  } else if (card.visual && card.visual.exists) {
-    const v = card.visual;
+        el("small", {}, media.generating_tool || "")));
+  }
+  const v = media.visual;
+  if (v && v.exists) {
     const badge = [v.model || v.source_tool, v.cost_usd != null ? fmtMoney(v.cost_usd) : null,
       v.quality_score != null ? `q ${v.quality_score}` : null].filter(Boolean).join(" · ");
     if (v.type === "video") {
-      thumb = el("div", { class: "thumb approved" },
-        el("video", { src: mediaURL(s.project_id, v.path), muted: "", preload: "metadata", playsinline: "" }),
+      const m = el("div", { class: "r-media has-video" },
+        el("video", {
+          src: mediaURL(s.project_id, v.path), preload: "metadata", muted: "", playsinline: "",
+          "data-poster-src": thumbURL(s.project_id, v.path, 640),
+        }),
         el("span", { class: "play" }, "▶"),
-        badge ? el("span", { class: "badge" }, badge) : null);
-      thumb.onclick = () => {
-        const vid = thumb.querySelector("video");
-        if (vid.paused) vid.play(); else vid.pause();
-      };
-    } else {
-      const img = el("img", { src: thumbURL(s.project_id, v.path, 640), loading: "lazy", alt: "" });
-      // A thumbnail that fails to load must never show a broken-image icon —
-      // fall back to the shot spec in place (F: broken links).
-      img.onerror = () => {
-        const t = img.closest(".thumb");
-        if (!t) return;
-        t.className = "thumb spec";
-        t.innerHTML = "";
-        t.append(el("div", { class: "spec-in" },
-          el("div", { class: "spec-desc" }, card.description || "asset unavailable"),
-          el("div", { class: "spec-shot" }, [card.framing, card.movement].filter(Boolean).join(" · ").slice(0, 70))));
-      };
-      thumb = el("div", { class: "thumb approved" }, img,
         v.snapshot ? el("span", { class: "badge" }, "snapshot") : (badge ? el("span", { class: "badge" }, badge) : null));
+      m.onclick = () => { const vid = m.querySelector("video"); if (vid.paused) vid.play(); else vid.pause(); };
+      return m;
     }
-  } else if (card.type === "animation") {
-    // Bespoke/atelier scene with no snapshot yet — name it as such rather
-    // than "no asset yet" (the composition IS the asset).
-    thumb = el("div", { class: "thumb spec bespoke" },
-      el("div", { class: "spec-in" },
-        el("span", { class: "bespoke-tag" }, "◆ BESPOKE"),
-        el("div", { class: "spec-desc" }, card.description || ""),
-        el("div", { class: "spec-shot" }, "hand-authored composition")));
-  } else if (card.visual && !card.visual.exists) {
-    thumb = el("div", { class: "thumb missing" },
-      el("div", { class: "spec-in" },
-        el("span", { class: "warn-ic" }, "⚑"),
-        el("div", { class: "spec-desc" }, "asset in manifest, file missing"),
-        el("div", { class: "spec-shot" }, card.visual.path || "")));
-  } else if (card.type === "text_card") {
-    thumb = el("div", { class: "thumb textcard" },
-      el("div", { class: "tc-copy" }, (card.narration || card.description || "").slice(0, 48)));
-  } else if (card.required_assets.length) {
-    thumb = el("div", { class: "thumb missing" },
-      el("div", { class: "spec-in" },
-        el("span", { class: "warn-ic" }, "⚑"),
-        el("div", { class: "spec-desc" }, "no asset yet"),
-        el("div", { class: "spec-shot" }, (card.required_assets[0].description || "").slice(0, 60))));
+    const img = el("img", { src: thumbURL(s.project_id, v.path, 640), loading: "lazy", alt: "" });
+    img.onerror = () => { if (img.parentElement) img.parentElement.classList.add("missing"); };
+    return el("div", { class: "r-media" }, img,
+      v.snapshot ? el("span", { class: "badge" }, "snapshot") : (badge ? el("span", { class: "badge" }, badge) : null));
+  }
+  if (v && !v.exists) {
+    return el("div", { class: "r-media missing" },
+      el("div", { class: "miss-in" },
+        el("span", { class: "miss-ic" }, "⚑"),
+        el("span", {}, "asset in manifest, file missing"),
+        el("span", { style: "font-size:11px;color:var(--r-muted)" }, v.path || "")));
+  }
+  const genReqs = (scene.required_assets || []).filter((a) => !a.source || a.source === "generate");
+  if (genReqs.length) {
+    return el("div", { class: "r-media missing" },
+      el("div", { class: "miss-in" },
+        el("span", { class: "miss-ic" }, "🔒"),
+        el("span", {}, shortText(genReqs[0].description || "image generation needed", 90))));
+  }
+  return null;
+}
+
+function assetBox(kind, ico, label, txt) {
+  return el("div", { class: `asset ${kind}` },
+    el("span", { class: "ico" }, ico),
+    el("div", {},
+      el("span", { class: "alabel" }, label),
+      txt ? el("span", { class: "txt" }, txt) : null));
+}
+// Map required_assets (+ metadata.blocked_assets) to the reference ok/blocked boxes.
+function sceneAssetBoxes(scene, ctx) {
+  const reqs = scene.required_assets || [];
+  const genReqs = reqs.filter((a) => !a.source || a.source === "generate");
+  const otherReqs = reqs.filter((a) => a.source && a.source !== "generate");
+  const boxes = [];
+  const blockedScene = ctx.blockedScenes && ctx.blockedScenes.has(String(scene.id));
+  if (genReqs.length || blockedScene) {
+    if (genReqs.length) {
+      for (const r of genReqs) boxes.push(assetBox("blocked", "🔒", "이미지/자산 생성 필요", r.description || ""));
+    } else {
+      boxes.push(assetBox("blocked", "🔒", "자산 생성 필요", (ctx.blockedMeta && ctx.blockedMeta.reason) || ""));
+    }
   } else {
-    thumb = el("div", { class: "thumb spec" },
-      el("div", { class: "spec-in" },
-        el("div", { class: "spec-desc" }, card.description || ""),
-        el("div", { class: "spec-shot" }, [card.framing, card.movement].filter(Boolean).join(" · ").slice(0, 70))));
+    const zeroText = ["text_card", "animation", "transition"].includes(scene.type)
+      ? "zero-key · 무생성 렌더 가능"
+      : "자산 불필요";
+    boxes.push(assetBox("ok", "✅", zeroText,
+      scene.shot_intent ? shortText(scene.shot_intent, 90) : ""));
   }
-  wrap.append(thumb);
+  for (const r of otherReqs) boxes.push(assetBox("ok", "✅", `${r.source} 자산`, r.description || ""));
+  return el("div", { class: "assets" }, ...boxes);
+}
 
-  // shot language chips
-  const sl = card.shot_language;
-  if (sl) {
-    wrap.append(el("div", { class: "shotchips", style: "display:flex;flex-wrap:wrap;gap:4px;padding:7px 2px 0" },
-      [sl.shot_size, sl.camera_movement, sl.lens_mm ? `${sl.lens_mm}mm` : null, sl.lighting_key]
-        .filter(Boolean)
-        .map((t) => el("span", { style: "font-family:var(--mono);font-size:calc(8.5px * var(--fs-scale));letter-spacing:.04em;color:#62626c;border:1px solid #212129;border-radius:3px;padding:1px 5px" }, String(t).replaceAll("_", " ")))));
-  }
+function sceneReadingCard(s, scene, media, ctx) {
+  const type = scene.type || "";
+  const isHero = !!scene.hero_moment;
+  const isSample = !!(ctx.sampleId && scene.script_section_id === ctx.sampleId);
+  const card = el("div", { class: `card t-${type}${isHero ? " hero" : ""}${isSample ? " sample" : ""}` });
 
-  // takes drawer
-  if (card.takes.length > 1) {
-    const takes = el("div", { class: "takes" });
-    card.takes.forEach((t, i) => {
-      const isActive = card.visual && (
-        t === card.visual
-        || (t.path && t.path === card.visual.path)
-        || (t.id && t.id === card.visual.id)
-      );
+  card.append(el("div", { class: "card-head" },
+    el("span", { class: "sc-id" }, sceneLabel(scene.id)),
+    el("span", { class: `type-chip ${type}` }, sceneTypeLabel(type)),
+    scene.narrative_role ? el("span", { class: "role" }, String(scene.narrative_role).replaceAll("_", " ")) : null,
+    isHero ? el("span", { class: "hero-badge" }, "⭐ Hero") : null,
+    el("span", { class: "time" }, `${scene.start_seconds}–${scene.end_seconds}s`)));
+
+  if (scene.description) card.append(el("p", { class: "desc" }, scene.description));
+  if (scene.shot_intent) card.append(el("p", { class: "intent" }, el("b", {}, "의도: "), scene.shot_intent));
+
+  const sl = scene.shot_language || {};
+  const shotParts = [sl.shot_size, sl.camera_movement, sl.lens_mm ? `${sl.lens_mm}mm` : null,
+    sl.lighting_key, sl.depth_of_field ? `${sl.depth_of_field} DoF` : null, sl.color_temperature]
+    .filter(Boolean).map((t) => String(t).replaceAll("_", " "));
+  if (shotParts.length) card.append(el("div", { class: "shot" }, ...shotParts.map((t) => el("span", {}, t))));
+
+  const body = el("div", { class: "scene-body" });
+  const mediaEl = sceneMedia(s, media, scene);
+  if (mediaEl) body.append(mediaEl);
+  body.append(sceneAssetBoxes(scene, ctx));
+
+  if (media && media.takes && media.takes.length > 1) {
+    const takes = el("div", { class: "rtakes" });
+    media.takes.forEach((t, i) => {
+      const isActive = media.visual && (t === media.visual
+        || (t.path && t.path === media.visual.path) || (t.id && t.id === media.visual.id));
       const tk = el("span", { class: `tk${isActive ? " active" : ""}`, title: `take ${i + 1}` });
       if (t.exists && t.type === "image") tk.append(el("img", { src: thumbURL(s.project_id, t.path, 320), loading: "lazy", alt: "" }));
       takes.append(tk);
     });
-    takes.append(el("span", { class: "tk-label" }, `${card.takes.length} TAKES`));
-    wrap.append(takes);
+    takes.append(el("span", { class: "tk-label" }, `${media.takes.length} TAKES`));
+    body.append(takes);
   }
 
-  // narration + audio — clickable to read in full (F: narration text cut off)
-  if (card.narration) {
-    const long = card.narration.length > 90;
-    wrap.append(el("div", {
-      class: `narr${long ? " clip" : ""}`,
-      title: "Click to read the full narration",
-      onclick: () => openNarrModal(card),
-    }, card.narration, long ? el("span", { class: "narr-more" }, "⤢") : null));
-  } else if (card.shot_intent || card.description) {
-    wrap.append(el("div", { class: "narr tc-note" }, (card.shot_intent || card.description || "").slice(0, 110)));
+  if (media && media.narration) body.append(el("div", { class: "note", style: "margin-top:12px" }, media.narration));
+  if (media) {
+    const narrAudio = (media.audio || []).find((a) => a.exists && (a.type === "narration" || a.type === "audio"));
+    if (narrAudio) {
+      const wave = el("div", { class: "r-wave", title: "Play narration" });
+      waveBars(wave, (media.id || "") + (narrAudio.path || ""));
+      wave.append(el("span", { class: "wv-time" }, narrAudio.duration_seconds ? `${narrAudio.duration_seconds}s` : "♪"));
+      wave.onclick = () => { player.src = mediaURL(s.project_id, narrAudio.path); player.play(); };
+      body.append(wave);
+    }
   }
-  const narrAudio = card.audio.find((a) => a.exists && (a.type === "narration" || a.type === "audio"));
-  if (narrAudio) {
-    const wave = el("div", { class: "wave", style: "cursor:pointer", title: "Play narration" });
-    waveBars(wave, card.id + narrAudio.path);
-    wave.append(el("span", { class: "wv-time" }, narrAudio.duration_seconds ? fmtDuration(narrAudio.duration_seconds) : "♪"));
-    wave.onclick = () => {
-      player.src = mediaURL(s.project_id, narrAudio.path);
-      player.play();
-    };
-    wrap.append(wave);
+
+  if (body.childNodes.length) card.append(body);
+  return card;
+}
+
+function sceneAssetsSummary(scenes, blockedMeta) {
+  if (blockedMeta && blockedMeta.scenes && blockedMeta.scenes.length) {
+    const sum = el("div", { class: "summary" },
+      el("h2", {}, `🔒 assets 단계 — ${blockedMeta.scenes.length}개 씬에 자산 생성 필요`));
+    if (blockedMeta.zero_key_feasible) sum.append(el("p", {}, blockedMeta.zero_key_feasible));
+    if (blockedMeta.reason) sum.append(el("p", {}, blockedMeta.reason));
+    if (blockedMeta.unblock_options && blockedMeta.unblock_options.length) {
+      sum.append(el("div", { class: "unlock" },
+        ...blockedMeta.unblock_options.map((o) => el("span", {}, o))));
+    }
+    return sum;
   }
-  return wrap;
+  const genScenes = scenes.filter((sc) => (sc.required_assets || []).some((a) => !a.source || a.source === "generate"));
+  if (!genScenes.length) return null;
+  return el("div", { class: "summary" },
+    el("h2", {}, `🔒 assets 단계 — ${genScenes.length}개 씬에 자산 생성 필요`),
+    el("p", {}, `${scenes.length}씬 중 ${scenes.length - genScenes.length}씬은 zero-key — 외부 자산 없이 렌더 가능합니다.`));
 }
 
 function renderStoryboard(s) {
   const board = s.storyboard;
-  if (!board) return null;
-  const strip = el("div", { class: "filmstrip" });
-  for (const card of board.scenes) strip.append(sceneCard(s, card));
-  return el("div", {},
-    el("div", { class: "section-title" }, "Storyboard",
-      el("span", { class: "meta" },
-        `${board.scenes.length} scenes${board.total_duration_seconds ? ` · ${fmtDuration(board.total_duration_seconds)}` : ""} · card width ∝ duration`)),
-    el("div", { class: "strip-outer" }, strip));
+  const planArtifact = s.artifacts.scene_plan || {};
+  const planScenes = planArtifact.scenes || [];
+  // Prefer the rich scene_plan scenes for layout; join live media from the
+  // storyboard by id. If no scene_plan artifact, fall back to the board cards.
+  const sourceScenes = planScenes.length ? planScenes : (board ? board.scenes : []);
+  if (!sourceScenes || !sourceScenes.length) return null;
+
+  const meta = planArtifact.metadata || {};
+  const scriptMeta = (s.artifacts.script && s.artifacts.script.metadata) || {};
+  const lang = scriptMeta.language || "en";
+  const sampleId = (s.artifacts.script && s.artifacts.script.voice_performance || {}).sample_section_id;
+  const mediaById = new Map((board && board.scenes ? board.scenes : []).map((c) => [String(c.id), c]));
+  const total = board && board.total_duration_seconds
+    || sourceScenes.reduce((m, c) => Math.max(m, Number(c.end_seconds) || 0), 0);
+
+  const root = el("section", { class: "reading reading-scene" });
+  root.append(el("div", { class: "r-toolbar" },
+    el("button", {
+      class: "r-btn primary", type: "button", title: "이 스토리보드를 HTML로 다운로드",
+      onclick: () => downloadReading(root, `${slug(s.project_id)}-scene-plan.html`, s.title, lang),
+    }, "↓ HTML 다운로드")));
+
+  root.append(el("div", { class: "eyebrow" }, "Scene Plan · Storyboard"));
+  root.append(el("h1", {}, s.title));
+  const typesUsed = [...new Set(sourceScenes.map((c) => c.type).filter(Boolean))];
+  const subParts = [planArtifact.style_playbook, `${sourceScenes.length}씬`,
+    s.pipeline.pipeline_type && s.pipeline.pipeline_type !== "unknown" ? s.pipeline.pipeline_type : null].filter(Boolean);
+  if (subParts.length) root.append(el("p", { class: "subtitle" }, subParts.join(" · ")));
+
+  const chips = [
+    total ? el("span", { class: "rchip accent" }, `${Math.round(total)}초`) : null,
+    el("span", { class: "rchip" }, `${sourceScenes.length}씬`),
+    planArtifact.style_playbook ? el("span", { class: "rchip" }, planArtifact.style_playbook) : null,
+    s.pipeline.pipeline_type && s.pipeline.pipeline_type !== "unknown"
+      ? el("span", { class: "rchip" }, `${s.pipeline.pipeline_type} pipeline`) : null,
+    typesUsed.length ? el("span", { class: "rchip" }, typesUsed.map(sceneTypeLabel).join(" · ")) : null,
+  ].filter(Boolean);
+  if (chips.length) root.append(el("div", { class: "meta" }, ...chips));
+
+  root.append(buildSceneTimeline(sourceScenes));
+
+  const blockedMeta = meta.blocked_assets || {};
+  const ctx = {
+    blockedScenes: new Set((blockedMeta.scenes || []).map((x) => String(x))),
+    blockedMeta,
+    sampleId,
+  };
+  const scenesEl = el("div", { class: "scenes" });
+  sourceScenes.forEach((scene) => {
+    scenesEl.append(sceneReadingCard(s, scene, mediaById.get(String(scene.id)), ctx));
+  });
+  root.append(scenesEl);
+
+  const summary = sceneAssetsSummary(sourceScenes, blockedMeta);
+  if (summary) root.append(summary);
+
+  const lastDesc = sourceScenes.length ? sourceScenes[sourceScenes.length - 1].description : "";
+  if (lastDesc) root.append(el("div", { class: "closer" }, `"${shortText(lastDesc, 140)}"`));
+
+  root.append(buildReadingFooter(s, `projects/${s.project_id}/artifacts/scene_plan.json`, [
+    planArtifact.style_playbook ? `스타일: ${planArtifact.style_playbook}` : null,
+    `${sourceScenes.length}씬`,
+  ]));
+  return root;
 }
 
 // ---------------------------------------------------------------------------
@@ -1072,8 +1551,6 @@ function render() {
   const main = el("div", { class: "main-col" });
   const approvalReview = renderApprovalReview(s);
   if (approvalReview) main.append(approvalReview);
-  const script = renderScriptCard(s);
-  if (script) main.append(script);
   const aside = el("aside", {});
   const decisions = renderDecisions(s);
   const activity = renderActivity(s);
@@ -1082,18 +1559,19 @@ function render() {
 
   // Media sections live INSIDE the main column so a tall decisions rail
   // never pushes them below the fold — the column flows beside the rail.
-  const storyboard = renderStoryboard(s);
+  // The script & scene-plan reading docs are NOT rendered inline — click the
+  // stage in the rail to open its warm-paper reading view in the drawer.
   const found = renderFoundMedia(s);
   const renders = renderRenders(s);
 
-  if (approvalReview || script || decisions || activity) {
-    for (const section of [storyboard, found, renders]) {
+  if (approvalReview || decisions || activity) {
+    for (const section of [found, renders]) {
       if (section) main.append(section);
     }
     const hasAside = Boolean(decisions || activity);
     app.append(el("div", { class: `board${hasAside ? "" : " solo"}` }, main, hasAside ? aside : null));
   } else {
-    for (const section of [storyboard, found, renders]) {
+    for (const section of [found, renders]) {
       if (section) app.append(section);
     }
   }

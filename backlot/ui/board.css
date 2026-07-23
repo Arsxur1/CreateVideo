@@ -892,6 +892,12 @@ a.backlink:hover { color: var(--text-2); }
   background: var(--surface-2); border: 1px solid var(--border-soft); border-radius: 8px;
   padding: 12px 14px; overflow: auto; max-height: 420px; white-space: pre-wrap;
 }
+/* Drawer hosts a warm-paper reading doc: let the document's own padding win,
+   flush its edges to the drawer's clip, drop the dead box-shadow. */
+.drawer.has-reading .drawer-body { padding: 0; }
+.drawer.has-reading .reading { border-radius: 0; box-shadow: none; }
+/* A reading doc can run tall — keep CLOSE reachable. */
+.drawer.has-reading .drawer-head { position: sticky; top: 0; z-index: 2; background: var(--surface); }
 .gate-chip {
   font-family: var(--mono); font-size: calc(9.5px * var(--fs-scale)); letter-spacing: .08em;
   padding: 2px 8px; border-radius: 99px; border: 1px solid rgba(229,84,75,.45);

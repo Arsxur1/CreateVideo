@@ -1,7 +1,13 @@
 param(
     [int]$MaxSourceGroups = 0,
     [int]$ChunkSize = 7000,
-    [switch]$Resume
+    [switch]$Resume,
+    [string]$Only = '',
+    [switch]$ResumeChunks,
+    [switch]$DryRun,
+    [string]$InputFile = '',
+    [string]$OutputName = '',
+    [string]$WorkSubdir = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -104,28 +110,184 @@ function Save-Status([hashtable]$Status) {
     )
 }
 
+function ConvertFrom-JsonToHashtable {
+    param($InputObject)
+    if ($null -eq $InputObject) { return $null }
+    if ($InputObject -is [System.Collections.IDictionary]) {
+        $ht = @{}
+        foreach ($key in @($InputObject.Keys)) { $ht[$key] = ConvertFrom-JsonToHashtable $InputObject[$key] }
+        return $ht
+    }
+    if ($InputObject -is [System.Collections.IList]) {
+        $arr = @()
+        foreach ($item in $InputObject) { $arr += ,(ConvertFrom-JsonToHashtable $item) }
+        return $arr
+    }
+    if ($InputObject -is [System.Management.Automation.PSCustomObject]) {
+        $ht = @{}
+        foreach ($prop in $InputObject.PSObject.Properties) { $ht[$prop.Name] = ConvertFrom-JsonToHashtable $prop.Value }
+        return $ht
+    }
+    return $InputObject
+}
+
+function Get-FileHashAsHex([string]$Path) {
+    $hash = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
+    return $hash
+}
+
+function Test-ValidKoreanResponse([string]$Content) {
+    if ([string]::IsNullOrWhiteSpace($Content)) { return $false }
+    $trimmed = $Content.Trim()
+    if ($trimmed.Length -eq 0) { return $false }
+    if ($trimmed.Contains([char]0xFFFD)) { return $false }
+    $hangulCodePoint = 0xAC00
+    $hasHangul = $false
+    foreach ($char in $trimmed.ToCharArray()) {
+        if ([int]$char -ge $hangulCodePoint -and [int]$char -le 0xD7A3) {
+            $hasHangul = $true
+            break
+        }
+    }
+    return $hasHangul
+}
+
+function Get-ExistingResponsePath([string]$GroupKey, [int]$OneBasedIndex, [string]$WorkDir) {
+    $currentPath = Join-Path $WorkDir ("{0}-{1:D5}.response.txt" -f $GroupKey, $OneBasedIndex)
+    if (Test-Path -LiteralPath $currentPath -PathType Leaf) {
+        return $currentPath
+    }
+
+    if ($GroupKey -eq '374516625') {
+        $zeroBasedIndex = $OneBasedIndex - 1
+        $legacyPath = Join-Path $WorkDir ("{0}-{1:D5}.response.txt1" -f $GroupKey, $zeroBasedIndex)
+        if (Test-Path -LiteralPath $legacyPath -PathType Leaf) {
+            return $legacyPath
+        }
+    }
+
+    return $null
+}
+
+function New-TranslationManifest([string]$ManifestPath, [string]$SourceDir, [string]$OutputDir) {
+    $manifest = @{
+        version = 1
+        sources = @{}
+    }
+
+    $targetSourceIds = @('388965245', '468956986', '374516625')
+
+    foreach ($sourceId in $targetSourceIds) {
+        $sourceFiles = Get-ChildItem -File (Join-Path $SourceDir "$sourceId*") -ErrorAction SilentlyContinue
+        if (-not $sourceFiles) { continue }
+
+        $mainSource = $null
+        foreach ($ext in @('.txt', '.docx', '.pdf')) {
+            $candidate = $sourceFiles | Where-Object { $_.Extension -eq $ext } | Select-Object -First 1
+            if ($candidate) { $mainSource = $candidate; break }
+        }
+        if (-not $mainSource) { continue }
+
+        $sourceHash = Get-FileHashAsHex $mainSource.FullName
+        $outputFileName = "$($mainSource.BaseName).ko.txt"
+        $mode = if ($sourceId -eq '374516625') { 'selected-extract' } else { 'full' }
+
+        $manifest.sources[$sourceId] = @{
+            id = $sourceId
+            source_file = $mainSource.Name
+            source_sha256 = $sourceHash
+            mode = $mode
+            chunk_size = 7000
+            output_path = "docs/forskills/ko/$outputFileName"
+            chunk_status = @{}
+        }
+    }
+
+    $manifestJson = ($manifest | ConvertTo-Json -Depth 4)
+    [System.IO.File]::WriteAllText(
+        $ManifestPath,
+        $manifestJson,
+        [System.Text.UTF8Encoding]::new($false)
+    )
+
+    return $manifest
+}
+
+$manifestPath = Join-Path $outputDir 'story-psychology-translation-manifest.json'
+
+$manifest = $null
+if (Test-Path $manifestPath) {
+    $json = Get-Content -Raw -Encoding utf8 $manifestPath | ConvertFrom-Json
+    $manifest = ConvertFrom-JsonToHashtable $json
+} else {
+    $manifest = New-TranslationManifest -ManifestPath $manifestPath -SourceDir $sourceDir -OutputDir $outputDir
+}
+
 $status = @{ version = 1; completed = @{}; blocked = @{}; updated_at = $null }
 if (Test-Path $statusPath) {
-    $saved = Get-Content -Raw -Encoding utf8 $statusPath | ConvertFrom-Json -AsHashtable
+    $json = Get-Content -Raw -Encoding utf8 $statusPath | ConvertFrom-Json
+    $saved = ConvertFrom-JsonToHashtable $json
     if ($saved) { $status = $saved }
 }
 
-$groups = Get-ChildItem -File $sourceDir |
+# Extract mode: process single input file
+$extractMode = $false
+if ($InputFile) {
+    $extractMode = $true
+    $InputFile = (Resolve-Path $InputFile -ErrorAction Stop).Path
+    $inputFileObj = Get-Item -LiteralPath $InputFile -ErrorAction Stop
+    $groupKey = $inputFileObj.BaseName
+    $targetName = if ($OutputName) { $OutputName } else { "$($inputFileObj.BaseName).ko.txt" }
+    $targetPath = Join-Path $outputDir $targetName
+
+    # Create isolated work subdirectory for this extract
+    $workSubdirName = if ($WorkSubdir) { $workSubdir } else { $groupKey }
+    $workDir = Join-Path $workDir $workSubdirName
+    New-Item -ItemType Directory -Force -Path $workDir | Out-Null
+
+    # Create synthetic group object matching Group-Object structure
+    $groups = @(
+        @{
+            Name  = $groupKey
+            Group = @($inputFileObj)
+        }
+    )
+    Write-Host "EXTRACT MODE: processing '$($inputFileObj.Name)' as group '$groupKey' with work dir: $workDir"
+} else {
+    # Original directory-scan mode
+    $groups = Get-ChildItem -File $sourceDir |
     Where-Object { $_.DirectoryName -eq $sourceDir } |
     Group-Object -Property { Get-GroupKey $_ } |
     Sort-Object Name
+}
+
+if ($Only) {
+    $filtered = $groups | Where-Object { $_.Name -like "$($Only)*" }
+    if (-not $filtered) {
+        throw "No source group matches -Only '$Only'."
+    }
+    $groups = @($filtered)
+    Write-Host "ONLY groups matching '$Only': $($groups.Name -join ', ')"
+}
 
 $processed = 0
 foreach ($group in $groups) {
     if (($MaxSourceGroups -gt 0) -and ($processed -ge $MaxSourceGroups)) { break }
-    $files = $group.Group
-    $source = @($files | Where-Object Extension -eq '.txt' | Sort-Object Length -Descending | Select-Object -First 1)
-    if (-not $source) { $source = @($files | Where-Object Extension -eq '.docx' | Select-Object -First 1) }
-    if (-not $source) { $source = @($files | Where-Object Extension -eq '.pdf' | Select-Object -First 1) }
-    if (-not $source) { continue }
-    $source = $source[0]
-    $targetName = "$($source.BaseName).ko.txt"
-    $targetPath = Join-Path $outputDir $targetName
+
+    # In extract mode, source and target are already set
+    if ($extractMode) {
+        $source = $inputFileObj
+        # targetName and targetPath are already set in extract mode block
+    } else {
+        $files = $group.Group
+        $source = @($files | Where-Object Extension -eq '.txt' | Sort-Object Length -Descending | Select-Object -First 1)
+        if (-not $source) { $source = @($files | Where-Object Extension -eq '.docx' | Select-Object -First 1) }
+        if (-not $source) { $source = @($files | Where-Object Extension -eq '.pdf' | Select-Object -First 1) }
+        if (-not $source) { continue }
+        $source = $source[0]
+        $targetName = "$($source.BaseName).ko.txt"
+        $targetPath = Join-Path $outputDir $targetName
+    }
 
     if ((Test-Path $targetPath) -and -not $Resume) {
         Write-Host "SKIP complete output: $targetName"
@@ -152,12 +314,53 @@ foreach ($group in $groups) {
 
     $tempTarget = "$targetPath.partial"
     if (Test-Path $tempTarget) { Remove-Item -LiteralPath $tempTarget -Force }
-    Write-Host "TRANSLATE $($source.Name): $($chunks.Count) chunks"
+
+    if ($DryRun) {
+        Write-Host "DRY-RUN ANALYSIS: $($source.Name): $($chunks.Count) chunks"
+    } else {
+        Write-Host "TRANSLATE $($source.Name): $($chunks.Count) chunks"
+    }
+
+    $chunkStats = @{
+        reused = 0
+        missing = 0
+        invalid = 0
+        pending = 0
+    }
 
     for ($index = 0; $index -lt $chunks.Count; $index++) {
-        $responsePath = Join-Path $workDir ("{0}-{1:D5}.response.txt" -f $group.Name, $index + 1)
-        Remove-Item -LiteralPath $responsePath -Force -ErrorAction SilentlyContinue
-        $prompt = @"
+        $oneBasedIndex = $index + 1
+        $currentResponsePath = Join-Path $workDir ("{0}-{1:D5}.response.txt" -f $group.Name, $oneBasedIndex)
+        $reuseResponse = $null
+
+        if ($ResumeChunks) {
+            $existingPath = Get-ExistingResponsePath -GroupKey $group.Name -OneBasedIndex $oneBasedIndex -WorkDir $workDir
+            if ($existingPath) {
+                $content = [System.IO.File]::ReadAllText($existingPath, [System.Text.UTF8Encoding]::new($false))
+                if (Test-ValidKoreanResponse -Content $content) {
+                    $reuseResponse = $content
+                    $chunkStats.reused++
+                    Write-Host "  chunk $oneBasedIndex/$($chunks.Count) [REUSED]"
+                } else {
+                    $chunkStats.invalid++
+                    Write-Host "  chunk $oneBasedIndex/$($chunks.Count) [INVALID - will re-translate]"
+                }
+            } else {
+                $chunkStats.missing++
+                Write-Host "  chunk $oneBasedIndex/$($chunks.Count) [MISSING]"
+            }
+        } else {
+            $chunkStats.pending++
+        }
+
+        if ($DryRun) { continue }
+
+        $translation = $null
+        if ($reuseResponse) {
+            $translation = $reuseResponse
+        } else {
+            Remove-Item -LiteralPath $currentResponsePath -Force -ErrorAction SilentlyContinue
+            $prompt = @"
 Translate the source text below from its original language into natural Korean.
 
 Strict requirements:
@@ -171,15 +374,20 @@ $($chunks[$index])
 SOURCE TEXT END
 "@
 
-        Write-Host "  chunk $($index + 1)/$($chunks.Count)"
-        & codex -a never --color never exec --ephemeral --ignore-rules -s read-only -o $responsePath $prompt
-        if ($LASTEXITCODE -ne 0 -or -not (Test-Path $responsePath)) {
-            throw "Codex translation failed for $($source.Name), chunk $($index + 1)."
+            Write-Host "  chunk $oneBasedIndex/$($chunks.Count)"
+            $promptFile = Join-Path $workDir ("{0}-{1:D5}.prompt.txt" -f $group.Name, $oneBasedIndex)
+            [System.IO.File]::WriteAllText($promptFile, $prompt, [System.Text.UTF8Encoding]::new($false))
+            $cmdLine = 'codex exec --ephemeral --ignore-rules --color never -s read-only -m gpt-5.6-terra -o "{0}" < "{1}"' -f $currentResponsePath, $promptFile
+            cmd.exe /c $cmdLine
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $currentResponsePath)) {
+                throw "Codex translation failed for $($source.Name), chunk $oneBasedIndex."
+            }
+            $translation = [System.IO.File]::ReadAllText($currentResponsePath).Trim()
+            if ([string]::IsNullOrWhiteSpace($translation)) {
+                throw "Codex returned empty output for $($source.Name), chunk $oneBasedIndex."
+            }
         }
-        $translation = [System.IO.File]::ReadAllText($responsePath).Trim()
-        if ([string]::IsNullOrWhiteSpace($translation)) {
-            throw "Codex returned empty output for $($source.Name), chunk $($index + 1)."
-        }
+
         if ($index -eq 0) {
             [System.IO.File]::WriteAllText($tempTarget, $translation + "`r`n", [System.Text.UTF8Encoding]::new($false))
         } else {
@@ -187,7 +395,43 @@ SOURCE TEXT END
         }
     }
 
+    if ($DryRun) {
+        Write-Host "DRY-RUN REPORT for $($source.Name):"
+        Write-Host "  Reused: $($chunkStats.reused)"
+        Write-Host "  Missing: $($chunkStats.missing)"
+        Write-Host "  Invalid: $($chunkStats.invalid)"
+        Write-Host "  Pending: $($chunkStats.pending)"
+        continue
+    }
+
     Move-Item -LiteralPath $tempTarget -Destination $targetPath -Force
+
+    if ($manifest.sources -and $manifest.sources.ContainsKey($group.Name)) {
+        $chunkStatusArray = @()
+        for ($i = 0; $i -lt $chunks.Count; $i++) {
+            $oneBased = $i + 1
+            $responsePath = Get-ExistingResponsePath -GroupKey $group.Name -OneBasedIndex $oneBased -WorkDir $workDir
+            if ($responsePath) {
+                $content = [System.IO.File]::ReadAllText($responsePath)
+                if (Test-ValidKoreanResponse -Content $content) {
+                    $chunkStatusArray += 'reused'
+                } else {
+                    $chunkStatusArray += 'invalid'
+                }
+            } else {
+                $chunkStatusArray += 'missing'
+            }
+        }
+        $manifest.sources[$group.Name].chunk_status = $chunkStatusArray
+
+        $manifestJson = ($manifest | ConvertTo-Json -Depth 4)
+        [System.IO.File]::WriteAllText(
+            $manifestPath,
+            $manifestJson,
+            [System.Text.UTF8Encoding]::new($false)
+        )
+    }
+
     $status.completed[$group.Name] = @{
         source = $source.Name
         output = $targetName
