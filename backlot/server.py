@@ -274,11 +274,11 @@ def create_app() -> FastAPI:
 
     @app.get("/p/{project_id}")
     async def board_page(project_id: str) -> HTMLResponse:
-        return _ui_html("board.html", ("board.css", "board.js"))
+        return _ui_html("board.html", ("board.css", "reading.css", "board.js"))
 
     @app.get("/p/{project_path:path}")
     async def board_page_path(project_path: str) -> HTMLResponse:
-        return _ui_html("board.html", ("board.css", "board.js"))
+        return _ui_html("board.html", ("board.css", "reading.css", "board.js"))
 
     @app.get("/")
     async def library_page() -> HTMLResponse:
