@@ -9,10 +9,12 @@ defects in how the review talks to the analysis tools:
 3. frame objects were passed through where the schema wants path strings
 4. audio_probe's nested, audio-only output left every video summarised as
    "unknown resolution, without audio"
+5. every video wrote its frames into one shared directory, so each clip
+   overwrote the previous one's frames
 
 (2) and (4) still produced schema-valid output -- an empty array and the
-string "unknown" -- so nothing ever raised. These tests build a tiny real
-video and assert the review is both accurate and schema-valid.
+string "unknown" -- so nothing ever raised. These tests build tiny real
+videos and assert the review is both accurate and schema-valid.
 """
 
 import shutil
@@ -87,3 +89,39 @@ def test_review_with_real_video_is_schema_valid(sample_video):
 
     # Raises jsonschema.ValidationError on mismatch.
     validate_artifact("source_media_review", artifact)
+
+
+def _make_solid_video(tmp_path, name, color):
+    """A 2s single-colour clip, so two clips are distinguishable files."""
+    path = tmp_path / name
+    subprocess.run(
+        [
+            "ffmpeg", "-v", "error",
+            "-f", "lavfi", "-i", f"color=c={color}:s=320x240:d=2:r=15",
+            "-c:v", "libx264", "-pix_fmt", "yuv420p", "-y", str(path),
+        ],
+        check=True,
+    )
+    return path
+
+
+def test_multiple_videos_do_not_share_frame_directory(tmp_path):
+    """Regression: the frame output dir was shared, so with several clips
+    each one overwrote the previous one's frames and every entry ended up
+    pointing at the last clip's frame_NNNN.jpg set.
+    """
+    clip_a = _make_solid_video(tmp_path, "a.mp4", "red")
+    clip_b = _make_solid_video(tmp_path, "b.mp4", "blue")
+
+    artifact = review_source_media([clip_a, clip_b], {"pipeline_type": "hybrid"})
+    entries = {Path(e["path"]).name: e for e in artifact["files"]}
+
+    frames_a = set(entries["a.mp4"]["representative_frames"])
+    frames_b = set(entries["b.mp4"]["representative_frames"])
+
+    assert frames_a, "clip a produced no representative frames"
+    assert frames_b, "clip b produced no representative frames"
+    assert frames_a.isdisjoint(frames_b), (
+        "frames overlap between clips -- the output directory is shared: "
+        f"{sorted(frames_a & frames_b)}"
+    )

@@ -97,7 +97,10 @@ def _probe_video(path: Path, tool_registry: Any) -> dict[str, Any]:
                 "input_path": str(path),
                 "strategy": "timestamps",
                 "timestamps": timestamps,
-                "output_dir": str(path.parent / ".source_review_frames"),
+                # Namespaced per source file: the tool writes a fixed
+                # frame_NNNN.jpg set, so a shared directory lets each video
+                # overwrite the previous one's frames.
+                "output_dir": str(path.parent / f".source_review_frames_{path.stem}"),
             })
             if sample_result.success:
                 # The frame list lives under "frames" (not "frame_paths"), as
