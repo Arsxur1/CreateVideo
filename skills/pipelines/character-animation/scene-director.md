@@ -7,6 +7,15 @@ animation.
 
 ## Scene Planning Fields
 
+
+### Reference-aware v1.1 handoff
+
+When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, carry the brief's `analysis_id`, or each bundle member's `analysis_id`, in
+`reference_analysis_refs` and emit `scene_plan@1.1`. Use plural `script_section_ids`
+when one character scene realizes multiple script sections. Keep character-specific
+acting in `character_actions` and populate the five visual plan fields explicitly when
+the reference informs them. See `docs/VIDEO_ANALYSIS_CONTRACT_V1_1.md`.
+
 For each scene, include:
 
 - character IDs,
