@@ -14,8 +14,7 @@ You are converting the script into a feasible animation plan. This is the stage 
 
 ### Reference-aware v1.1 handoff
 
-When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, carry the
-referenced analysis IDs in `reference_analysis_refs` and emit `scene_plan@1.1`. Use
+When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, carry the brief's `analysis_id`. For a bundle, carry the IDs in the selected concept's `reference_analysis_refs` (a non-empty subset is valid), not every member by default, and emit `scene_plan@1.1`. Use
 plural `script_section_ids` when a scene realizes multiple beats. Populate `subject`,
 `subject_motion`, `scene`, `spatial_framing`, and `camera` explicitly; use `N/A — ...`
 when an aspect does not apply. Reference-derived scenes declare `evidence_refs`. See

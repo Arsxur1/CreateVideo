@@ -81,13 +81,60 @@ def _validate_legacy_finite_values(value: Any, path: str = "$") -> None:
             _validate_legacy_finite_values(child, f"{path}[{index}]")
 
 
+_LEGACY_SENTINEL_TEXT = frozenset({
+    "unknown",
+    "unavailable",
+    "not available",
+    "not analyzed",
+    "not yet analyzed",
+    "pending",
+    "tbd",
+    "todo",
+    "placeholder",
+    "not provided",
+    "not specified",
+    "redacted",
+    "not known",
+    "no data",
+    "n/a",
+    "n a",
+    "na",
+    "none",
+})
+_LEGACY_SCHEME_ONLY = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:/*$")
+_SHA256_HEX = re.compile(r"^[0-9a-fA-F]{64}$")
+
+
+def _usable_legacy_locator(value: Any) -> bool:
+    if not isinstance(value, str) or not value.strip():
+        return False
+    text = value.strip()
+    normalized = re.sub(r"[\W_]+", " ", text.casefold()).strip()
+    lowered = text.casefold()
+    return (
+        bool(normalized)
+        and normalized not in _LEGACY_SENTINEL_TEXT
+        and not lowered.startswith(("unavailable://", "migration://"))
+        and not _LEGACY_SCHEME_ONLY.fullmatch(lowered)
+    )
+
+
+def _source_locator(source: dict[str, Any]) -> str | None:
+    for field in ("url", "local_path"):
+        value = source.get(field)
+        if _usable_legacy_locator(value):
+            return value.strip()
+    return None
+
+
 def _source_ref(source: dict[str, Any]) -> str:
-    return str(source.get("url") or source.get("local_path") or "legacy://video-analysis")
+    return _source_locator(source) or "migration://video_analysis_brief/1.0/source"
 
 
 def _normalise_id(value: Any, fallback: str) -> str:
-    text = str(value) if value is not None else ""
-    text = re.sub(r"[^A-Za-z0-9_.-]+", "-", text).strip("-")
+    if not _usable_legacy_locator(value):
+        return fallback
+    text = re.sub(r"[^A-Za-z0-9_.-]+", "-", value.strip()).strip("-")
     return text or fallback
 
 
@@ -151,16 +198,29 @@ def _migrate_video_analysis(data: dict[str, Any]) -> dict[str, Any]:
     _validate_legacy_time_ranges(data)
     result = deepcopy(data)
     source = deepcopy(result.get("source", {}))
-    source_ref = _source_ref(source)
+    for field in ("url", "local_path"):
+        if field in source and not _usable_legacy_locator(source[field]):
+            source.pop(field)
+    source_locator = _source_locator(source)
+    source_ref = source_locator or _source_ref(source)
     fingerprint = source.get("fingerprint")
-    if not isinstance(fingerprint, dict) or not fingerprint.get("value"):
+    if (
+        not isinstance(fingerprint, dict)
+        or set(fingerprint) - {"kind", "algorithm", "value"}
+        or fingerprint.get("kind") not in {"content", "locator", "legacy_locator"}
+        or fingerprint.get("algorithm") != "sha256"
+        or not isinstance(fingerprint.get("value"), str)
+        or not _SHA256_HEX.fullmatch(fingerprint["value"].strip())
+    ):
         fingerprint = {
             "kind": "legacy_locator",
             "algorithm": "sha256",
             "value": _hash(source_ref),
         }
+    else:
+        fingerprint = {**fingerprint, "value": fingerprint["value"].strip().lower()}
     source["fingerprint"] = fingerprint
-    if not source.get("url") and not source.get("local_path"):
+    if source_locator is None:
         source["identity_status"] = "unavailable"
     source.setdefault("rights_status", "unknown")
     source.setdefault("privacy_status", "review_required")
@@ -168,7 +228,9 @@ def _migrate_video_analysis(data: dict[str, Any]) -> dict[str, Any]:
     source.setdefault("platform", "youtube" if source.get("type") == "shorts" else source.get("type", "unknown"))
     source.setdefault("surface", source.get("type", "unknown"))
 
-    analysis_id = str(result.get("analysis_id") or f"analysis-{_short_hash(source_ref)}")
+    analysis_id = _normalise_id(
+        result.get("analysis_id"), f"analysis-{_short_hash(source_ref)}"
+    )
     legacy_meta = result.pop("_analysis_meta", {})
     if not isinstance(legacy_meta, dict):
         legacy_meta = {}
@@ -200,7 +262,7 @@ def _migrate_video_analysis(data: dict[str, Any]) -> dict[str, Any]:
     evidence: list[dict[str, Any]] = [{
         "id": "ev-source-metadata",
         "kind": "source_metadata",
-        "status": "available",
+        "status": "available" if source_locator is not None else "unavailable",
         "source_ref": source_ref,
         "description": "Source locator and legacy metadata; content revision was not captured in v1.0.",
     }]
@@ -220,7 +282,7 @@ def _migrate_video_analysis(data: dict[str, Any]) -> dict[str, Any]:
         evidence.append({
             "id": scene_evidence_id,
             "kind": "scene_detection",
-            "status": "available",
+            "status": "unavailable",
             "source_ref": "migration://video_analysis_brief/1.0/structure_analysis",
             "start_seconds": float(scene.get("start_time", 0)),
             "end_seconds": float(scene.get("end_time", 0)),
@@ -256,7 +318,7 @@ def _migrate_video_analysis(data: dict[str, Any]) -> dict[str, Any]:
             evidence.append({
                 "id": f"ev-transcript-{segment['id']}",
                 "kind": "transcript_segment",
-                "status": "available",
+                "status": "available" if source_locator is not None else "unavailable",
                 "source_ref": source_ref,
                 "start_seconds": segment["start"],
                 "end_seconds": segment["end"],
@@ -282,8 +344,9 @@ def _migrate_video_analysis(data: dict[str, Any]) -> dict[str, Any]:
         if raw_scene_index != frame["scene_index"]:
             frame["legacy_scene_index"] = raw_scene_index
         frame["description"] = str(frame.get("description") or "Legacy keyframe without description.")
-        has_path = bool(frame.get("path"))
-        frame["path"] = str(frame.get("path") or f"unavailable://legacy-keyframe/{index:04d}")
+        raw_path = frame.get("path")
+        has_path = _usable_legacy_locator(raw_path)
+        frame["path"] = raw_path.strip() if has_path else f"unavailable://legacy-keyframe/{index:04d}"
         keyframes.append(frame)
         evidence.append({
             "id": f"ev-keyframe-{frame['id']}",
@@ -373,7 +436,9 @@ def _migrate_bundle(data: dict[str, Any]) -> dict[str, Any]:
         seen_ids.add(str(item["analysis_id"]))
     ids = [str(item.get("analysis_id", index)) for index, item in enumerate(migrated) if isinstance(item, dict)]
     result["version"] = "1.1"
-    result["bundle_id"] = str(result.get("bundle_id") or f"bundle-{_short_hash('|'.join(ids))}")
+    result["bundle_id"] = _normalise_id(
+        result.get("bundle_id"), f"bundle-{_short_hash('|'.join(ids))}"
+    )
     result["analyses"] = migrated
     result.setdefault("metadata", {})
     result["metadata"]["migrated_from"] = "video_analysis_bundle@1.0"
@@ -426,13 +491,32 @@ def _migrate_script(data: dict[str, Any]) -> dict[str, Any]:
     result.setdefault("reference_analysis_refs", [])
     result.setdefault("narrative_profile_refs", [])
     used_ids: set[str] = set()
+    id_map: dict[str, str] = {}
     for index, section in enumerate(result.get("sections", [])):
-        section["id"] = _unique_id(section.get("id"), f"section-{index + 1}", used_ids)
+        original_id = section.get("id")
+        section["id"] = _unique_id(original_id, f"section-{index + 1}", used_ids)
+        if isinstance(original_id, str) and original_id not in id_map:
+            id_map[original_id] = section["id"]
         section.setdefault("evidence_refs", [])
         section.setdefault("source_refs", [])
         if section.get("source_ref") and section["source_ref"] not in section["source_refs"]:
             section["source_refs"].append(section["source_ref"])
         section.setdefault("beat_role", section.get("label", "section"))
+    voice_performance = result.get("voice_performance")
+    if isinstance(voice_performance, dict) and "sample_section_id" in voice_performance:
+        sample_id = voice_performance.get("sample_section_id")
+        normalized_sample_id = id_map.get(sample_id) if isinstance(sample_id, str) else None
+        if normalized_sample_id in used_ids:
+            voice_performance["sample_section_id"] = normalized_sample_id
+        else:
+            voice_performance.pop("sample_section_id", None)
+    if "sample_section_id" in result:
+        sample_id = result.get("sample_section_id")
+        normalized_sample_id = id_map.get(sample_id) if isinstance(sample_id, str) else None
+        if normalized_sample_id in used_ids:
+            result["sample_section_id"] = normalized_sample_id
+        else:
+            result.pop("sample_section_id", None)
     return result
 
 
@@ -444,9 +528,21 @@ def _migrate_scene_plan(data: dict[str, Any]) -> dict[str, Any]:
     used_ids: set[str] = set()
     for index, scene in enumerate(result.get("scenes", [])):
         scene["id"] = _unique_id(scene.get("id"), f"scene-{index + 1}", used_ids)
-        refs = scene.get("script_section_ids", [])
-        if scene.get("script_section_id") and scene["script_section_id"] not in refs:
-            refs = [*refs, scene["script_section_id"]]
+        raw_refs = scene.get("script_section_ids", [])
+        if not isinstance(raw_refs, list):
+            raw_refs = []
+        refs = []
+        for ref_index, ref in enumerate(raw_refs):
+            normalized_ref = _normalise_id(ref, f"section-{index + 1}-{ref_index + 1}")
+            if normalized_ref not in refs:
+                refs.append(normalized_ref)
+        if "script_section_id" in scene:
+            normalized_singular = _normalise_id(
+                scene.get("script_section_id"), f"section-{index + 1}-1"
+            )
+            scene["script_section_id"] = normalized_singular
+            if normalized_singular not in refs:
+                refs.append(normalized_singular)
         scene["script_section_ids"] = refs
         scene.setdefault("evidence_refs", [])
         scene.setdefault("visual_intent", scene.get("shot_intent", scene.get("description", "")))

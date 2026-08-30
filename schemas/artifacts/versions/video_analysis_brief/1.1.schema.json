@@ -1114,5 +1114,6 @@
       "type": "object"
     }
   },
+  "additionalProperties": false,
   "$id": "openmontage/artifacts/video_analysis_brief/1.1"
 }

@@ -101,7 +101,7 @@ that carries a reference-driven v1.1 artifact must carry the referenced v1.1 ana
 artifact or `video_analysis_bundle@1.1` as well, so the IDs are resolvable without relying
 on conversation context.
 
-- Proposal concepts may carry their own reference and evidence refs.
+- Proposal concepts may carry their own reference and evidence refs. The selected concept's non-empty subset is the effective analysis lineage for downstream stages.
 - Script sections carry plural `evidence_refs` and `source_refs`.
 - Scene plans carry plural `script_section_ids` and may carry evidence refs.
 - Script visual/audio intent is semantic; camera/framing/assets belong in scene plan.

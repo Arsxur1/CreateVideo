@@ -7,6 +7,7 @@ references, and handoff lineage.
 
 from __future__ import annotations
 
+import jsonschema
 import math
 from numbers import Real
 import re
@@ -53,6 +54,71 @@ def _check_finite_values(name: str, value: Any, path: str = "$") -> None:
             _check_finite_values(name, child, f"{path}[{index}]")
 
 
+_SENTINEL_TEXT = frozenset({
+    "unknown",
+    "unavailable",
+    "not available",
+    "not analyzed",
+    "not yet analyzed",
+    "pending",
+    "tbd",
+    "todo",
+    "placeholder",
+    "not provided",
+    "not specified",
+    "redacted",
+    "not known",
+    "no data",
+    "n/a",
+    "n a",
+    "na",
+    "none",
+})
+
+
+def _non_blank(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def _meaningful_text(value: Any) -> bool:
+    if not _non_blank(value):
+        return False
+    normalized = re.sub(r"[\W_]+", " ", value.strip().casefold()).strip()
+    return bool(normalized) and normalized not in _SENTINEL_TEXT
+
+
+_SCHEME_ONLY = re.compile(r"^[A-Za-z][A-Za-z0-9+.-]*:/*$")
+
+
+def _usable_locator(value: Any) -> bool:
+    if not _meaningful_text(value):
+        return False
+    normalized = value.strip().casefold()
+    return not normalized.startswith(("unavailable://", "migration://")) and not _SCHEME_ONLY.fullmatch(normalized)
+
+
+_STABLE_ID_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+$")
+
+
+def _stable_id(value: Any) -> bool:
+    return isinstance(value, str) and _meaningful_text(value) and bool(_STABLE_ID_PATTERN.fullmatch(value))
+
+
+def _has_available_evidence(evidence: Any, kind: str) -> bool:
+    if not isinstance(evidence, list):
+        return False
+    for item in evidence:
+        if not isinstance(item, dict):
+            continue
+        if (
+            item.get("kind") == kind
+            and item.get("status") == "available"
+            and _usable_locator(item.get("source_ref"))
+        ):
+            return True
+    return False
+
+
 def _check_range(
     name: str,
     start: Any,
@@ -74,6 +140,15 @@ def _check_range(
 
 
 def _unique(name: str, values: list[Any], label: str) -> set[Any]:
+    blank_values = [value for value in values if isinstance(value, str) and not value.strip()]
+    if blank_values:
+        _fail(name, f"{label} must contain non-empty values")
+    invalid_values = [
+        value for value in values
+        if isinstance(value, str) and not _STABLE_ID_PATTERN.fullmatch(value)
+    ]
+    if invalid_values:
+        _fail(name, f"{label} must use stable ID characters: {invalid_values}")
     if len(values) != len(set(values)):
         duplicates = sorted({value for value in values if values.count(value) > 1}, key=str)
         _fail(name, f"duplicate {label}: {duplicates}")
@@ -81,11 +156,31 @@ def _unique(name: str, values: list[Any], label: str) -> set[Any]:
 
 
 def _refs(name: str, refs: Any, label: str = "evidence_refs") -> list[str]:
-    if not isinstance(refs, list) or any(not isinstance(ref, str) or not ref for ref in refs):
+    if not isinstance(refs, list) or any(not isinstance(ref, str) or not ref.strip() for ref in refs):
         _fail(name, f"{label} must be a list of non-empty strings")
     if len(refs) != len(set(refs)):
         _fail(name, f"duplicate values in {label}")
     return refs
+
+
+def _analysis_refs(name: str, refs: Any, label: str) -> list[str]:
+    values = _refs(name, refs, label)
+    invalid = [value for value in values if not _stable_id(value)]
+    if invalid:
+        _fail(name, f"{label} must contain stable IDs: {invalid}")
+    return values
+
+
+def _evidence_refs(name: str, refs: Any, label: str = "evidence_refs") -> list[str]:
+    values = _refs(name, refs, label)
+    invalid = []
+    for value in values:
+        parts = value.split("#")
+        if len(parts) not in {1, 2} or any(not _stable_id(part) for part in parts):
+            invalid.append(value)
+    if invalid:
+        _fail(name, f"{label} must contain stable or qualified evidence IDs: {invalid}")
+    return values
 
 
 def _profile_refs(name: str, data: dict[str, Any], field: str = "narrative_profile_refs") -> None:
@@ -102,18 +197,25 @@ def _profile_refs(name: str, data: dict[str, Any], field: str = "narrative_profi
 def _validate_video_analysis(data: dict[str, Any]) -> None:
     name = "video_analysis_brief@1.1"
     analysis_id = data.get("analysis_id")
-    if not isinstance(analysis_id, str) or not analysis_id:
-        _fail(name, "analysis_id must be non-empty")
+    if not _stable_id(analysis_id):
+        _fail(name, "analysis_id must be non-empty and cannot contain '#'")
 
     source = data["source"]
     duration = source.get("duration_seconds")
     if not _is_number(duration) or duration < 0:
         _fail(name, "source.duration_seconds must be a non-negative number")
     fingerprint = source.get("fingerprint", {})
-    if not isinstance(fingerprint, dict) or not fingerprint.get("value"):
+    if not isinstance(fingerprint, dict) or not _usable_locator(fingerprint.get("value")):
         _fail(name, "source.fingerprint.value is required")
+    for field in ("url", "local_path"):
+        if field in source and not _usable_locator(source[field]):
+            _fail(name, f"source.{field} must be a usable locator")
+    if not _meaningful_text(source.get("retention_policy")):
+        _fail(name, "source.retention_policy must be non-empty")
 
     run = data["analysis_run"]
+    if not _stable_id(run.get("id")):
+        _fail(name, "analysis_run.id must be non-empty and cannot contain '#'")
     completed = run.get("steps_completed", [])
     failed = run.get("steps_failed", [])
     status = run.get("status")
@@ -135,24 +237,39 @@ def _validate_video_analysis(data: dict[str, Any]) -> None:
         keyframe_steps = {"keyframes", "keyframes_uniform"}
         scenes_for_status = data.get("structure_analysis", {}).get("scenes", [])
         keyframes_for_status = data.get("keyframes", [])
+        content = data.get("content_analysis", {})
+        topics = content.get("topics", []) if isinstance(content, dict) else []
+        locator_field = "local_path" if source.get("type") == "local_file" else "url"
         if (
             "metadata" not in completed
             or "scene_detect" not in completed
             or not keyframe_steps.intersection(completed)
             or not scenes_for_status
             or not keyframes_for_status
+            or duration <= 0
+            or not _usable_locator(source.get(locator_field))
+            or not _usable_locator(fingerprint.get("value"))
+            or not isinstance(content, dict)
+            or not _meaningful_text(content.get("summary"))
+            or not any(_meaningful_text(topic) for topic in topics)
+            or not _meaningful_text(content.get("target_audience"))
+            or not _has_available_evidence(data.get("evidence"), "scene_detection")
+            or not _has_available_evidence(data.get("evidence"), "keyframe")
         ):
-            _fail(name, "complete standard/deep analysis requires metadata, scene_detect, scenes, and keyframes")
+            _fail(
+                name,
+                "complete standard/deep analysis requires a source locator, positive duration, "
+                "non-empty fingerprint, content metadata, and available scene/keyframe evidence",
+            )
         blank_scene_fields = [
             index for index, scene in enumerate(scenes_for_status)
-            if not str(scene.get("description", "")).strip()
+            if not _meaningful_text(scene.get("description", ""))
         ]
         blank_keyframe_fields = [
             index for index, frame in enumerate(keyframes_for_status)
             if (
-                not str(frame.get("path", "")).strip()
-                or str(frame.get("path", "")).startswith(("unavailable://", "migration://"))
-                or not str(frame.get("description", "")).strip()
+                not _usable_locator(frame.get("path"))
+                or not _meaningful_text(frame.get("description", ""))
             )
         ]
         if blank_scene_fields or blank_keyframe_fields:
@@ -171,6 +288,11 @@ def _validate_video_analysis(data: dict[str, Any]) -> None:
     evidence_ids = _unique(name, [item["id"] for item in evidence], "evidence IDs")
     evidence_by_id = {item["id"]: item for item in evidence}
     for index, item in enumerate(evidence):
+        source_ref = item["source_ref"]
+        if not _meaningful_text(source_ref):
+            _fail(name, f"evidence[{index}].source_ref cannot be blank")
+        if item["status"] == "available" and not _usable_locator(source_ref):
+            _fail(name, f"evidence[{index}].source_ref is not a usable available locator")
         has_start = "start_seconds" in item
         has_end = "end_seconds" in item
         if has_start != has_end:
@@ -189,6 +311,10 @@ def _validate_video_analysis(data: dict[str, Any]) -> None:
     if structure["total_scenes"] != len(scenes):
         _fail(name, "structure_analysis.total_scenes must equal scenes length")
     scene_indices = _unique(name, [scene["scene_index"] for scene in scenes], "scene indices")
+    for index, item in enumerate(evidence):
+        scene_index = item.get("scene_index")
+        if scene_index is not None and scene_index not in scene_indices:
+            _fail(name, f"evidence[{index}] refers to unknown scene {scene_index}")
     for index, scene in enumerate(scenes):
         _check_range(
             name,
@@ -199,7 +325,7 @@ def _validate_video_analysis(data: dict[str, Any]) -> None:
             allow_point=False,
         )
         observation_ids = scene.get("observation_ids", [])
-        _refs(name, observation_ids, "observation_ids")
+        _analysis_refs(name, observation_ids, "observation_ids")
 
     observations = data["five_aspect_observations"]
     observation_ids = _unique(name, [item["id"] for item in observations], "observation IDs")
@@ -211,13 +337,15 @@ def _validate_video_analysis(data: dict[str, Any]) -> None:
             _fail(name, f"observation[{index}] refers to unknown scene {scene_index}")
         if aspect not in _ASPECTS:
             _fail(name, f"observation[{index}] has unknown aspect {aspect!r}")
-        if not item["value"].strip():
+        if not _non_blank(item["value"]):
             _fail(name, f"observation[{index}] value cannot be blank")
+        if item["status"] in {"observed", "inferred"} and not _meaningful_text(item["value"]):
+            _fail(name, f"observation[{index}] {item['status']} value must be meaningful")
         key = (scene_index, aspect)
         if key in coverage:
             _fail(name, f"duplicate five-aspect observation for scene {scene_index}, {aspect}")
         coverage.add(key)
-        refs = _refs(name, item["evidence_refs"])
+        refs = _evidence_refs(name, item["evidence_refs"])
         missing_refs = set(refs) - evidence_ids
         if missing_refs:
             _fail(name, f"observation[{index}] has unknown evidence refs {sorted(missing_refs)}")
@@ -257,7 +385,7 @@ def _validate_video_analysis(data: dict[str, Any]) -> None:
     assertions = data["assertions"]
     _unique(name, [item["id"] for item in assertions], "assertion IDs")
     for index, item in enumerate(assertions):
-        refs = _refs(name, item["evidence_refs"])
+        refs = _evidence_refs(name, item["evidence_refs"])
         if item.get("scene_index") is not None and item["scene_index"] not in scene_indices:
             _fail(name, f"assertion[{index}] refers to unknown scene {item['scene_index']}")
         missing_refs = set(refs) - evidence_ids
@@ -293,6 +421,41 @@ def _validate_video_analysis(data: dict[str, Any]) -> None:
             allow_point=False,
         )
 
+    transcript_evidence = [
+        item for item in evidence if item.get("kind") == "transcript_segment"
+    ]
+    if segments:
+        def matches_transcript(item: dict[str, Any], segment: dict[str, Any]) -> bool:
+            start = item.get("start_seconds")
+            end = item.get("end_seconds")
+            return (
+                item.get("id") == f"ev-transcript-{segment['id']}"
+                and _is_number(start)
+                and _is_number(end)
+                and abs(float(start) - float(segment["start"])) <= 0.001
+                and abs(float(end) - float(segment["end"])) <= 0.001
+                and str(item.get("excerpt", "")).strip() == str(segment["text"]).strip()
+            )
+
+        unbound_segments = [
+            index
+            for index, segment in enumerate(segments)
+            if not any(matches_transcript(item, segment) for item in transcript_evidence)
+        ]
+        unbound_evidence = [
+            index
+            for index, item in enumerate(transcript_evidence)
+            if not any(matches_transcript(item, segment) for segment in segments)
+        ]
+        if unbound_segments or unbound_evidence:
+            _fail(
+                name,
+                "transcript segments require matching transcript_segment evidence; "
+                f"unbound_segments={unbound_segments}, unbound_evidence={unbound_evidence}",
+            )
+    elif transcript_evidence:
+        _fail(name, "transcript_segment evidence requires transcript segments")
+
     keyframes = data.get("keyframes", [])
     _unique(name, [frame["id"] for frame in keyframes], "keyframe IDs")
     for index, frame in enumerate(keyframes):
@@ -303,6 +466,87 @@ def _validate_video_analysis(data: dict[str, Any]) -> None:
             _fail(name, f"keyframe[{index}] timestamp exceeds source duration")
         if scene_indices and frame["scene_index"] not in scene_indices:
             _fail(name, f"keyframe[{index}] refers to unknown scene {frame['scene_index']}")
+
+    if status == "complete" and run.get("depth") in {"standard", "deep"}:
+        available_scene_evidence = [
+            item
+            for item in evidence
+            if item.get("kind") == "scene_detection"
+            and item.get("status") == "available"
+            and _usable_locator(item.get("source_ref"))
+        ]
+        scene_evidence_indices = {item.get("scene_index") for item in available_scene_evidence}
+        if scene_evidence_indices != scene_indices:
+            _fail(
+                name,
+                "complete analysis scene evidence must resolve every declared scene; "
+                f"missing={sorted(scene_indices - scene_evidence_indices, key=str)}",
+            )
+
+        def matches_scene(item: dict[str, Any], scene: dict[str, Any]) -> bool:
+            start = item.get("start_seconds")
+            end = item.get("end_seconds")
+            return (
+                item.get("scene_index") == scene["scene_index"]
+                and _is_number(start)
+                and _is_number(end)
+                and abs(float(start) - float(scene["start_time"])) <= 0.001
+                and abs(float(end) - float(scene["end_time"])) <= 0.001
+            )
+
+        unbound_scenes = [
+            index
+            for index, scene in enumerate(scenes)
+            if not any(matches_scene(item, scene) for item in available_scene_evidence)
+        ]
+        unbound_scene_evidence = [
+            index
+            for index, item in enumerate(available_scene_evidence)
+            if not any(matches_scene(item, scene) for scene in scenes)
+        ]
+        if unbound_scenes or unbound_scene_evidence:
+            _fail(
+                name,
+                "complete analysis scene evidence must match declared scene ranges; "
+                f"unbound_scenes={unbound_scenes}, unbound_evidence={unbound_scene_evidence}",
+            )
+
+        available_keyframe_evidence = [
+            item
+            for item in evidence
+            if item.get("kind") == "keyframe"
+            and item.get("status") == "available"
+            and _usable_locator(item.get("source_ref"))
+        ]
+
+        def matches_keyframe(item: dict[str, Any], frame: dict[str, Any]) -> bool:
+            start = item.get("start_seconds")
+            end = item.get("end_seconds")
+            return (
+                item.get("scene_index") == frame["scene_index"]
+                and _is_number(start)
+                and _is_number(end)
+                and abs(float(start) - float(frame["timestamp"])) <= 0.001
+                and abs(float(end) - float(frame["timestamp"])) <= 0.001
+                and item.get("source_ref", "").strip() == str(frame.get("path", "")).strip()
+            )
+
+        unbound_keyframes = [
+            index
+            for index, frame in enumerate(keyframes)
+            if not any(matches_keyframe(item, frame) for item in available_keyframe_evidence)
+        ]
+        unbound_evidence = [
+            index
+            for index, item in enumerate(available_keyframe_evidence)
+            if not any(matches_keyframe(item, frame) for frame in keyframes)
+        ]
+        if unbound_keyframes or unbound_evidence:
+            _fail(
+                name,
+                "complete analysis keyframe evidence must resolve declared keyframes; "
+                f"unbound_keyframes={unbound_keyframes}, unbound_evidence={unbound_evidence}",
+            )
 
     all_transfer_ids: list[str] = []
     guidance = data["replication_guidance"]
@@ -316,7 +560,7 @@ def _validate_video_analysis(data: dict[str, Any]) -> None:
     ):
         for index, item in enumerate(guidance.get(field, [])):
             all_transfer_ids.append(item["id"])
-            refs = _refs(name, item["evidence_refs"])
+            refs = _evidence_refs(name, item["evidence_refs"])
             if not refs and item.get("provenance_status") != "unavailable":
                 _fail(name, f"{field}[{index}] must cite evidence or declare unavailable provenance")
             if item.get("provenance_status") == "unavailable" and refs:
@@ -334,11 +578,24 @@ def _validate_video_analysis(data: dict[str, Any]) -> None:
 
 def _validate_v11_bundle(data: dict[str, Any]) -> None:
     name = "video_analysis_bundle@1.1"
+    if not _stable_id(data.get("bundle_id")):
+        _fail(name, "bundle_id must be non-empty and cannot contain '#'")
     analyses = data["analyses"]
     _unique(name, [analysis.get("analysis_id") for analysis in analyses], "analysis IDs")
     if any(not isinstance(analysis, dict) or analysis.get("version") != "1.1" for analysis in analyses):
         _fail(name, "every bundle member must be a video_analysis_brief@1.1")
-    for analysis in analyses:
+
+    from schemas.artifacts import load_schema
+
+    member_schema = load_schema("video_analysis_brief", "1.1")
+    for index, analysis in enumerate(analyses):
+        try:
+            jsonschema.validate(instance=analysis, schema=member_schema)
+        except jsonschema.ValidationError as exc:
+            _fail(
+                name,
+                f"analyses[{index}] must match video_analysis_brief@1.1 schema: {exc.message}",
+            )
         _validate_video_analysis(analysis)
 
 
@@ -347,9 +604,7 @@ def _validate_v11_brief(data: dict[str, Any]) -> None:
     if data["target_duration_seconds"] <= 0:
         _fail(name, "target_duration_seconds must be positive")
     _profile_refs(name, data)
-    refs = data.get("reference_analysis_refs", [])
-    if not isinstance(refs, list) or any(not isinstance(ref, str) or not ref for ref in refs):
-        _fail(name, "reference_analysis_refs must be non-empty strings")
+    refs = _analysis_refs(name, data.get("reference_analysis_refs", []), "reference_analysis_refs")
     if data.get("reference_driven") and not refs:
         _fail(name, "reference_driven briefs require reference_analysis_refs")
 
@@ -357,9 +612,7 @@ def _validate_v11_brief(data: dict[str, Any]) -> None:
 def _validate_v11_proposal(data: dict[str, Any]) -> None:
     name = "proposal_packet@1.1"
     _profile_refs(name, data)
-    refs = data.get("reference_analysis_refs", [])
-    if not isinstance(refs, list) or any(not isinstance(ref, str) or not ref for ref in refs):
-        _fail(name, "reference_analysis_refs must be non-empty strings")
+    refs = _analysis_refs(name, data.get("reference_analysis_refs", []), "reference_analysis_refs")
     if data.get("reference_driven") and not refs:
         _fail(name, "reference_driven proposals require reference_analysis_refs")
     concepts = data["concept_options"]
@@ -374,9 +627,8 @@ def _validate_v11_proposal(data: dict[str, Any]) -> None:
     for index, concept in enumerate(concepts):
         _profile_refs(name, concept)
         for field in ("reference_analysis_refs", "evidence_refs"):
-            values = concept.get(field, [])
-            if not isinstance(values, list) or any(not isinstance(value, str) or not value for value in values):
-                _fail(name, f"concept_options[{index}].{field} must be a list of non-empty strings")
+            ref_validator = _analysis_refs if field == "reference_analysis_refs" else _evidence_refs
+            ref_validator(name, concept.get(field, []), f"concept_options[{index}].{field}")
         if reference_driven:
             if not concept.get("reference_analysis_refs"):
                 _fail(name, f"concept_options[{index}] must attribute its reference analysis")
@@ -392,8 +644,20 @@ def _validate_v11_proposal(data: dict[str, Any]) -> None:
         selected_option = next(
             concept for concept in concepts if concept["id"] == selected["concept_id"]
         )
-        selected_refs = set(selected["reference_analysis_refs"])
-        option_refs = set(selected_option.get("reference_analysis_refs", []))
+        selected_refs = set(
+            _analysis_refs(
+                name,
+                selected.get("reference_analysis_refs", []),
+                "selected_concept.reference_analysis_refs",
+            )
+        )
+        option_refs = set(
+            _analysis_refs(
+                name,
+                selected_option.get("reference_analysis_refs", []),
+                "selected concept option.reference_analysis_refs",
+            )
+        )
         if not selected_refs.issubset(option_refs):
             _fail(name, "selected_concept references analyses outside its selected concept")
 
@@ -401,14 +665,23 @@ def _validate_v11_proposal(data: dict[str, Any]) -> None:
 def _validate_v11_script(data: dict[str, Any]) -> None:
     name = "script@1.1"
     _profile_refs(name, data)
-    refs = data.get("reference_analysis_refs", [])
-    if not isinstance(refs, list) or any(not isinstance(ref, str) or not ref for ref in refs):
-        _fail(name, "reference_analysis_refs must be non-empty strings")
+    refs = _analysis_refs(name, data.get("reference_analysis_refs", []), "reference_analysis_refs")
     duration = float(data["total_duration_seconds"])
     if duration <= 0:
         _fail(name, "total_duration_seconds must be positive")
     sections = data["sections"]
     ids = _unique(name, [section["id"] for section in sections], "section IDs")
+    voice_performance = data.get("voice_performance", {})
+    sample_section_id = (
+        voice_performance.get("sample_section_id")
+        if isinstance(voice_performance, dict)
+        else None
+    )
+    if sample_section_id is not None:
+        if not _stable_id(sample_section_id):
+            _fail(name, "sample_section_id must be a stable section ID")
+        if sample_section_id not in ids:
+            _fail(name, f"sample_section_id {sample_section_id!r} is not a declared section")
     ordered = sorted(sections, key=lambda section: section["start_seconds"])
     previous_end = 0.0
     for index, section in enumerate(ordered):
@@ -425,7 +698,7 @@ def _validate_v11_script(data: dict[str, Any]) -> None:
         previous_end = section["end_seconds"]
         if refs and "evidence_refs" not in section:
             _fail(name, f"reference-driven section[{index}] must declare evidence_refs")
-        _refs(name, section.get("evidence_refs", []))
+        _evidence_refs(name, section.get("evidence_refs", []))
         _refs(name, section.get("source_refs", []), "source_refs")
     if not ids:
         _fail(name, "at least one section is required")
@@ -434,9 +707,7 @@ def _validate_v11_script(data: dict[str, Any]) -> None:
 def _validate_v11_scene_plan(data: dict[str, Any]) -> None:
     name = "scene_plan@1.1"
     _profile_refs(name, data)
-    refs = data.get("reference_analysis_refs", [])
-    if not isinstance(refs, list) or any(not isinstance(ref, str) or not ref for ref in refs):
-        _fail(name, "reference_analysis_refs must be non-empty strings")
+    refs = _analysis_refs(name, data.get("reference_analysis_refs", []), "reference_analysis_refs")
     scenes = data["scenes"]
     ids = _unique(name, [scene["id"] for scene in scenes], "scene IDs")
     duration = max((scene["end_seconds"] for scene in scenes), default=0.0)
@@ -454,14 +725,17 @@ def _validate_v11_scene_plan(data: dict[str, Any]) -> None:
         if scene["start_seconds"] < previous_end - 0.001:
             _fail(name, f"scene[{index}] overlaps the previous scene")
         previous_end = scene["end_seconds"]
-        _refs(name, scene.get("script_section_ids", []), "script_section_ids")
+        _analysis_refs(name, scene.get("script_section_ids", []), "script_section_ids")
+        singular_script_ref = scene.get("script_section_id")
+        if singular_script_ref is not None and not _stable_id(singular_script_ref):
+            _fail(name, f"scene[{index}] script_section_id must be a stable section ID")
         if refs:
             for field in ("subject", "subject_motion", "scene", "spatial_framing", "camera"):
                 if not str(scene.get(field, "")).strip():
                     _fail(name, f"reference-driven scene[{index}] field {field} cannot be blank")
         if refs and "evidence_refs" not in scene:
             _fail(name, f"reference-driven scene[{index}] must declare evidence_refs")
-        _refs(name, scene.get("evidence_refs", []))
+        _evidence_refs(name, scene.get("evidence_refs", []))
     if not ids:
         _fail(name, "at least one scene is required")
 
@@ -498,17 +772,33 @@ def _attached_analyses(artifacts: dict[str, Any]) -> list[dict[str, Any]]:
     return analyses
 
 
-def _handoff_evidence_ids(analyses: list[dict[str, Any]]) -> set[str]:
-    """Return local IDs when unambiguous plus qualified IDs for every source."""
-    local_counts: dict[str, int] = {}
+def _handoff_evidence_ids(
+    analyses: list[dict[str, Any]],
+    *,
+    all_analyses: list[dict[str, Any]] | None = None,
+) -> set[str]:
+    """Return locally unique IDs plus qualified IDs for selected sources.
+
+    Local uniqueness is calculated across every attached analysis, not only
+    the selected subset, so an unqualified ref cannot hide a duplicate in an
+    unselected bundle member.
+    """
+    all_analyses = analyses if all_analyses is None else all_analyses
+    global_counts: dict[str, int] = {}
+    for analysis in all_analyses:
+        for item in analysis.get("evidence", []):
+            evidence_id = item["id"]
+            global_counts[evidence_id] = global_counts.get(evidence_id, 0) + 1
+
+    local: set[str] = set()
     qualified: set[str] = set()
     for analysis in analyses:
         analysis_id = analysis["analysis_id"]
         for item in analysis.get("evidence", []):
             evidence_id = item["id"]
-            local_counts[evidence_id] = local_counts.get(evidence_id, 0) + 1
+            if global_counts[evidence_id] == 1:
+                local.add(evidence_id)
             qualified.add(f"{analysis_id}#{evidence_id}")
-    local = {evidence_id for evidence_id, count in local_counts.items() if count == 1}
     return local | qualified
 
 
@@ -527,7 +817,7 @@ def validate_artifact_handoffs(artifacts: dict[str, Any]) -> None:
 
     def evidence_for(refs: set[str]) -> set[str]:
         selected = [analysis_by_id[ref] for ref in refs if ref in analysis_by_id]
-        return _handoff_evidence_ids(selected)
+        return _handoff_evidence_ids(selected, all_analyses=analyses)
 
     def check_evidence(name: str, label: str, refs: Any, selected_ids: set[str]) -> None:
         values = set(refs or [])

@@ -264,6 +264,106 @@ def test_version_dispatch_and_legacy_schema_remain_available():
     assert load_schema("video_analysis_brief", "1.1")["properties"]["version"]["const"] == "1.1"
 
 
+def test_v11_bundle_members_use_brief_schema():
+    bundle = bundle_fixture()
+    bundle["analyses"][0]["bogus_member_field"] = True
+    with pytest.raises(ArtifactSemanticValidationError, match="video_analysis_brief@1.1 schema"):
+        validate_artifact("video_analysis_bundle", bundle)
+
+
+def test_v11_singular_ids_are_stable_and_resolved():
+    script = script_fixture()
+    script["voice_performance"] = {"sample_section_id": "bad ref#x"}
+    with pytest.raises(ArtifactSemanticValidationError, match="stable section ID"):
+        validate_artifact("script", script)
+
+    script["voice_performance"]["sample_section_id"] = "missing-section"
+    with pytest.raises(ArtifactSemanticValidationError, match="declared section"):
+        validate_artifact("script", script)
+
+    scene = scene_fixture()
+    scene["scenes"][0]["script_section_id"] = "bad ref#x"
+    with pytest.raises(ArtifactSemanticValidationError, match="stable section ID"):
+        validate_artifact("scene_plan", scene)
+
+
+def test_v11_stable_ids_reject_whitespace_and_separator_collision():
+    analysis = analysis_fixture()
+    analysis["analysis_run"]["id"] = " "
+    with pytest.raises(ArtifactSemanticValidationError, match="analysis_run.id"):
+        validate_artifact("video_analysis_brief", analysis)
+
+    analysis = analysis_fixture()
+    analysis["analysis_id"] = "A#B"
+    with pytest.raises(ArtifactSemanticValidationError, match="cannot contain '#'"):
+        validate_artifact("video_analysis_brief", analysis)
+
+    analysis = analysis_fixture()
+    analysis["evidence"][0]["id"] = "A#B"
+    with pytest.raises(ArtifactSemanticValidationError, match="stable ID characters"):
+        validate_artifact("video_analysis_brief", analysis)
+
+    bundle = bundle_fixture()
+    bundle["bundle_id"] = " "
+    with pytest.raises(ArtifactSemanticValidationError, match="bundle_id"):
+        validate_artifact("video_analysis_bundle", bundle)
+
+    bundle = bundle_fixture()
+    bundle["bundle_id"] = "bundle#1"
+    with pytest.raises(ArtifactSemanticValidationError, match="cannot contain '#'"):
+        validate_artifact("video_analysis_bundle", bundle)
+
+
+def test_v11_stable_ids_reject_embedded_whitespace():
+    analysis = analysis_fixture()
+    analysis["analysis_id"] = "analysis fixture"
+    with pytest.raises(ArtifactSemanticValidationError, match="analysis_id"):
+        validate_artifact("video_analysis_brief", analysis)
+
+    analysis = analysis_fixture()
+    analysis["analysis_run"]["id"] = "run fixture"
+    with pytest.raises(ArtifactSemanticValidationError, match="analysis_run.id"):
+        validate_artifact("video_analysis_brief", analysis)
+
+    analysis = analysis_fixture()
+    analysis["evidence"][0]["id"] = "ev source"
+    with pytest.raises(ArtifactSemanticValidationError, match="stable ID characters"):
+        validate_artifact("video_analysis_brief", analysis)
+
+    bundle = bundle_fixture()
+    bundle["bundle_id"] = "bundle fixture"
+    with pytest.raises(ArtifactSemanticValidationError, match="bundle_id"):
+        validate_artifact("video_analysis_bundle", bundle)
+
+    proposal = proposal_fixture()
+    proposal["concept_options"][0]["id"] = "concept one"
+    proposal["selected_concept"]["concept_id"] = "concept one"
+    with pytest.raises(ArtifactSemanticValidationError, match="stable ID characters"):
+        validate_artifact("proposal_packet", proposal)
+
+    script = script_fixture()
+    script["sections"][0]["id"] = "section one"
+    with pytest.raises(ArtifactSemanticValidationError, match="stable ID characters"):
+        validate_artifact("script", script)
+
+    scene = scene_fixture()
+    scene["scenes"][0]["id"] = "scene one"
+    with pytest.raises(ArtifactSemanticValidationError, match="stable ID characters"):
+        validate_artifact("scene_plan", scene)
+
+
+def test_v11_available_provenance_rejects_reserved_locators():
+    analysis = analysis_fixture()
+    analysis["source"]["url"] = "  UnAvAiLaBlE://invented"
+    with pytest.raises(ArtifactSemanticValidationError, match="usable locator"):
+        validate_artifact("video_analysis_brief", analysis)
+
+    analysis = analysis_fixture()
+    analysis["evidence"][1]["source_ref"] = "  MiGrAtIoN://invented"
+    with pytest.raises(ArtifactSemanticValidationError, match="available locator"):
+        validate_artifact("video_analysis_brief", analysis)
+
+
 def test_v11_analysis_requires_explicit_aspect_coverage_and_evidence():
     analysis = analysis_fixture()
     validate_artifact("video_analysis_brief", analysis)
@@ -276,6 +376,133 @@ def test_v11_analysis_requires_explicit_aspect_coverage_and_evidence():
         item["value"] = "Observed in the fixture frame."
         item["evidence_refs"] = ["ev-keyframe-0"]
     validate_artifact("video_analysis_brief", complete)
+
+    completion_cases = [
+        ("source locator", lambda item: item["source"].update(url=" "), "usable locator"),
+        ("positive duration", lambda item: item["source"].update(duration_seconds=0), "positive duration"),
+        ("fingerprint", lambda item: item["source"]["fingerprint"].update(value=" "), "source.fingerprint"),
+        ("summary", lambda item: item["content_analysis"].update(summary=" "), "content metadata"),
+        ("topics", lambda item: item["content_analysis"].update(topics=[" "]), "content metadata"),
+        ("audience", lambda item: item["content_analysis"].update(target_audience=" "), "content metadata"),
+        ("scene evidence", lambda item: item.update(evidence=[item["evidence"][0]]), "scene/keyframe evidence"),
+        (
+            "keyframe evidence",
+            lambda item: item.update(
+                evidence=[evidence for evidence in item["evidence"] if evidence["kind"] != "keyframe"]
+            ),
+            "scene/keyframe evidence",
+        ),
+        (
+            "evidence locator",
+            lambda item: next(
+                evidence.update(source_ref=" ")
+                for evidence in item["evidence"]
+                if evidence["kind"] == "keyframe"
+            ),
+            "scene/keyframe evidence",
+        ),
+        (
+            "reserved evidence locator",
+            lambda item: [
+                evidence.update(source_ref="  migration://invented")
+                for evidence in item["evidence"]
+                if evidence["kind"] in {"scene_detection", "keyframe"}
+            ],
+            "scene/keyframe evidence",
+        ),
+        (
+            "evidence scene anchor",
+            lambda item: [
+                evidence.update(scene_index=999)
+                for evidence in item["evidence"]
+                if evidence["kind"] in {"scene_detection", "keyframe"}
+            ],
+            "unknown scene",
+        ),
+        (
+            "evidence ID",
+            lambda item: next(
+                evidence.update(id=" ")
+                for evidence in item["evidence"]
+                if evidence["kind"] == "keyframe"
+            ),
+            "evidence IDs",
+        ),
+        (
+            "scene evidence range",
+            lambda item: next(
+                evidence.update(start_seconds=2, end_seconds=3)
+                for evidence in item["evidence"]
+                if evidence["kind"] == "scene_detection"
+            ),
+            "scene ranges",
+        ),
+        (
+            "keyframe evidence time",
+            lambda item: next(
+                evidence.update(start_seconds=2, end_seconds=2)
+                for evidence in item["evidence"]
+                if evidence["kind"] == "keyframe"
+            ),
+            "keyframe evidence",
+        ),
+        (
+            "sentinel content",
+            lambda item: item["content_analysis"].update(summary="Unknown."),
+            "content metadata",
+        ),
+        (
+            "punctuation-only content",
+            lambda item: item["content_analysis"].update(
+                summary="...", topics=["___"], target_audience="!!!"
+            ),
+            "content metadata",
+        ),
+        (
+            "scheme-only source",
+            lambda item: item["source"].update(url="https://"),
+            "usable locator",
+        ),
+        (
+            "scheme-only fingerprint",
+            lambda item: item["source"]["fingerprint"].update(value="sha256:"),
+            "source.fingerprint",
+        ),
+        (
+            "retention policy",
+            lambda item: item["source"].update(retention_policy=" "),
+            "retention_policy",
+        ),
+        (
+            "observed sentinel",
+            lambda item: item["five_aspect_observations"][0].update(value="Unknown."),
+            "must be meaningful",
+        ),
+        (
+            "keyframe asset drift",
+            lambda item: item["keyframes"][0].update(path="other.jpg"),
+            "keyframe evidence",
+        ),
+        (
+            "uppercase reserved locator",
+            lambda item: [
+                evidence.update(source_ref="  MIGRATION://invented")
+                for evidence in item["evidence"]
+                if evidence["kind"] in {"scene_detection", "keyframe"}
+            ],
+            "scene/keyframe evidence",
+        ),
+        (
+            "uppercase reserved source",
+            lambda item: item["source"].update(url="MIGRATION://invented"),
+            "usable locator",
+        ),
+    ]
+    for _, mutate, message in completion_cases:
+        hollow = deepcopy(complete)
+        mutate(hollow)
+        with pytest.raises(ArtifactSemanticValidationError, match=message):
+            validate_artifact("video_analysis_brief", hollow)
 
 
     empty_transcript = deepcopy(analysis)
@@ -310,7 +537,10 @@ def test_v11_analysis_requires_explicit_aspect_coverage_and_evidence():
     with pytest.raises(ArtifactSemanticValidationError, match="unknown scene"):
         validate_artifact("video_analysis_brief", dangling_scene_claim)
 
-    unavailable = deepcopy(complete)
+    unavailable = deepcopy(analysis)
+    unavailable["five_aspect_observations"][0]["status"] = "observed"
+    unavailable["five_aspect_observations"][0]["value"] = "Observed in the fixture frame."
+    unavailable["five_aspect_observations"][0]["evidence_refs"] = ["ev-keyframe-0"]
     unavailable["evidence"][2]["status"] = "unavailable"
     with pytest.raises(ArtifactSemanticValidationError, match="unavailable evidence"):
         validate_artifact("video_analysis_brief", unavailable)
@@ -417,11 +647,22 @@ def test_multi_reference_bundle_requires_qualified_ambiguous_evidence():
     validate_artifact("proposal_packet", proposal)
     validate_artifact_handoffs({"video_analysis_bundle": bundle, "proposal_packet": proposal})
 
+    selected_subset = deepcopy(proposal)
+    selected_subset["selected_concept"]["reference_analysis_refs"] = ["analysis-fixture"]
+    validate_artifact("proposal_packet", selected_subset)
+    validate_artifact_handoffs({"video_analysis_bundle": bundle, "proposal_packet": selected_subset})
+
     cross_wired = deepcopy(proposal)
     cross_wired["concept_options"][0]["reference_analysis_refs"] = ["analysis-fixture"]
     cross_wired["concept_options"][0]["evidence_refs"] = ["analysis-second#ev-keyframe-0"]
     with pytest.raises(ArtifactSemanticValidationError, match="unresolved evidence"):
         validate_artifact_handoffs({"video_analysis_bundle": bundle, "proposal_packet": cross_wired})
+
+    selected_subset = deepcopy(proposal)
+    selected_subset["concept_options"][0]["reference_analysis_refs"] = ["analysis-fixture"]
+    selected_subset["concept_options"][0]["evidence_refs"] = ["ev-keyframe-0"]
+    with pytest.raises(ArtifactSemanticValidationError, match="unresolved evidence"):
+        validate_artifact_handoffs({"video_analysis_bundle": bundle, "proposal_packet": selected_subset})
 
     ambiguous = deepcopy(proposal)
     ambiguous["concept_options"][0]["evidence_refs"] = ["ev-keyframe-0"]
@@ -597,6 +838,92 @@ def test_locatorless_legacy_bundle_members_are_disambiguated():
     validate_artifact("video_analysis_bundle", migrated)
 
 
+@pytest.mark.parametrize("locator", [" MIGRATION://legacy ", "UNAVAILABLE://legacy", "..."])
+def test_reserved_legacy_locator_becomes_unavailable_provenance(locator: str):
+    legacy = {
+        "version": "1.0",
+        "source": {"type": "youtube", "url": locator, "duration_seconds": 4},
+        "content_analysis": {"summary": "Legacy", "topics": [], "target_audience": "general"},
+        "structure_analysis": {
+            "total_scenes": 1,
+            "scenes": [{"scene_index": 0, "start_time": 0, "end_time": 4, "description": "Scene"}],
+            "pacing_profile": {},
+        },
+    }
+    migrated = migrate_artifact("video_analysis_brief", legacy)
+    assert "url" not in migrated["source"]
+    assert migrated["evidence"][0]["status"] == "unavailable"
+    assert migrated["evidence"][0]["source_ref"].startswith("migration://")
+    validate_artifact("video_analysis_brief", migrated)
+
+
+def test_migration_repairs_legacy_fingerprint_and_keyframe_placeholders():
+    legacy = {
+        "version": "1.0",
+        "source": {
+            "type": "youtube",
+            "url": "https://example.test/legacy",
+            "duration_seconds": 4,
+            "fingerprint": {
+                "kind": "content",
+                "algorithm": "sha256",
+                "value": "definitely-not-a-sha256-digest",
+            },
+        },
+        "content_analysis": {"summary": "Legacy", "topics": [], "target_audience": "general"},
+        "structure_analysis": {
+            "total_scenes": 1,
+            "scenes": [{"scene_index": 0, "start_time": 0, "end_time": 4, "description": "Scene"}],
+            "pacing_profile": {},
+        },
+        "keyframes": [{"id": "legacy-frame", "timestamp": 1, "scene_index": 0, "path": "..."}],
+    }
+    migrated = migrate_artifact("video_analysis_brief", legacy)
+    assert migrated["source"]["fingerprint"]["kind"] == "legacy_locator"
+    assert migrated["source"]["fingerprint"]["algorithm"] == "sha256"
+    assert migrated["keyframes"][0]["path"].startswith("unavailable://")
+    assert migrated["evidence"][-1]["status"] == "unavailable"
+    validate_artifact("video_analysis_brief", migrated)
+
+
+def test_migration_normalizes_legacy_scene_section_refs():
+    legacy = {
+        "version": "1.0",
+        "scenes": [{
+            "id": "scene one#",
+            "type": "animation",
+            "description": "Scene",
+            "start_seconds": 0,
+            "end_seconds": 4,
+            "script_section_id": "section one#",
+        }],
+    }
+    migrated = migrate_artifact("scene_plan", legacy)
+    scene = migrated["scenes"][0]
+    assert scene["id"] == "scene-one"
+    assert scene["script_section_id"] == "section-one"
+    assert scene["script_section_ids"] == ["section-one"]
+    validate_artifact("scene_plan", migrated)
+
+
+def test_whitespace_legacy_locator_becomes_unavailable_provenance():
+    legacy = {
+        "version": "1.0",
+        "source": {"type": "youtube", "url": "   ", "duration_seconds": 4},
+        "content_analysis": {"summary": "Legacy", "topics": [], "target_audience": "general"},
+        "structure_analysis": {
+            "total_scenes": 1,
+            "scenes": [{"scene_index": 0, "start_time": 0, "end_time": 4, "description": "Scene"}],
+            "pacing_profile": {},
+        },
+    }
+    migrated = migrate_artifact("video_analysis_brief", legacy)
+    assert "url" not in migrated["source"]
+    assert migrated["evidence"][0]["status"] == "unavailable"
+    assert migrated["evidence"][0]["source_ref"].startswith("migration://")
+    validate_artifact("video_analysis_brief", migrated)
+
+
 def test_migration_rejects_unsafe_legacy_time_ranges():
     legacy = {
         "version": "1.0",
@@ -699,6 +1026,34 @@ def test_migration_normalizes_schema_valid_duplicate_ids():
     assert [item["id"] for item in migrated_scene["scenes"]] == ["scene", "scene-2"]
 
 
+def test_v11_transcript_segments_bind_to_evidence():
+    analysis = analysis_fixture()
+    analysis["narration_transcript"] = {
+        "full_text": "A spoken line.",
+        "segments": [{"id": "segment-1", "start": 0, "end": 1, "text": "A spoken line."}],
+    }
+    analysis["evidence"].append({
+        "id": "ev-transcript-segment-1",
+        "kind": "transcript_segment",
+        "status": "available",
+        "source_ref": analysis["source"]["url"],
+        "start_seconds": 0,
+        "end_seconds": 1,
+        "excerpt": "A spoken line.",
+    })
+    validate_artifact("video_analysis_brief", analysis)
+
+    missing = deepcopy(analysis)
+    missing["evidence"] = [item for item in missing["evidence"] if item["kind"] != "transcript_segment"]
+    with pytest.raises(ArtifactSemanticValidationError, match="transcript segments"):
+        validate_artifact("video_analysis_brief", missing)
+
+    mismatched = deepcopy(analysis)
+    mismatched["evidence"][-1]["excerpt"] = "A different line."
+    with pytest.raises(ArtifactSemanticValidationError, match="transcript segments"):
+        validate_artifact("video_analysis_brief", mismatched)
+
+
 def test_analyzer_normalizes_segments_and_builds_unknown_aspect_scaffold(tmp_path: Path):
     analyzer = VideoAnalyzer()
     assert analyzer.get_info()["artifact_schema"] == {"artifact": "video_analysis_brief", "version": "1.1"}
@@ -747,6 +1102,29 @@ def test_prior_stage_lineage_rejects_reference_switches_and_dangling_scenes(tmp_
         json.dumps({
             "status": "completed",
             "artifacts": {
+                "proposal_packet": {
+                    "version": "1.1",
+                    "reference_analysis_refs": ["analysis-fixture", "analysis-second"],
+                }
+            },
+        }),
+        encoding="utf-8",
+    )
+    dropped_script = script_fixture()
+    dropped_script["reference_analysis_refs"] = ["analysis-fixture"]
+    with pytest.raises(CheckpointValidationError, match="dropped prior analysis refs"):
+        _validate_prior_reference_lineage(
+            tmp_path,
+            "project",
+            "animated-explainer",
+            "script",
+            {"script": dropped_script},
+        )
+
+    proposal_path.write_text(
+        json.dumps({
+            "status": "completed",
+            "artifacts": {
                 "video_analysis_brief": analysis_fixture(),
                 "proposal_packet": proposal_fixture(),
             },
@@ -781,6 +1159,35 @@ def test_prior_stage_lineage_rejects_reference_switches_and_dangling_scenes(tmp_
             "scene_plan",
             {"scene_plan": bad_scene},
         )
+
+
+def test_prior_stage_lineage_uses_selected_proposal_refs(tmp_path: Path):
+    project_dir = tmp_path / "project"
+    project_dir.mkdir()
+    (project_dir / "checkpoint_proposal.json").write_text(
+        json.dumps({
+            "status": "completed",
+            "artifacts": {
+                "proposal_packet": {
+                    "version": "1.1",
+                    "reference_analysis_refs": ["analysis-fixture", "analysis-second"],
+                    "selected_concept": {
+                        "reference_analysis_refs": ["analysis-fixture"],
+                    },
+                }
+            },
+        }),
+        encoding="utf-8",
+    )
+    selected_script = script_fixture()
+    selected_script["reference_analysis_refs"] = ["analysis-fixture"]
+    _validate_prior_reference_lineage(
+        tmp_path,
+        "project",
+        "animated-explainer",
+        "script",
+        {"script": selected_script},
+    )
 
 
 def test_v11_reference_lineage_survives_stage_checkpoints(tmp_path: Path):

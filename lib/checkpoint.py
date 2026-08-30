@@ -449,6 +449,24 @@ def _analysis_identity_map(artifacts: dict[str, Any]) -> dict[str, Any]:
         identities[analysis["analysis_id"]] = analysis.get("source", {}).get("fingerprint")
     return identities
 
+def _effective_lineage_refs(
+    artifact: dict[str, Any], artifact_name: str
+) -> set[str]:
+    """Return the analysis IDs that should continue into the next stage.
+
+    A proposal's top-level refs may be the union of all concept options. Once
+    one option is selected, downstream stages inherit that option's refs;
+    other concept sources must not become mandatory script inputs.
+    """
+    refs = set(artifact.get("reference_analysis_refs", []))
+    if artifact_name == "proposal_packet":
+        selected = artifact.get("selected_concept")
+        selected_refs = selected.get("reference_analysis_refs", []) if isinstance(selected, dict) else []
+        if selected_refs:
+            return set(selected_refs)
+    return refs
+
+
 def _validate_prior_reference_lineage(
     pipeline_dir: Path,
     project_id: str,
@@ -492,19 +510,29 @@ def _validate_prior_reference_lineage(
         return
 
     current_refs = set(current.get("reference_analysis_refs", []))
-    prior_refs = set(prior_artifact.get("reference_analysis_refs", [])) if prior_artifact else set()
-    if prior_refs and not current_refs:
-        raise CheckpointValidationError(
-            f"REFERENCE LINEAGE VIOLATION: {stage!r} dropped prior analysis refs {sorted(prior_refs)}"
-        )
+    prior_refs = (
+        _effective_lineage_refs(prior_artifact, prior_artifact_name)
+        if prior_artifact
+        else set()
+    )
     if current_refs and prior_artifact is None:
         raise CheckpointValidationError(
             f"REFERENCE LINEAGE VIOLATION: {stage!r} has no prior v1.1 {prior_artifact_name} to inherit from"
         )
-    if current_refs - prior_refs:
+    if prior_artifact is not None and current_refs != prior_refs:
+        dropped = prior_refs - current_refs
+        introduced = current_refs - prior_refs
+        details = []
+        if dropped:
+            details.append(f"dropped prior analysis refs {sorted(dropped)}")
+        if introduced:
+            details.append(
+                f"introduced analysis refs {sorted(introduced)} outside the prior stage"
+            )
         raise CheckpointValidationError(
-            f"REFERENCE LINEAGE VIOLATION: {stage!r} introduced analysis refs "
-            f"{sorted(current_refs - prior_refs)} outside the prior stage"
+            f"REFERENCE LINEAGE VIOLATION: {stage!r} changed analysis refs ("
+            + "; ".join(details)
+            + ")"
         )
 
     if prior_checkpoint is not None and current_refs:

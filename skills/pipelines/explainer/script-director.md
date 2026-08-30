@@ -20,7 +20,7 @@ The script is the backbone of the video. Every visual, every scene, every audio 
 
 ### Reference-aware v1.1 handoff
 
-When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, carry the brief's `analysis_id`, or each bundle member's `analysis_id`, in
+When a `video_analysis_brief@1.1` or `video_analysis_bundle@1.1` is present for a reference-driven run, carry the brief's `analysis_id`. For a bundle, carry the IDs in the selected concept's `reference_analysis_refs` (a non-empty subset is valid), not every member by default, in
 `reference_analysis_refs` and emit a `script@1.1` artifact. Use plural
 `narrative_profile_refs` because profiles compose; use namespaced `beat_role` values
 rather than inventing a universal beat enum. Each section should expose `evidence_refs`
