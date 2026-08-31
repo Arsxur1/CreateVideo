@@ -10,6 +10,7 @@ Everything you need to know about every provider in OpenMontage — setup instru
 
 | Step | Cost | What to set up | What it unlocks |
 |------|------|----------------|-----------------|
+| 0 | **$0, no key** | Codex CLI (if you already pay for ChatGPT) | gpt-image-2 image generation billed to your ChatGPT subscription — see [Codex ChatGPT subscription](#codex-chatgpt-subscription-no-api-key) |
 | 1 | **$0** | Pexels + Pixabay | Stock photos and videos — enough to produce basic videos |
 | 2 | **$0** | Google API key | TTS with 700+ voices (1M chars/month free) + $300 new account credit |
 | 3 | **$0** | ElevenLabs | Premium TTS + music + SFX (10K chars/month free) |
@@ -30,6 +31,9 @@ Everything you need to know about every provider in OpenMontage — setup instru
 
 ```bash
 # .env — add your keys here
+
+# NO KEY AT ALL — codex_image uses your signed-in Codex CLI (paid ChatGPT plan).
+# Nothing to put in .env; just `codex login`. CODEX_HOME only if state isn't in ~/.codex.
 
 # FREE (no cost, ever)
 PEXELS_API_KEY=              # Stock photos + videos
@@ -1100,6 +1104,72 @@ Gen-3 Alpha Turbo and Gen-4 Aleph were removed from the Runway API on
 ## Local Providers (Free, No API Key)
 
 These providers run entirely on your machine. No network, no API key, no cost. Some require a GPU.
+
+### Codex ChatGPT Subscription (No API Key)
+
+> **The only image provider that costs no money and needs no key.** If you already pay for
+> ChatGPT, the locally-installed Codex CLI can generate `gpt-image-2` images against your
+> subscription. Useful on a machine with no provider keys and no GPU — the situation where
+> every other image tool reports `unavailable`.
+
+**Tool:** `codex_image`
+**Model:** `gpt-image-2` (same model as `openai_image`)
+**Runtime:** local CLI (reaches the network on your behalf)
+**Env var:** none — optionally `CODEX_HOME` if Codex state is not in `~/.codex`
+
+#### Setup
+
+```bash
+# 1. Install the Codex CLI — https://developers.openai.com/codex/cli
+# 2. Sign in with a PAID ChatGPT plan (free tier has no image generation)
+codex login
+
+# 3. Verify the capability is on for your account
+codex features list | grep image_generation      # must read: stable  true
+```
+
+Check OpenMontage sees it:
+
+```bash
+python -c "from tools.tool_registry import registry; registry.discover(); \
+  print(registry.support_envelope()['codex_image']['status'])"
+```
+
+| Status | Meaning |
+|--------|---------|
+| `available` | signed in with ChatGPT — generations bill your subscription |
+| `degraded` | signed in with an API key instead — generations bill **API credit**, not the subscription |
+| `unavailable` | `codex` not on PATH, or `auth.json` unreadable → run `codex login` |
+
+#### Cost — $0.00 in money, not free
+
+Generations draw on your ChatGPT plan's **rolling 5-hour and weekly quota**, roughly 3–5×
+faster than a normal Codex turn. A 20-image batch can leave you unable to use Codex for
+coding. `estimate_cost()` reports `0.0` because no money moves — always state the quota
+cost alongside it when proposing a batch.
+
+| | `codex_image` | `flux_image` (fal.ai) |
+|---|---|---|
+| Money per image | $0.00 | ~$0.03 |
+| Wall time per image | 30–60s | 5–10s |
+| Real cost | ChatGPT quota | API credit |
+| Sizes | `1024x1024`, `1024x1536`, `1536x1024` | arbitrary |
+
+#### Limits
+
+- **Three aspect ratios only.** For a 1080×1920 short, generate `1024x1536` and crop with
+  `auto_reframe` / `video_compose`.
+- **Runs are serialized.** Codex keeps global state on disk, so the tool takes a lock in
+  `$CODEX_HOME`; concurrent calls fail fast rather than corrupt state.
+- **No stable contract.** This drives an undocumented internal capability of the Codex CLI.
+  A Codex update can break it — hence `stability = EXPERIMENTAL` and a two-tier result
+  lookup (structured response first, Codex's own `generated_images/<session_id>/` second).
+- **Text-to-image only** in this version. Codex accepts input images, but image editing is
+  not wired up yet.
+
+**Prompting guide:** [`.agents/skills/codex-image/SKILL.md`](../.agents/skills/codex-image/SKILL.md)
+
+---
 
 ### Remotion — Programmatic Video Composition
 
