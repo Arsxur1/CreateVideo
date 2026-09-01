@@ -104,3 +104,8 @@ venv/
 
 # Local Wan / diffusers GPU environment
 .venv-wan/
+
+# Per-run scratch written by the asset-generation scripts; regenerate, do not track.
+/s[0-9].json
+/v1r.json
+/*_result.json
