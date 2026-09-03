@@ -275,9 +275,13 @@ class HyperFramesCompose(BaseTool):
         `_runtime_check` previously only verified that node/ffmpeg/npx existed
         on PATH, which meant `runtime_available: True` on any machine with
         Node + FFmpeg — even offline, even if npm was down, even if the
-        package was unpublished. This method performs a cheap
-        `npm view hyperframes version` (5s timeout) and caches the answer
-        for the rest of the process.
+        package was unpublished.
+
+        To avoid failing renders when the registry is slow or offline, this
+        method first probes the local environment (`npx --no-install` or
+        binary on PATH). If already available locally, returns the local version
+        immediately without network overhead. Otherwise, performs an
+        `npm view hyperframes version` probe (5s timeout) and caches the answer.
 
         Returns {"version": "X.Y.Z"} on success, {"error": "<short>"} on any
         failure (404, timeout, network error, npm missing). Never raises.
@@ -285,6 +289,42 @@ class HyperFramesCompose(BaseTool):
         if cls._npm_resolve_cache is not None:
             return cls._npm_resolve_cache
 
+        # 1. Fast local probe: check if CLI is already cached or installed locally
+        npx = shutil.which("npx")
+        if npx:
+            try:
+                local_proc = subprocess.run(
+                    [npx, "--no-install", cls._NPM_PACKAGE, "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if local_proc.returncode == 0:
+                    local_ver = (local_proc.stdout or "").strip()
+                    if local_ver and re.match(r"^v?\d+\.\d+", local_ver):
+                        cls._npm_resolve_cache = {"version": local_ver.lstrip("v")}
+                        return cls._npm_resolve_cache
+            except (OSError, subprocess.SubprocessError):
+                pass
+
+        cli_bin = shutil.which(cls._NPM_PACKAGE)
+        if cli_bin:
+            try:
+                local_proc = subprocess.run(
+                    [cli_bin, "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if local_proc.returncode == 0:
+                    local_ver = (local_proc.stdout or "").strip()
+                    if local_ver and re.match(r"^v?\d+\.\d+", local_ver):
+                        cls._npm_resolve_cache = {"version": local_ver.lstrip("v")}
+                        return cls._npm_resolve_cache
+            except (OSError, subprocess.SubprocessError):
+                pass
+
+        # 2. Remote registry probe when not yet installed/cached locally
         npm = shutil.which("npm")
         if not npm:
             cls._npm_resolve_cache = {"error": "npm not on PATH"}
@@ -389,16 +429,28 @@ class HyperFramesCompose(BaseTool):
         # Only probe npm if the local tooling is actually usable — otherwise
         # a missing-node run would also show a confusing npm error.
         npm_resolve: dict[str, str] = {}
+        cli_probe: dict[str, str] = {}
         if not reasons:
             npm_resolve = self._resolve_npm_package()
             if "error" in npm_resolve:
-                reasons.append(
-                    f"npm package `{self._NPM_PACKAGE}` not resolvable: "
-                    f"{npm_resolve['error']}"
-                )
+                # If the registry check timed out or is offline, let the CLI doctor probe
+                # determine whether the cached runtime is runnable before failing.
+                if "timeout" in npm_resolve["error"] or "offline" in npm_resolve["error"]:
+                    cli_probe = self._probe_cli()
+                    if cli_probe.get("status") == "ok":
+                        npm_resolve = {"version": "cached"}
+                    else:
+                        reasons.append(
+                            f"npm package `{self._NPM_PACKAGE}` not resolvable: "
+                            f"{npm_resolve['error']}"
+                        )
+                else:
+                    reasons.append(
+                        f"npm package `{self._NPM_PACKAGE}` not resolvable: "
+                        f"{npm_resolve['error']}"
+                    )
 
-        cli_probe: dict[str, str] = {}
-        if not reasons:
+        if not reasons and not cli_probe:
             cli_probe = self._probe_cli()
             if "error" in cli_probe:
                 reasons.append(f"published CLI is not executable: {cli_probe['error']}")
