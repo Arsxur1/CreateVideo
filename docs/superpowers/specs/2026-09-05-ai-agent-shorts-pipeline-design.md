@@ -73,7 +73,7 @@ Tool mới `tools/capture/episode_capture.py`. Đọc `steps`, trả về một 
   Chờ theo phần tử, không chờ theo giây.
 
 **chat** (claude.ai / ChatGPT)
-- Như browser, cùng persistent context. Gõ `action` vào ô chat, chờ streaming dừng
+- Như browser, cùng persistent context; step `chat` cũng cần `url` (claude.ai hoặc chatgpt.com). Gõ `action` vào ô chat, chờ streaming dừng
   (nút Stop biến mất), cuộn về đầu câu trả lời.
 
 **Chung**
