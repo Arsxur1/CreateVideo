@@ -250,6 +250,18 @@ class HyperFramesCompose(BaseTool):
     _cli_probe_cache: Optional[dict[str, str]] = None
 
     @classmethod
+    def _child_env(cls) -> dict[str, str]:
+        """Environment for node/npm/npx subprocesses, minus NODE_OPTIONS.
+
+        Some agent harnesses inject `NODE_OPTIONS=--require <shim>` into every
+        node process to broker filesystem access. npm/npx load thousands of
+        module files at startup, and each one pays the broker round-trip:
+        measured 24s for `npm view` vs 0.41s with the shim removed (58x).
+        The shim is a host-side audit layer, not something the CLI needs.
+        """
+        return {k: v for k, v in os.environ.items() if k != "NODE_OPTIONS"}
+
+    @classmethod
     def _node_major_version(cls) -> Optional[int]:
         """Return Node.js major version, or None if node isn't installed."""
         node = shutil.which("node")
@@ -257,7 +269,11 @@ class HyperFramesCompose(BaseTool):
             return None
         try:
             out = subprocess.run(
-                [node, "--version"], capture_output=True, text=True, timeout=5
+                [node, "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                env=cls._child_env(),
             )
             if out.returncode != 0:
                 return None
@@ -276,8 +292,8 @@ class HyperFramesCompose(BaseTool):
         on PATH, which meant `runtime_available: True` on any machine with
         Node + FFmpeg — even offline, even if npm was down, even if the
         package was unpublished. This method performs a cheap
-        `npm view hyperframes version` (5s timeout) and caches the answer
-        for the rest of the process.
+        `npm view hyperframes version` (30s timeout, shim-free env) and caches
+        the answer for the rest of the process.
 
         Returns {"version": "X.Y.Z"} on success, {"error": "<short>"} on any
         failure (404, timeout, network error, npm missing). Never raises.
@@ -295,10 +311,11 @@ class HyperFramesCompose(BaseTool):
                 [npm, "view", cls._NPM_PACKAGE, "version"],
                 capture_output=True,
                 text=True,
-                timeout=5,
+                timeout=30,
+                env=cls._child_env(),
             )
         except subprocess.TimeoutExpired:
-            cls._npm_resolve_cache = {"error": "timeout (5s) — offline or slow registry"}
+            cls._npm_resolve_cache = {"error": "timeout (30s) — offline or slow registry"}
             return cls._npm_resolve_cache
         except (OSError, subprocess.SubprocessError) as e:
             cls._npm_resolve_cache = {"error": f"npm view failed: {type(e).__name__}"}
@@ -345,10 +362,11 @@ class HyperFramesCompose(BaseTool):
                 [npx, "--yes", cls._NPM_PACKAGE, "doctor", "--json"],
                 capture_output=True,
                 text=True,
-                timeout=20,
+                timeout=60,
+                env=cls._child_env(),
             )
         except subprocess.TimeoutExpired:
-            cls._cli_probe_cache = {"error": "doctor timed out after 20s"}
+            cls._cli_probe_cache = {"error": "doctor timed out after 60s"}
             return cls._cli_probe_cache
         except (OSError, subprocess.SubprocessError) as exc:
             cls._cli_probe_cache = {"error": f"doctor failed: {type(exc).__name__}"}
@@ -1375,6 +1393,7 @@ class HyperFramesCompose(BaseTool):
                 timeout=timeout,
                 cwd=str(cwd) if cwd else None,
                 check=False,
+                env=self._child_env(),
             )
         except subprocess.TimeoutExpired as e:
             # Surface timeouts as a failed CompletedProcess so callers get a

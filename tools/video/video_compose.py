@@ -498,8 +498,17 @@ class VideoCompose(BaseTool):
         inputs = dict(inputs)
         inputs["subtitle_style"] = resolved_sub_style
 
+        # `options.subtitle_burn=False` must win unconditionally. Previously
+        # edit_decisions.subtitles.source was picked up regardless of that flag,
+        # so callers could not produce a clean master to burn subtitles onto
+        # separately (e.g. to work around the force_style separator issue).
         ed_subs = edit_decisions.get("subtitles", {})
-        if ed_subs.get("source") and not subtitle_path:
+        if (
+            ed_subs.get("enabled", True)
+            and inputs.get("options", {}).get("subtitle_burn", True)
+            and ed_subs.get("source")
+            and not subtitle_path
+        ):
             subtitle_path = ed_subs["source"]
 
         temp_dir = output_path.parent / ".compose_tmp"
@@ -2910,7 +2919,13 @@ class VideoCompose(BaseTool):
 
     @staticmethod
     def _build_subtitle_style(style: dict) -> str:
-        """Build ASS force_style string from style dict."""
+        """Build ASS force_style string from style dict.
+
+        Fields are joined with `;` (the libass separator), NOT `,`. ffmpeg
+        splits `-vf` on commas, so a comma-joined force_style gets parsed as
+        separate filters — alignment/margin silently drop and captions jump
+        to the top of the frame.
+        """
         parts = []
         parts.append(f"FontName={style.get('font', 'Inter')}")
         parts.append(f"FontSize={style.get('font_size', 28)}")
@@ -2927,7 +2942,7 @@ class VideoCompose(BaseTool):
         parts.append(f"Shadow={style.get('shadow', 0)}")
         parts.append(f"MarginV={style.get('margin_v', 40)}")
         parts.append(f"Alignment={style.get('alignment', 2)}")
-        return ",".join(parts)
+        return ";".join(parts)
 
     @staticmethod
     def _build_atempo(factor: float) -> str:

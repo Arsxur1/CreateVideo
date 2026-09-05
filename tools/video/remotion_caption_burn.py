@@ -397,9 +397,9 @@ class RemotionCaptionBurn(BaseTool):
             "-i", input_path,
             "-vf", (
                 f"subtitles='{srt_escaped}'"
-                ":force_style='FontName=Segoe UI,FontSize=24,Bold=1,"
-                "PrimaryColour=&H00FFFFFF,OutlineColour=&H00000000,"
-                "Outline=3,Shadow=2,Alignment=2,MarginV=100'"
+                ":force_style='FontName=Segoe UI;FontSize=24;Bold=1;"
+                "PrimaryColour=&H00FFFFFF;OutlineColour=&H00000000;"
+                "Outline=3;Shadow=2;Alignment=2;MarginV=100'"
             ),
             "-c:v", "libx264", "-preset", "fast", "-crf", "18",
             "-pix_fmt", "yuv420p",
