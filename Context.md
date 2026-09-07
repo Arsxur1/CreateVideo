@@ -770,3 +770,112 @@ Ask the user the gloves question. Then rewrite the sequence for F4 and the locke
 User approval of the rewritten sequence, the delivery shape, and any spend above 0.50 dollars.
 
 <!-- context-entry:end -->
+
+<!-- context-entry:start -->
+## CTX-000017 | session-start
+
+- Timestamp: 2026-09-06T20:37:35Z
+- Lifecycle: implement
+- Session: SES-20260906T203735Z-claude-code-f4587d37
+- Harness: claude-code
+- Supersedes: none
+
+### Objective
+Ask the user the gloves question, then rewrite the F4 cockpit shot sequence around the locked story and locked bridge, replace the stale concept options in proposal_packet, and present the result at the proposal gate without generating anything.
+
+### Previous State
+- CTX-000016 handoff closed the prior session with proposal at awaiting_human and research completed.
+- Story locked as d-016: a last departure from Earth, seated in the captain's chair, one control, warp, never looks back.
+- Bridge locked as d-017 to the user-generated F4 two-seat cockpit with an empty copilot seat and gloves left on it.
+- Spend unchanged at 0.80 dollars of a 10.00 dollar budget. Nothing was generated in the prior session.
+
+### Governing Artifacts
+- projects/spacesuit-bridge/artifacts/decision_log.json - 17 decisions; read d-016, d-017, d-015 first; append-only with supersedes.
+- projects/spacesuit-bridge/artifacts/proposal_packet.json - holds the stale concept options that must be replaced.
+- projects/spacesuit-bridge/artifacts/research_brief.json - metadata.local_visual_references carries the ten stills with per-image defects.
+- pipeline_defs/cinematic.yaml - stage order and which stages gate.
+- skills/pipelines/cinematic/proposal-director.md - the director skill that owns the current stage.
+- AGENT_GUIDE.md - Rule Zero, mandatory preflight, project directory convention, checkpoint protocol.
+
+### Working Set
+- projects/spacesuit-bridge/artifacts/proposal_packet.json
+- projects/spacesuit-bridge/artifacts/decision_log.json
+- projects/spacesuit-bridge/checkpoint_proposal.json
+- projects/spacesuit-bridge/assets/images/F4-two-seat-cockpit-empty-copilot.jpg
+
+### Retrieve When Needed
+- skills/meta/checkpoint-protocol.md and skills/meta/reviewer.md for the gate and self-review rules.
+- schemas/artifacts/proposal_packet.schema.json before writing the rewritten packet.
+- om_ext/README.md only if a local tool addition becomes necessary.
+- Earlier Context.md entries CTX-000001 through CTX-000015 for decision provenance.
+
+### Open Items
+- The gloves question is unanswered and blocks the shot list; only the user can answer it.
+- Target duration, delivery aspect ratio and platform are still unset and change the framing of every shot.
+- Provider confirmation for the direct Google route recommended in d-015 is not yet user-approved.
+- The four concept options in proposal_packet predate the locked story and must not be re-presented.
+- The United States flag patch recurs in every generation and the user is Canadian; it rides into the regeneration prompt.
+- No paid generation has been approved; the 0.24 dollar 360p draft sits under the 0.50 dollar single-action threshold.
+
+### Next Action
+Ask the user the gloves question inline and wait for the answer before writing any shot.
+
+### Next Gate
+User approval of the rewritten sequence, the delivery shape, and any spend above 0.50 dollars.
+
+<!-- context-entry:end -->
+
+<!-- context-entry:start -->
+## CTX-000018 | checkpoint
+
+- Timestamp: 2026-09-07T20:47:42Z
+- Lifecycle: implement
+- Session: SES-20260906T203735Z-claude-code-f4587d37
+- Harness: claude-code
+- Supersedes: none
+
+### Current Objective
+Sync the externally produced Runway cut into OpenMontage as hero source footage and re-open the proposal gate against the film that now exists.
+
+### Decisions Since Previous Boundary
+- User answered the role question: the Runway cut is hero source footage, not the deliverable and not an animatic. Recorded as d-019.
+- User stated the clip's background audio must carry through to the master. This is now recorded in source_media_review, in the d-019 reason, and as an explicit compose-stage constraint in proposal_packet.
+- Provider route changed from Gemini Omni direct to Runway offline on the user's subscription. Recorded as d-018, superseding d-015 on the same subject.
+- The four prior concept options A-D were removed rather than edited, because all predate d-016, d-017 and the hero clip.
+- Three upstream defects in lib/source_media_review.py were fixed on a branch and sent as a pull request rather than carried as local edits, per the project rule that fixes to upstream files belong in a PR.
+
+### Changed Artifacts
+- projects/spacesuit-bridge/assets/video/spacesuit-bridge-runway-cut-12s.mp4 - new; 12.0s, 1280x720, 24fps, h264, AAC stereo 48kHz; sha256 verified identical to the Downloads original.
+- projects/spacesuit-bridge/artifacts/source_media_review.json - regenerated over all 21 media files; the prior claim of image-only source is gone; audio bed and the 1280x720 ceiling now recorded.
+- projects/spacesuit-bridge/artifacts/proposal_packet.json - concept options replaced with S1, S2, S3; delivery promise switched to source_led; estimate falls from 3.44 dollars to 0.00.
+- projects/spacesuit-bridge/decision_log.json - d-018 and d-019 appended; 19 decisions total.
+- projects/spacesuit-bridge/checkpoint_proposal.json - rewritten at awaiting_human, now carrying source_media_review as a stage input; prior checkpoint archived to history/.
+- lib/source_media_review.py and tests/lib/test_source_media_review_video_probe.py - on branch fix/source-media-review-video-probe, merged locally to main, sent as calesthio/OpenMontage pull request 641.
+
+### Verification State
+- Three defects confirmed by reading source and by execution, not inferred. frame_sampler was called without its required strategy input, raising KeyError into a swallowing except. Its result was read as frame_paths when the tool returns frames. audio_probe's audio-shaped dict was assigned to technical_probe wholesale, leaving no resolution or fps and making the ffprobe fallback unreachable.
+- Net effect measured: a 1280x720 clip with a real AAC track was reported as 12.0s at unknown, without audio, with zero frames sampled, while asserting reviewed true. No video had ever been frame-sampled by this function.
+- After the fix the same call reports 1280x720, 24fps, h264, aac, 48000Hz, 2 channels, four frames on disk, and adds source audio to usable_for.
+- The three new tests fail against the unfixed library and pass against the fixed one; verified by stashing the fix and re-running.
+- Full suite: 1853 passed, 12 skipped, 3 xfailed, zero failures. Baseline on main was 1850 plus the 3 new tests.
+- Proposal checkpoint re-read and validated through lib.checkpoint.validate_checkpoint: status awaiting_human, human_approved false, three artifacts attached, 21 files in the review.
+- Whisper found zero speech segments in both the hero cut and shot01, so the audio bed is ambience and score rather than dialogue.
+- Both repositories committed and pushed. kraaft007/spacesuit-bridge at a74afb1, working tree clean and in sync with origin.
+
+### Unresolved Items
+- The proposal gate is open and unapproved. S2 is recommended but not chosen; picking S2 or S3 requires explicitly superseding d-016's register from refusal to farewell.
+- The to-camera look at roughly 3.0s and 6.9s in the hero clip contradicts d-016's never looks back. This is the substance of the S1 versus S2 choice.
+- The gloves question is still formally unanswered. The hero clip does not clearly resolve it: at 7.8s his hand reaches past the empty seat toward the console and his gaze drops, but stills cannot tell whether it lands on the gloves or the control.
+- Target duration and delivery aspect ratio remain unset. A 16:9 frame is not classified as a Short, so phone distribution would change the framing of every remaining decision.
+- render_runtime is still locked to remotion from the previous gate, but the production is now source-led, which makes ffmpeg a live option again. It needs re-confirming rather than carrying over.
+- Whether further inserts go through Runway on the subscription at 0.00 dollars or in-pipeline at 0.80 dollars is open. The in-pipeline route is the only one that yields a seed and reproducible provenance.
+- The hero clip has no recoverable seed, model version or prompt. It can be re-edited but never regenerated.
+- Pull request 641 is open against calesthio/OpenMontage and is now the third open PR alongside 633 and 634.
+
+### Next Action
+Wait for the user to choose S1, S2 or S3 at the proposal gate, along with duration, aspect ratio and the render_runtime re-confirmation. Generate nothing before that.
+
+### Next Gate
+User approval of the rewritten proposal packet: concept choice, delivery shape, render runtime, and the insert route.
+
+<!-- context-entry:end -->
