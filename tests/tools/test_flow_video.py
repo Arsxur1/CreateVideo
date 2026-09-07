@@ -141,6 +141,22 @@ class TestExecute:
         assert result.cost_usd == 0.0
         assert Path(FakeDriver.last_job["output_path"]).is_absolute()
 
+    def test_default_output_path_lands_under_projects_scratch_not_cwd(self, ready, monkeypatch):
+        # A caller that omits output_path must never get a bare filename
+        # resolved against whatever the shell's cwd happened to be — that is
+        # exactly how a stray flow_output_*.mp4 used to end up loose at the
+        # repo root, outside every project.
+        monkeypatch.setattr("tools.video.flow_video.PROJECTS_DIR", ready)
+
+        result = FlowVideo().execute({"prompt": "x"})
+
+        assert result.success, result.error
+        scratch = ready / "_flow_video_scratch"
+        assert scratch.is_dir()
+        out = Path(result.artifacts[0])
+        assert out.parent == scratch
+        assert out.name.startswith("flow_output_") and out.suffix == ".mp4"
+
     def test_driver_error_is_surfaced(self, ready):
         from lib.flow_driver import FlowError
 

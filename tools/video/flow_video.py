@@ -21,6 +21,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from lib.paths import PROJECTS_DIR
 from tools.base_tool import (
     BaseTool,
     Determinism,
@@ -138,7 +139,35 @@ class FlowVideo(BaseTool):
                 "type": "string",
                 "description": "Local first-frame image for image_to_video.",
             },
-            "output_path": {"type": "string"},
+            "end_image_path": {
+                "type": "string",
+                "description": (
+                    "Optional local last-frame image. Flow interpolates from the "
+                    "first frame to this one, which is how a chained sequence lands "
+                    "on an exact artwork instead of wherever the model drifts to."
+                ),
+            },
+            "output_path": {
+                "type": "string",
+                "description": (
+                    "Where to write the clip. Omit and it lands under "
+                    "projects/_flow_video_scratch/ instead of wherever the shell's cwd "
+                    "happened to be — a bare relative default previously left generated "
+                    "mp4s loose at the repo root."
+                ),
+            },
+            "quality": {
+                "type": "string",
+                "default": "max",
+                "description": (
+                    "max: the highest tier the Flow plan allows, including its upscale rows "
+                    "(rows marked 'Nâng cấp' are a paywall and are never clicked). "
+                    "native: the size the model rendered at. "
+                    "Or name a tier exactly — '1080p', '2K', '4K' — which fails loudly if Flow "
+                    "does not offer it, rather than silently handing back another size."
+                ),
+            },
+
             "timeout_seconds": {
                 "type": "integer",
                 "default": 900,
@@ -215,6 +244,19 @@ class FlowVideo(BaseTool):
         # racing itself; swap for a proper lock if other tools drive the browser.
         return Path.home() / ".openmontage" / "flow_video.lock"
 
+    def _scratch_dir(self) -> Path:
+        # A caller that omits output_path used to fall back to a bare relative
+        # filename, which `.resolve()` pins to whatever the shell's cwd was —
+        # usually the repo root, so a run left a stray `flow_output_*.mp4`
+        # sitting loose outside every project. Route it under projects/ instead:
+        # `infer_project_dir` (lib/events.py) only ever attributes an event to a
+        # path under PROJECTS_DIR, so this is also the only default that gets a
+        # real events.jsonl. The directory is created eagerly — emit_event
+        # refuses to write into a project dir that doesn't exist yet.
+        d = PROJECTS_DIR / "_flow_video_scratch"
+        d.mkdir(parents=True, exist_ok=True)
+        return d
+
     @staticmethod
     def _cdp_blocker(cdp_url: str) -> str | None:
         """Explain what is missing, in the order the user has to fix it."""
@@ -259,9 +301,9 @@ class FlowVideo(BaseTool):
             return ToolResult(success=False, error=blocker)
 
         timeout = int(inputs.get("timeout_seconds", 900))
-        output_path = Path(
-            inputs.get("output_path") or f"flow_output_{uuid.uuid4().hex[:8]}.mp4"
-        ).resolve()
+        filename = f"flow_output_{uuid.uuid4().hex[:8]}.mp4"
+        output_path = Path(inputs["output_path"]).resolve() if inputs.get("output_path") \
+            else (self._scratch_dir() / filename).resolve()
 
         operation = inputs.get("operation", "text_to_video")
         asset_path = inputs.get("reference_image_path")
@@ -286,7 +328,10 @@ class FlowVideo(BaseTool):
             "duration": str(inputs["duration"]) if inputs.get("duration") else None,
             "resolution": inputs.get("resolution"),
             "output_path": str(output_path),
+            "quality": inputs.get("quality", "max"),
             "asset_path": asset_path,
+            "end_asset_path": (str(Path(inputs["end_image_path"]).resolve())
+                               if inputs.get("end_image_path") else None),
             "timeout_seconds": timeout,
         }
 
@@ -354,6 +399,7 @@ class FlowVideo(BaseTool):
                 "flow_model": result.get("model"),
                 "flow_credits": result.get("credits"),
                 "flow_media_id": result.get("media_id"),
+                "flow_download_row": result.get("download_row"),
                 "reference_image": asset_path,
                 **probed,
             },
