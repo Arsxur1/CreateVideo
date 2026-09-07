@@ -58,7 +58,7 @@ Generate {n} image(s) using your image generation tool.
 
 Aspect: {size}
 
-Image description, render exactly this and nothing else:
+{ref_block}Image description, render exactly this and nothing else:
 {prompt}
 
 When every image is generated, reply with ONLY this JSON object:
@@ -136,6 +136,14 @@ class CodexImage(BaseTool):
             },
             "n": {"type": "integer", "default": 1, "minimum": 1, "maximum": 4},
             "output_path": {"type": "string"},
+            "reference_images": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": (
+                    "Local image paths attached to the prompt via `codex exec -i`. "
+                    "The agent passes them to gpt-image-2 as style/character references."
+                ),
+            },
             "codex_model": {
                 "type": "string",
                 "description": "Codex agent model driving the turn (not the image model).",
@@ -292,6 +300,18 @@ class CodexImage(BaseTool):
         ]
         if inputs.get("codex_model"):
             cmd += ["-m", str(inputs["codex_model"])]
+        refs = [Path(r).resolve() for r in inputs.get("reference_images", [])]
+        missing = [str(r) for r in refs if not r.is_file()]
+        if missing:
+            return ToolResult(success=False, error=f"reference_images not found: {missing}")
+        for r in refs:
+            cmd += ["-i", str(r)]
+        ref_block = (
+            "The attached image(s) are STYLE AND CHARACTER REFERENCES. Pass them to the "
+            "image generation tool as input/reference images and keep their art style, "
+            "color palette, lighting and materials exactly. Only change what the "
+            "description below asks for.\n\n"
+        ) if refs else ""
 
         # An OPENAI_API_KEY in the environment can flip Codex onto API billing —
         # the exact thing this provider exists to avoid. Strip it for the child.
@@ -324,7 +344,7 @@ class CodexImage(BaseTool):
                     timeout=timeout,
                     cwd=workdir,
                     env=child_env,
-                    input=_PROMPT_TEMPLATE.format(n=n, size=size, prompt=prompt),
+                    input=_PROMPT_TEMPLATE.format(n=n, size=size, prompt=prompt, ref_block=ref_block),
                 )
             except Exception as e:
                 return ToolResult(success=False, error=f"Codex image generation failed: {e}")

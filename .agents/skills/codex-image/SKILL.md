@@ -37,6 +37,26 @@ prompting knowledge that applies is instruction-following, not tag-soup:
   Write "empty background, no people" rather than expecting a `negative_prompt`.
 - **Diacritics survive.** Vietnamese text in prompts and in rendered image text both work.
 
+## Reference images (style / character lock)
+
+`codex exec -i <file>` attaches images to the prompt; the tool exposes this as
+`reference_images: [path, ...]`. The agent hands them to gpt-image-2 as input images,
+so palette, lighting, materials and character design carry over instead of drifting.
+
+```python
+CodexImage().execute({
+    "prompt": "The same lion mascot as in the reference image, but younger: ...",
+    "reference_images": ["assets/su-tu-poster.webp"],
+    "size": "1536x1024",
+})
+```
+
+- Write the prompt as a **delta**: "same X as the reference, only change Y". Listing the
+  whole scene again invites the model to re-invent it.
+- One or two refs is enough. More refs = more tokens per turn on the same quota.
+- Verified 2026-09: without a ref the same prompt shifted the palette to warm orange
+  sunset; with the poster as ref it kept the beige-gray sky and muted gold of the original.
+
 ## Aspect ratios — only three
 
 | `size` | Use for |
@@ -76,3 +96,14 @@ and the job is a **batch** — those return in seconds and do not touch the subs
 `codex_image` is the right pick when there is no key at all, or when a small number of
 high-instruction-fidelity images (text in image, precise composition) matter more than
 throughput.
+
+## Transparent sprites (measured 2026-09-06)
+
+gpt-image-2 honours "PNG with a fully transparent background" only partially: a 3x3 sprite sheet
+came back RGBA with 2–60 % of pixels at alpha 0 depending on the subject, sometimes with a drawn
+checkerboard or baked shadow instead of real transparency. Ask for it anyway (it saves most of the
+cut-out work), then **flatten onto white and run `bg_remove`** for any sheet whose alpha-0 fraction
+is below ~30 %. Never `convert("RGB")` a returned PNG directly — transparent pixels turn black and
+the cut-out inherits fringes. Sprite-sheet phrasing that works: "3x3 sprite sheet … nine consecutive
+animation frames of the SAME <subject> … identical character, size, lighting and camera in every
+panel … no text, no numbers".

@@ -149,6 +149,39 @@ class TestExecute:
         # No money moves, so the cost tracker must not be told otherwise.
         assert result.cost_usd == 0.0
 
+    def test_reference_images_are_attached_with_dash_i(self, codex_home, tmp_path, monkeypatch):
+        session = codex_home / "generated_images" / "01a0-session"
+        session.mkdir(parents=True)
+        src = session / "exec-1.png"
+        src.write_bytes(b"png")
+        ref = tmp_path / "ref.webp"
+        ref.write_bytes(b"ref")
+        seen = {}
+        inner = self._fake_run([src])
+
+        def run_command(cmd, **kw):
+            seen["cmd"], seen["input"] = cmd, kw["input"]
+            return inner(cmd, **kw)
+
+        tool = CodexImage()
+        monkeypatch.setattr(tool, "run_command", run_command)
+        result = tool.execute({
+            "prompt": "same lion, younger",
+            "reference_images": [str(ref)],
+            "output_path": str(tmp_path / "out.png"),
+        })
+
+        assert result.success is True
+        assert seen["cmd"][seen["cmd"].index("-i") + 1] == str(ref.resolve())
+        assert "STYLE AND CHARACTER REFERENCES" in seen["input"]
+
+    def test_missing_reference_image_fails_before_spending_quota(self, codex_home, tmp_path, monkeypatch):
+        tool = CodexImage()
+        monkeypatch.setattr(tool, "run_command", lambda *a, **k: pytest.fail("must not run codex"))
+        result = tool.execute({"prompt": "x", "reference_images": [str(tmp_path / "nope.png")]})
+        assert result.success is False
+        assert "reference_images not found" in result.error
+
     def test_refuses_to_run_when_codex_is_missing(self, codex_home, monkeypatch):
         monkeypatch.setattr("tools.graphics.codex_image.shutil.which", lambda _: None)
         result = CodexImage().execute({"prompt": "a red lantern"})
