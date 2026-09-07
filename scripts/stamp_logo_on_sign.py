@@ -13,6 +13,10 @@ Two things make it read as printed rather than pasted:
     the board show through the ink the way real print does. Straight alpha
     compositing produces a flat sticker every time.
 
+It composites over everything in front of the board as well as the board itself —
+it has no idea a hand is in the way. Frame the shot so nothing crosses the face:
+a hand resting at the board's bottom rim works, a thumb in the middle does not.
+
     python scripts/stamp_logo_on_sign.py <frame.png> <logo.rgba.png> <out.png>
 """
 
