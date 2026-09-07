@@ -189,3 +189,21 @@ Reach for `veo_video`, `seedance_video`, or `kling_video` when the user has a ke
 job is a **batch**, or when generation must run unattended. `flow_video` is the right pick
 when there is no video API key at all, when the user explicitly wants zero spend, or when
 a handful of hero shots matter more than throughput.
+
+## Images: `flow_image` (Nano Banana via the same tab)
+
+Same driver, same Chrome, same lock. Switches the settings popover to **"Hình ảnh"**, picks a
+Nano Banana model, an aspect (`1:1`, `16:9`, `9:16`, `4:3`, `3:4`) and `x1..x4`, then downloads
+each tile at **"1K Kích thước gốc"** (~1024 px JPEG). Measured 2026-09-05: **0 credits per image**
+on every Nano Banana model, so images do not touch the daily video allowance.
+
+- `model_variant`: `2` (default, Nano Banana 2 — fast, excellent), `Pro`, `2 Lite`.
+- `n` up to 4 gives variations of one prompt, not a sequence. For **animation frames that stay
+  consistent**, ask for one image that is a `2x2 sprite sheet` of the same subject ("identical
+  character, lighting and camera in every panel, thin white gaps") and split it afterwards —
+  see `projects/hsg-van/gen_assets_flow.py`. Cut-outs: run `bg_remove` on each panel.
+- Flow's **agent mode** ("Tác nhân" chip) hides the settings pill. The driver switches it off for
+  the run and restores it. Do **not** use the Flow tab while a run is in progress: a click that
+  opens a tile editor empties the grid the driver is watching, and the wait times out.
+- No reference images yet (`supports.reference_image: false`); the add-media menu exists in
+  image mode and is the upgrade path.
