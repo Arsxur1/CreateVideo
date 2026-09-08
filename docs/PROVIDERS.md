@@ -15,7 +15,7 @@ Everything you need to know about every provider in OpenMontage — setup instru
 | 3 | **$0** | ElevenLabs | Premium TTS + music + SFX (10K chars/month free) |
 | 4 | **$0** | Piper (local install) | Fully offline TTS — no API key, no cost, no network |
 | 5 | **~$0.03/image** | fal.ai | FLUX images + Kling/Veo/MiniMax video + Recraft — broad single-key image + video coverage |
-| 6 | **~$0.05/image** | OpenAI | GPT Image 2 images + OpenAI TTS |
+| 6 | **~$0.006/image** | OpenAI | GPT Image 2 images + OpenAI TTS |
 | 7 | **~$0.04/image** | Google Imagen | Imagen 4 images (shares the Google API key) |
 | 8 | **pay-as-you-go** | Kling Official | Official direct Kling video, image, TTS, avatar, and lip-sync API, separate from fal.ai Kling |
 | 9 | **pay-as-you-go** | Volcengine Ark | Official direct Seedance 2.0 Standard/Fast/Mini API |
@@ -883,7 +883,7 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 | GPT Image 2 | 1024x1536 / 1536x1024 | medium | $0.041 |
 | GPT Image 2 | 1024x1536 / 1536x1024 | high | $0.165 |
 
-> **Note:** DALL-E 2/3 were shut down by OpenAI on 2026-05-12, and the `gpt-image-1` family (`gpt-image-1-mini`, `gpt-image-1.5`) retires 2026-12-01 — `gpt-image-2` is OpenAI's recommended replacement ([deprecations](https://developers.openai.com/api/docs/deprecations)).
+> **Note:** DALL-E 2/3 were shut down by OpenAI on 2026-05-12, and the `gpt-image-1` family (`gpt-image-1-mini`, `gpt-image-1.5`) retires 2026-12-01 — `gpt-image-2` is OpenAI's recommended replacement; OpenMontage defaults to `gpt-image-2.5-flare` (same token pricing, not listed by `/v1/models` but accepted by `images.generate`) ([deprecations](https://developers.openai.com/api/docs/deprecations)).
 
 **Free tier:** None. Requires prepaid billing. Previously offered $5 in free credits for new accounts (discontinued for most signups).
 

@@ -1,4 +1,4 @@
-"""OpenAI GPT Image generation (gpt-image-2)."""
+"""OpenAI GPT Image generation (gpt-image-2.5-flare by default)."""
 
 from __future__ import annotations
 
@@ -60,8 +60,8 @@ class OpenAIImage(BaseTool):
             "prompt": {"type": "string"},
             "model": {
                 "type": "string",
-                "enum": ["gpt-image-2"],
-                "default": "gpt-image-2",
+                "enum": ["gpt-image-2.5-flare", "gpt-image-2"],
+                "default": "gpt-image-2.5-flare",
             },
             "size": {
                 "type": "string",
@@ -71,7 +71,12 @@ class OpenAIImage(BaseTool):
             "quality": {
                 "type": "string",
                 "enum": ["low", "medium", "high", "auto"],
-                "default": "high",
+                "default": "low",
+                "description": (
+                    "Draft at 'low' (~$0.006/img) while iterating on the prompt; once the "
+                    "draft is approved, regenerate the same prompt at 'medium' (~$0.05) or "
+                    "'high' (~$0.21) for the final asset."
+                ),
             },
             "output_format": {
                 "type": "string",
@@ -116,12 +121,13 @@ class OpenAIImage(BaseTool):
         return ToolStatus.UNAVAILABLE
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
-        # gpt-image-2 per-image pricing at 1024x1024 (non-square sizes run
+        # gpt-image-2.5-flare and gpt-image-2 share the same token pricing, so the
+        # per-image estimates below hold for both at 1024x1024 (non-square sizes run
         # slightly cheaper): https://developers.openai.com/api/docs/guides/image-generation
-        quality = inputs.get("quality", "high")
+        quality = inputs.get("quality", "low")
         n = inputs.get("n", 1)
         cost_map = {"low": 0.006, "medium": 0.053, "high": 0.211, "auto": 0.053}
-        return cost_map.get(quality, 0.053) * n
+        return cost_map.get(quality, 0.006) * n
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         if not os.environ.get("OPENAI_API_KEY"):
@@ -134,13 +140,13 @@ class OpenAIImage(BaseTool):
 
         start = time.time()
         client = OpenAI()
-        model = inputs.get("model", "gpt-image-2")
+        model = inputs.get("model", "gpt-image-2.5-flare")
         prompt = inputs["prompt"]
         size = inputs.get("size", "1024x1024")
         n = inputs.get("n", 1)
 
         try:
-            quality = inputs.get("quality", "high")
+            quality = inputs.get("quality", "low")
             output_format = inputs.get("output_format", "png")
             response = client.images.generate(
                 model=model,
