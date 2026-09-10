@@ -1,0 +1,231 @@
+"""Film 14: I Knew It All Along (hindsight and outcome bias, Ch 19)."""
+import sys
+import filmgen as G
+
+DL = "https://thedecisionlab.com/biases"
+
+FILM = {
+    "slug": "diana-hindsight", "comp_id": "DianaHindsight",
+    "title": "I Knew It All Along", "position": "14 of 18", "chapters": "Ch 19",
+    "source_url": DL, "source_title": "Cognitive Biases - The Decision Lab",
+    "topic": "Hindsight and outcome bias, told for an 8-year-old as why everything looks obvious once you know how it ended",
+    "summary": ("Film 14 of the series. Chapter 19. Once an outcome is known, the mind rewrites what it previously "
+                "believed and cannot recover the earlier uncertainty, which is hindsight bias. A closely related "
+                "error, outcome bias, judges a decision by how it turned out rather than by whether the reasoning "
+                "was sound with the information available at the time. For a child this covers being told off for "
+                "something that could not have been foreseen, blaming herself after an accident, and the harsher "
+                "habit of judging her own past self by what she only learned later."),
+    "existing": [
+        {"title": "Jane the Brain (NIMH)", "url": G.NIMH, "source": "government site",
+         "angle": "Coping with big feelings", "what_it_covers": "Feelings after events, not the rewriting of what was known before them"},
+        {"title": "Children's resilience and reflection material", "url": G.SCH, "source": "web",
+         "angle": "Learn from your mistakes",
+         "what_it_covers": "Assumes the mistake was visible in advance, which is exactly what hindsight manufactures"},
+        {"title": "Cognitive Biases - The Decision Lab", "url": DL, "source": "reference site",
+         "angle": "Adult reference explainer", "what_it_covers": "Hindsight through investing, medicine and management framings"}],
+    "saturated": ["Learn-from-your-mistakes reflection prompts",
+                  "Adult investing, medical and management post-mortem framings"],
+    "gaps": ["Telling a child that the obviousness she feels was manufactured after the fact",
+             "Separating a bad outcome from a bad decision, in words a child can use",
+             "Giving her a way to be fair to her past self rather than only to other people"],
+    "data_points": [
+        ("Once an outcome is known, people cannot reconstruct what they believed beforehand and report having known it all along.",
+         DL, "Thinking, Fast and Slow, Ch 19", "secondary_source", "counterintuitive",
+         "the whole spine and the fog-clearing device"),
+        ("Outcome bias leads observers to judge a decision by its result rather than by the soundness of the process.",
+         G.SN, "Thinking, Fast and Slow, Ch 19", "secondary_source", "surprising",
+         "the separation between a bad result and a bad choice"),
+        ("The corrective is to record the forecast and its reasons before the outcome is known.",
+         G.SN, "Thinking, Fast and Slow, Ch 19", "secondary_source", "expected",
+         "the say-it-first tool"),
+        ("By age 8 to 9 children can reflect on and report their own earlier mental states when prompted.",
+         G.PQ, "Pennequin et al., British Journal of Educational Psychology (2020)", "primary_source",
+         "expected", "age appropriateness of asking what did I know then")],
+    "knowledge_level": ("Age 8. Has seen films 1 to 13 and owns the fast one, the story machine, the anchor, the "
+                        "see-saw, the tiny spoon, the ordinary street, the shrinking circle and the worn path."),
+    "questions": ["Why does it look so obvious now when it was not obvious then?",
+                  "Why do I get told I should have known?",
+                  "Was it a bad choice, or did it just turn out badly?"],
+    "misconceptions": [
+        ("If it turned out badly, it was a bad decision", "A sound choice can have a bad result, and a reckless one can have a good result.", "Ch 19"),
+        ("I knew it would happen", "You cannot recover what you believed before you knew. The memory has been overwritten.", "Ch 19"),
+        ("Being fair means being hard on myself", "Being fair means judging the choice by what was knowable at the time.", "Ch 19 corrective")],
+    "pain_points": ["Being blamed for not foreseeing something unforeseeable",
+                    "Blaming her past self using knowledge she did not then have"],
+    "angles": [
+        ("The Fog That Lifts", "narrative",
+         "Before, the road was in fog. Afterwards the fog lifts, and it looks like it was never there.",
+         "Fog is something a child has stood in, and it carries both the earlier uncertainty and its disappearance.",
+         ["Ch 19"]),
+        ("Say It First", "evergreen", "Write down what you think will happen, before it happens.",
+         "The only reliable defence, and something a child can physically do.", ["Ch 19 corrective"]),
+        ("Bad Result Is Not Bad Choice", "contrarian", "How it turned out is not the same as whether it was sensible.",
+         "Separates two things that children's reflection material always conflates.", ["Ch 19 outcome bias"])],
+    "kahneman": "Once an outcome is known, people believe they knew it all along, and they judge decisions by results.",
+    "excluded": ["The financial and medical malpractice examples, which need adult context.",
+                 "Any suggestion that outcomes never matter or that consequences are unimportant.",
+                 "Anything from the priming or ego-depletion chapters."],
+    "concepts": [
+        {"id": "c1", "title": "I Knew It All Along",
+         "hook": "After it happened, everybody said they knew it would. Including you.",
+         "narrative_structure": "story",
+         "visual_approach": "A road disappearing into thick fog, then the same road with the fog gone and every turning plainly visible.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 150,
+         "key_points": ["Before the outcome, the road was in fog",
+                        "Afterwards the fog lifts and the way looks obvious",
+                        "You cannot get the fog back, so you cannot remember not knowing",
+                        "A bad result is not the same as a bad choice",
+                        "Say what you think will happen before it happens"],
+         "core_message": "It only looks obvious because the fog has gone. It was not gone at the time.",
+         "cta": "Before something happens, say out loud what you think will happen.",
+         "tone": "Fair-minded and gentle, particularly towards her own past self.",
+         "why_this_works": "It defends her against unfair blame from others and, more importantly, from herself.",
+         "grounded_in": ["Ch 19"]},
+        {"id": "c2", "title": "Say It First", "hook": "Say your guess out loud before you find out.",
+         "narrative_structure": "tutorial", "visual_approach": "A small folded paper note placed in a pocket before a journey.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 95,
+         "key_points": ["Record the guess", "Then look at it after", "It cannot be rewritten"],
+         "core_message": "Write it down first.", "cta": "Say it before.", "tone": "Practical",
+         "why_this_works": "The actionable core with nothing behind it, so it becomes the payoff of c1.",
+         "grounded_in": ["Ch 19 corrective"]},
+        {"id": "c3", "title": "Bad Result Is Not Bad Choice", "hook": "Sensible things sometimes go wrong.",
+         "narrative_structure": "comparison", "visual_approach": "Two identical roads, one ending well and one ending badly, both chosen the same way.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 100,
+         "key_points": ["Judge the choosing", "Not the ending", "Luck is in both"],
+         "core_message": "Judge the choice.", "cta": "Ask what she knew then.", "tone": "Fair",
+         "why_this_works": "The most useful distinction here, but it needs the fog first, so it becomes the middle of c1.",
+         "grounded_in": ["Ch 19 outcome bias"]}],
+    "rationale": ("c1 establishes the fog before making either argument, so the unfairness of should-have-known is "
+                  "something she has watched rather than been told. The others are its middle and its ending."),
+    "device_short": "the road that was in fog and afterwards is not",
+    "art_direction": ("Series house style. New device: a simple road with branching turnings, first swallowed in soft "
+                      "pale fog and afterwards completely clear, on otherwise empty cream paper."),
+    "device_lock": ("One simple curving road with a few branching turnings, drawn flat on cream paper. Soft pale fog "
+                    "is what was not knowable at the time. The same road without fog is hindsight. Nothing is "
+                    "counted and no numeral appears."),
+    "anti_patterns": ["asking the image model for an exact count of roads or turnings",
+                      "two children in one frame", "numerals, road signs with writing, labels or lettering",
+                      "a fully painted landscape; the road sits on empty cream paper",
+                      "implying that consequences do not matter"],
+    "tradeoffs": [
+        {"tradeoff": "Using a real family incident versus a neutral road",
+         "recommendation": "A neutral road",
+         "quality_impact": "A real incident would assign blame to someone in the house. The road carries the structure with nobody at fault."},
+        {"tradeoff": "Saying outcomes do not matter versus separating result from choice",
+         "recommendation": "Separate them",
+         "quality_impact": "Telling a child results do not matter would be both false and unsafe. The honest version is that a result is not evidence about the reasoning."}],
+    "delivery_style": "warm parent reading a bedtime story, fair-minded and protective",
+    "performance_intent": ("The same parent and child, thirteen chapters on. This one is a defence. It should sound "
+                           "like somebody standing up for her, including against herself."),
+    "energy_curve": ("Rueful at the opening. Curious through the fog. Firm at bad result is not bad choice. "
+                     "Tenderest at be fair to the you from before. Bright at the tool."),
+    "pause_policy": "Three genuine silences: after including you, after could you have seen them before, and after what did I actually know right then.",
+    "sample_section": "s12",
+    "human_note": "Section s12 is about forgiving her past self. It carries the film; do not rush it.",
+    "reading_age": "Written for a listener of 8. Hindsight bias and outcome bias never appear as terms.",
+    "pause_beats": [{"section": "s2", "purpose": "She recognises having said it herself"},
+                    {"section": "s7", "purpose": "She tests whether it really was visible beforehand"},
+                    {"section": "s14", "purpose": "She asks the question about one of her own regrets"}],
+    "grounded_in": {"s1_to_s3": "Ch 19, the outcome rewrites the memory of what was believed",
+                    "s4_to_s7": "Ch 19, earlier uncertainty cannot be reconstructed once resolved",
+                    "s8_to_s10": "Ch 19, outcome bias judges the decision by the result",
+                    "s11_to_s12": "Ch 19 applied to self-blame",
+                    "s13_to_s15": "Ch 19 corrective, recording the forecast in advance, plus Pennequin"},
+    "guardrails": ["The film never says consequences do not matter, only that a result is not evidence about the reasoning.",
+                   "No real incident and no blamed person appears; the example is a neutral road.",
+                   "No numeral or written sign appears in any illustration.",
+                   "No priming or ego-depletion material."],
+    "sections": [
+        ("s1", "Afterwards", "Something went wrong. And afterwards, everybody said the same thing. Well, that was obvious.",
+         'Something went wrong. <break time="0.5s"/> And afterwards, everybody said the same thing. <break time="0.4s"/> Well, <break time="0.3s"/> that was obvious.',
+         1.4, "measured", "wry", ["obvious"], "Dry."),
+        ("s2", "Including you", "Including you. You said it too. I knew that was going to happen.",
+         'Including you. <break time="0.4s"/> You said it too. <break time="0.5s"/> I knew that was going to happen. <break time="2.5s"/>',
+         2.5, "measured", "gentle", ["knew"], "Pause beat one. No accusation in it."),
+        ("s3", "Did you", "But did you? Really? Before it happened?",
+         'But did you? <break time="0.4s"/> Really? <break time="0.4s"/> Before it happened?',
+         1.4, "slow", "curious", ["before"], "Genuinely asking."),
+        ("s4", "The fog", "Picture a road, going off into thick fog. You can see a few steps ahead of you and no further.",
+         'Picture a road, going off into thick fog. <break time="0.5s"/> You can see a few steps ahead of you <break time="0.3s"/> and no further.',
+         1.4, "measured", "warm", ["fog"], "Picture-building."),
+        ("s5", "Choosing", "Somewhere out there the road splits. You cannot see where. You pick a way and you walk.",
+         'Somewhere out there the road splits. <break time="0.4s"/> You cannot see where. <break time="0.5s"/> You pick a way and you walk.',
+         1.4, "measured", "steady", ["cannot see"], "Plain."),
+        ("s6", "The fog lifts", "And then it happens, whatever it was. And the fog lifts. All of it. In one second.",
+         'And then it happens, whatever it was. <break time="0.5s"/> And the fog lifts. <break time="0.4s"/> All of it. <break time="0.3s"/> In one second.',
+         1.4, "measured", "curious", ["lifts"], "The turn."),
+        ("s7", "Now look", "And now you are standing in bright clear air, looking back at the road. And you can see every single turning. Could you have seen them before?",
+         'And now you are standing in bright clear air, looking back at the road. <break time="0.5s"/> And you can see every single turning. <break time="0.5s"/> Could you have seen them before? <break time="2.5s"/>',
+         2.5, "slow", "curious", ["every"], "Pause beat two. She should try to remember the fog."),
+        ("s8", "You cannot get it back", "Here is the strange part. You cannot put the fog back. Once you know, you cannot get back to not knowing.",
+         'Here is the strange part. <break time="0.5s"/> You cannot put the fog back. <break time="0.5s"/> Once you know, <break time="0.4s"/> you cannot get back to not knowing.',
+         1.4, "slow", "steady", ["cannot"], "The hinge. Slow."),
+        ("s9", "So it looks obvious", "So it always looks obvious afterwards. Not because it was. Because the fog has gone.",
+         'So it always looks obvious afterwards. <break time="0.5s"/> Not because it was. <break time="0.4s"/> Because the fog has gone.',
+         1.4, "measured", "steady", ["gone"], "Firm."),
+        ("s10", "Result and choice", "And that leads to something unfair. People start judging the choosing by the ending.",
+         'And that leads to something unfair. <break time="0.5s"/> People start judging the choosing by the ending.',
+         1.4, "measured", "steady", ["unfair"], "Name it."),
+        ("s11", "Two roads", "But a sensible choice can end badly. And a silly one can end beautifully. The ending does not tell you which it was.",
+         'But a sensible choice can end badly. <break time="0.4s"/> And a silly one can end beautifully. <break time="0.5s"/> The ending does not tell you which it was.',
+         1.4, "measured", "steady", ["does not"], "Clear and important."),
+        ("s12", "Be fair to her", "So be careful with the you from before. She did not have what you have now. She was standing in the fog, doing her best.",
+         'So be careful with the you from before. <break time="0.5s"/> She did not have what you have now. <break time="0.5s"/> She was standing in the fog, <break time="0.4s"/> doing her best.',
+         1.4, "slow", "tender", ["her best"], "The heart of the film. Very gentle."),
+        ("s13", "The tool", "So here is your fourteenth trick, and it happens before, not after. Say out loud what you think is going to happen. Before you find out.",
+         'So here is your fourteenth trick, and it happens before, <break time="0.3s"/> not after. <break time="0.5s"/> Say out loud what you think is going to happen. <break time="0.4s"/> Before you find out.',
+         1.4, "measured", "encouraging", ["before"], "Bright."),
+        ("s14", "And the other one", "And when you are being hard on yourself about something that went wrong, ask this. What did I actually know, right then?",
+         'And when you are being hard on yourself about something that went wrong, ask this. <break time="0.5s"/> What did I actually know, <break time="0.3s"/> right then? <break time="2.5s"/>',
+         2.5, "measured", "encouraging", ["actually"], "Pause beat three. Let her apply it."),
+        ("s15", "Landing", "It only looks obvious because the fog has gone. It was not gone at the time.",
+         'It only looks obvious because the fog has gone. <break time="0.5s"/> It was not gone at the time.',
+         0.0, "slow", "tender", ["not gone"], "Settled and fair. End soft."),
+    ],
+    "spec": [
+        ("sc1", "s1", "NONE", "Three plain empty rounded speech bubbles clustered together in the middle of the page, all of them identical, completely empty inside."),
+        ("sc2", "s2", "DIANA", "The girl stands with her arms folded and her mouth set, looking slightly away, a little defensive."),
+        ("sc3", "s3", "DIANA", "The girl looks directly ahead with a small doubtful frown, genuinely uncertain."),
+        ("sc4", "s4", "NONE", "One simple curving road running away from the front of the page and disappearing into thick soft pale grey fog part way along."),
+        ("sc5", "s5", "NONE", "The same road inside the fog, with the faint shape of a fork in the road only just visible ahead through the greyness."),
+        ("sc6", "s5", "DIANA", "The girl walks away from the viewer along a road with soft pale fog closing in around her, seen from behind."),
+        ("sc7", "s6", "NONE", "The same road with the fog half lifted, thinning and breaking apart, the shapes of the turnings starting to appear."),
+        ("sc8", "s7", "NONE", "The same road now completely clear in bright light, with every fork and turning along its whole length plainly visible."),
+        ("sc9", "s7", "DIANA", "The girl stands looking back over her shoulder at a clear empty road behind her, her expression thoughtful."),
+        ("sc10", "s8", "NONE", "A pair of cupped open hands trying to hold a wisp of pale fog that is slipping away between the fingers. Only the hands and forearms are visible, with no face and no body."),
+        ("sc11", "s9", "NONE", "One simple clear road with all its turnings visible, drawn in flat bright light with no fog anywhere."),
+        ("sc12", "s10", "NONE", "One plain set of balance scales on the page with a small smooth pebble on one tray only, the other tray empty, and no markings or numbers anywhere."),
+        ("sc13", "s11", "NONE", "Two simple roads side by side on the page. The left road ends at a small bright sun shape. The right road ends at a small grey cloud shape. Both roads look exactly the same along their length."),
+        ("sc14", "s12", "DIANA", "The girl kneels and gently reaches out one hand towards a soft pale patch of fog on the ground in front of her, tender and unhurried."),
+        ("sc15", "s13", "NONE", "One small folded paper note being tucked into a coat pocket, the note completely blank with no writing on it."),
+        ("sc16", "s14", "DIANA", "The girl sits quietly with her hands in her lap, calm and thinking, not upset."),
+        ("sc17", "s14", "NONE", "One small folded paper note lying open flat on the page, entirely blank with no writing or marks on it."),
+        ("sc18", "s15", "NONE", "One simple road running away into the distance in warm golden evening light, clear and open and empty, with a soft haze only far away at the very end."),
+    ],
+    "heroes": {"sc7", "sc8", "sc10", "sc13", "sc18"},
+    "wides": {"sc4", "sc8", "sc11", "sc13", "sc18"},
+}
+
+ROAD = ("The road is one simple flat curving band of pale warm earth drawn on plain empty cream paper, with a few "
+        "simple branching turnings. There is no landscape, no sky, no trees, no buildings and no horizon. Any fog "
+        "is a soft pale grey haze. Do not draw road signs, markings, arrows, letters or numbers of any kind.")
+BUBBLE = ("The speech bubbles are plain smooth rounded outlines with a small tail, completely EMPTY inside: no "
+          "words, no letters, no squiggles and no marks of any kind.")
+
+FILM["clauses"] = {
+    "OPEN": (G.OPEN, {"sc1", "sc2", "sc3", "sc9", "sc10", "sc12", "sc14", "sc15", "sc16", "sc17"}),
+    "NOICON": (G.NOICON, {"sc2", "sc3", "sc9", "sc12", "sc15", "sc16", "sc17"}),
+    "ROAD": (ROAD, {"sc4", "sc5", "sc6", "sc7", "sc8", "sc11", "sc13", "sc18"}),
+    "BUBBLE": (BUBBLE, {"sc1"}),
+}
+
+if __name__ == "__main__":
+    if "init" in sys.argv:
+        G.init(FILM)
+    if "build" in sys.argv:
+        G.build(FILM)
+    if "sheet" in sys.argv:
+        G.sheet(FILM)

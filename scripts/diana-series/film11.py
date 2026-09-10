@@ -1,0 +1,227 @@
+"""Film 11: Most Things Are The Ordinary Thing (base rates, Ch 14 and 16)."""
+import sys
+import filmgen as G
+
+DL = "https://thedecisionlab.com/biases"
+
+FILM = {
+    "slug": "diana-base-rates", "comp_id": "DianaBaseRates",
+    "title": "Most Things Are The Ordinary Thing", "position": "11 of 18", "chapters": "Ch 14 and 16",
+    "source_url": DL, "source_title": "Cognitive Biases - The Decision Lab",
+    "topic": "Base-rate neglect and representativeness, told for an 8-year-old as why the exciting answer is usually the wrong one",
+    "summary": ("Film 11 of the series. Chapters 14 and 16. People judge probability by how well a case matches a "
+                "picture in their head and ignore how common the thing is in the first place. The corrective is to "
+                "start from how common something is and move off that only as far as the evidence genuinely "
+                "justifies. For a child this covers the noise downstairs, the unfamiliar bird, the stomach ache, "
+                "and every moment where the dramatic explanation arrives before the ordinary one."),
+    "existing": [
+        {"title": "Jane the Brain (NIMH)", "url": G.NIMH, "source": "government site",
+         "angle": "Managing worry", "what_it_covers": "Calming techniques, not why the frightening explanation arrived first"},
+        {"title": "Children's nature and spotting guides", "url": G.SCH, "source": "web",
+         "angle": "Identify what you saw", "what_it_covers": "Teaches features to match on, which is exactly the trap"},
+        {"title": "Cognitive Biases - The Decision Lab", "url": DL, "source": "reference site",
+         "angle": "Adult reference explainer", "what_it_covers": "Base rates through medical-test and hiring framings"}],
+    "saturated": ["Calm-down and manage-your-worry techniques",
+                  "Adult medical-test, hiring and Bayesian framings"],
+    "gaps": ["Giving a child the how-common-is-it question before the what-does-it-look-like question",
+             "Naming why the dramatic explanation feels more likely than the boring one",
+             "A version of base rates that needs no arithmetic at all"],
+    "data_points": [
+        ("People judge probability by resemblance to a mental picture and neglect how common the outcome is.",
+         DL, "Thinking, Fast and Slow, Ch 14", "secondary_source", "counterintuitive",
+         "the whole spine: matching the picture instead of counting the world"),
+        ("Base rates are used when they are given a causal story and ignored when they are merely statistical.",
+         G.SN, "Thinking, Fast and Slow, Ch 16", "secondary_source", "surprising",
+         "why the film gives the base rate as a picture of a full street rather than a number"),
+        ("The corrective is to anchor on the base rate first and move off it only as far as the evidence justifies.",
+         G.SN, "Thinking, Fast and Slow, Ch 14 and 18", "secondary_source", "expected",
+         "the start-with-the-boring-answer tool"),
+        ("By age 8 to 9 children can hold and apply an explicit ordered two-step routine.",
+         G.PQ, "Pennequin et al., British Journal of Educational Psychology (2020)", "primary_source",
+         "expected", "age appropriateness of ask-boring-first")],
+    "knowledge_level": ("Age 8. Has seen films 1 to 10 and owns the fast one, the story machine, the anchor, the "
+                        "see-saw, the tiny spoon and remember-do-not-guess."),
+    "questions": ["Why does my brain go straight to the scary answer?",
+                  "Why is the boring answer usually right?",
+                  "How do I tell an exciting guess from a likely one?"],
+    "misconceptions": [
+        ("If it matches the picture, it probably is that", "Matching a picture says nothing about how common the thing is.", "Ch 14"),
+        ("An unusual explanation is as likely as an ordinary one", "Ordinary things are ordinary precisely because there are far more of them.", "Ch 14 and 16"),
+        ("Being careful means imagining what could go wrong", "Being careful means starting from what usually happens.", "Ch 14 corrective")],
+    "pain_points": ["Frightening herself with the dramatic explanation",
+                    "Being told not to worry without being given a way to think"],
+    "angles": [
+        ("The Crowded Street", "narrative",
+         "Before you ask what it looked like, ask how many of those there are.",
+         "Turns a probability idea into a picture of a full street, which needs no arithmetic.", ["Ch 14", "Ch 16"]),
+        ("Boring First", "evergreen", "Start with the boring answer. Then see if the evidence can drag you off it.",
+         "One ordered routine a child can actually run, rather than an attitude to adopt.", ["Ch 14 corrective", "Ch 18"]),
+        ("Exciting Is Not Likely", "contrarian", "Your brain offers you the most interesting answer, not the most likely one.",
+         "Names the swap directly, which children's worry material never does.", ["Ch 14"])],
+    "kahneman": "People judge by resemblance to a stereotype and neglect the base rate of the outcome.",
+    "excluded": ["The Tom W and taxicab problems, which need explicit probabilities.",
+                 "Any numeric probability, since no numeral may appear in an illustration.",
+                 "Anything from the priming or ego-depletion chapters."],
+    "concepts": [
+        {"id": "c1", "title": "Most Things Are The Ordinary Thing",
+         "hook": "You heard a noise downstairs. And your brain went straight to the worst thing it could think of.",
+         "narrative_structure": "story",
+         "visual_approach": "A long street of many identical ordinary houses with one strange house among them, and a single spotlight that keeps landing on the strange one.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 150,
+         "key_points": ["Your brain answers what does it look like, not how common is it",
+                        "Ordinary things are ordinary because there are far more of them",
+                        "The exciting answer arrives first because it is interesting, not because it is likely",
+                        "Start from the boring answer", "Move off it only if the evidence really pushes you"],
+         "core_message": "Ask how many of those there are before you ask what it looked like.",
+         "cta": "When a frightening answer arrives, ask what the most ordinary explanation would be.",
+         "tone": "Calm, practical, quietly reassuring.",
+         "why_this_works": "It gives her a thinking move where other material gives her only reassurance.",
+         "grounded_in": ["Ch 14", "Ch 16"]},
+        {"id": "c2", "title": "Boring First", "hook": "Start with the dullest possible answer.",
+         "narrative_structure": "tutorial", "visual_approach": "One plain ordinary house drawn alone and warmly lit.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 95,
+         "key_points": ["Say the boring answer out loud", "Then test it", "Move only if pushed"],
+         "core_message": "Boring first.", "cta": "Say the boring answer first.", "tone": "Practical",
+         "why_this_works": "The actionable core with no explanation behind it, so it becomes the payoff of c1.",
+         "grounded_in": ["Ch 14 corrective"]},
+        {"id": "c3", "title": "The Spotlight", "hook": "Your brain shines its light on the interesting house.",
+         "narrative_structure": "comparison", "visual_approach": "A spotlight singling out the one odd house on a long ordinary street.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 100,
+         "key_points": ["Interesting is not likely", "The light picks the story", "The street is still ordinary"],
+         "core_message": "Interesting is not likely.", "cta": "Look at the whole street.", "tone": "Curious",
+         "why_this_works": "The clearest single image here, but it is the middle of c1 rather than a film.",
+         "grounded_in": ["Ch 14"]}],
+    "rationale": ("c1 starts from a fear she has actually had at night, converts it into a street she can see, and "
+                  "only then supplies the routine. The others are its middle and its ending."),
+    "device_short": "the long ordinary street with one strange house and a wandering spotlight",
+    "art_direction": ("Series house style. New device: a long row of many identical plain houses with a single odd "
+                      "house among them, and a soft spotlight that keeps landing on the odd one."),
+    "device_lock": ("A long horizontal row of many simple identical houses in muted warm tones, with exactly one "
+                    "visibly strange house among them. A soft circular pool of light is attention. Nothing is "
+                    "counted and no numeral appears."),
+    "anti_patterns": ["asking the image model for an exact count of houses",
+                      "two children in one frame", "numerals, labels or lettering of any kind",
+                      "anything genuinely frightening; the scary answer is shown as a shape, never as a threat",
+                      "a fully painted background"],
+    "tradeoffs": [
+        {"tradeoff": "Showing probability as numbers versus as a crowded street",
+         "recommendation": "A crowded street",
+         "quality_impact": "No numeral may appear in an illustration, and an 8-year-old cannot use a percentage. A street of many houses carries how common is it directly."},
+        {"tradeoff": "Naming the frightening explanation versus keeping it vague",
+         "recommendation": "Keep it vague",
+         "quality_impact": "The film is watched at bedtime. The dramatic answer is drawn as an odd shape, never as anything a child would be frightened by."}],
+    "delivery_style": "warm parent reading a bedtime story, calm and unhurried",
+    "performance_intent": ("The same parent and child, ten chapters on. This one is for the dark. It should sound "
+                           "like someone sitting on the edge of the bed, not like a lesson."),
+    "energy_curve": ("Hushed at the noise downstairs. Curious through the street. Steady at the spotlight. Bright "
+                     "at the tools. Very settled at the close."),
+    "pause_policy": "Three genuine silences: after the worst thing it could think of, after which house did your light land on, and after the boring answer.",
+    "sample_section": "s1",
+    "human_note": "Section s1 must sound like the middle of the night, not like an anecdote.",
+    "reading_age": "Written for a listener of 8. Base rate, representativeness and probability never appear as terms.",
+    "pause_beats": [{"section": "s1", "purpose": "She recognises the feeling from her own nights"},
+                    {"section": "s8", "purpose": "She notices which house her own attention went to"},
+                    {"section": "s14", "purpose": "She tries saying the boring answer out loud"}],
+    "grounded_in": {"s1_to_s3": "Ch 14, judging by resemblance rather than frequency",
+                    "s4_to_s7": "Ch 14 and 16, the base rate given as a causal picture rather than a statistic",
+                    "s8_to_s11": "Ch 14, why the interesting answer arrives first",
+                    "s12_to_s13": "Ch 14 and 18, moving off the ordinary answer only as far as evidence justifies",
+                    "s14_to_s15": "Ch 14 corrective plus Pennequin on ordered routines at 8 to 9"},
+    "guardrails": ["The film never says the frightening thing cannot happen, only that it is rare.",
+                   "No probability figure and no numeral appears anywhere.",
+                   "The dramatic explanation is drawn as an abstract odd shape, never as anything frightening.",
+                   "No priming or ego-depletion material."],
+    "sections": [
+        ("s1", "The noise", "You heard a noise downstairs, in the dark. And your brain went straight to the very worst thing it could think of.",
+         'You heard a noise downstairs, <break time="0.3s"/> in the dark. <break time="0.5s"/> And your brain went straight to the very worst thing it could think of. <break time="2.5s"/>',
+         2.5, "slow", "gentle", ["worst"], "Pause beat one. Hushed, like the middle of the night."),
+        ("s2", "Not the cat", "It did not say, that will be the cat. It never says that will be the cat.",
+         'It did not say, that will be the cat. <break time="0.5s"/> It never says that will be the cat.',
+         1.4, "measured", "wry", ["cat"], "A small dry smile."),
+        ("s3", "The wrong question", "Because your brain answered the wrong question. It asked, what could that sound be? Instead of, what usually is it?",
+         'Because your brain answered the wrong question. <break time="0.5s"/> It asked, what could that sound be? <break time="0.5s"/> Instead of, <break time="0.3s"/> what usually is it?',
+         1.4, "measured", "curious", ["usually"], "The hinge. Slow on usually."),
+        ("s4", "The street", "So picture a long street. Full of houses. Ordinary house, ordinary house, ordinary house, all the way along.",
+         'So picture a long street. <break time="0.4s"/> Full of houses. <break time="0.4s"/> Ordinary house, ordinary house, ordinary house, <break time="0.4s"/> all the way along.',
+         1.4, "measured", "warm", ["ordinary"], "Rhythmic, almost a lullaby."),
+        ("s5", "The strange one", "And right in the middle, one strange house. Crooked roof. Odd windows.",
+         'And right in the middle, <break time="0.4s"/> one strange house. <break time="0.4s"/> Crooked roof. <break time="0.3s"/> Odd windows.',
+         1.4, "measured", "curious", ["strange"], "Lean in slightly."),
+        ("s6", "Which one", "Now. Which house did you look at?",
+         'Now. <break time="0.4s"/> Which house did you look at?',
+         1.4, "slow", "warm", ["look"], "A real question."),
+        ("s7", "The light", "Your attention is a little spotlight. And it lands on whatever is interesting. Never on whatever is likely.",
+         'Your attention is a little spotlight. <break time="0.5s"/> And it lands on whatever is interesting. <break time="0.5s"/> Never on whatever is likely.',
+         1.4, "measured", "steady", ["interesting"], "Firm."),
+        ("s8", "Your own light", "So think about your noise in the dark. Which house did your light land on?",
+         'So think about your noise in the dark. <break time="0.5s"/> Which house did your light land on? <break time="2.5s"/>',
+         2.5, "slow", "gentle", ["your light"], "Pause beat two. She will know the answer."),
+        ("s9", "The whole street", "But the street is still full of ordinary houses. It always was.",
+         'But the street is still full of ordinary houses. <break time="0.5s"/> It always was.',
+         1.4, "measured", "steady", ["still"], "Reassuring but not soft."),
+        ("s10", "Why ordinary", "That is what ordinary means. It means there are an enormous number of them.",
+         'That is what ordinary means. <break time="0.5s"/> It means there are an enormous number of them.',
+         1.4, "measured", "warm", ["enormous"], "Plain and useful."),
+        ("s11", "Rare is rare", "And the strange house is real. It does exist. There is just one of it, in a whole long street.",
+         'And the strange house is real. <break time="0.4s"/> It does exist. <break time="0.5s"/> There is just one of it, <break time="0.4s"/> in a whole long street.',
+         1.4, "slow", "gentle", ["one"], "Honest. Do not dismiss the fear."),
+        ("s12", "Evidence can move you", "Now, sometimes something really does push you towards the strange house. A proper reason. Then you go.",
+         'Now, sometimes something really does push you towards the strange house. <break time="0.4s"/> A proper reason. <break time="0.5s"/> Then you go.',
+         1.4, "measured", "steady", ["proper"], "Do not teach her to dismiss real evidence."),
+        ("s13", "But start here", "But you start on the ordinary side of the street. Not in the strange house looking back.",
+         'But you start on the ordinary side of the street. <break time="0.5s"/> Not in the strange house looking back.',
+         1.4, "measured", "steady", ["start"], "The correction, put plainly."),
+        ("s14", "The tool", "So here is your eleventh trick. When a frightening answer arrives, say the most boring answer out loud first. That will be the cat.",
+         'So here is your eleventh trick. <break time="0.5s"/> When a frightening answer arrives, say the most boring answer out loud first. <break time="0.5s"/> That will be the cat. <break time="2.5s"/>',
+         2.5, "measured", "encouraging", ["boring"], "Pause beat three. She should say it aloud."),
+        ("s15", "Landing", "Most things are the ordinary thing. That is not me being nice to you. That is just how many of them there are.",
+         'Most things are the ordinary thing. <break time="0.5s"/> That is not me being nice to you. <break time="0.5s"/> That is just how many of them there are.',
+         0.0, "slow", "tender", ["how many"], "The reassurance is arithmetic, not comfort. End soft."),
+    ],
+    "spec": [
+        ("sc1", "s1", "DIANA", "The girl sits up in bed in the dark with the covers held to her chin, eyes wide, listening."),
+        ("sc2", "s1", "NONE", "One closed bedroom door drawn in the middle of the page with a soft dark shape of shadow spreading beneath it."),
+        ("sc3", "s2", "NONE", "One small cat sitting calmly and looking up, drawn alone in the middle of the page."),
+        ("sc4", "s3", "NONE", "Two empty rounded speech bubbles side by side on the page, the left one much larger and darker than the right one, both completely empty with nothing inside them."),
+        ("sc5", "s4", "NONE", "A long horizontal row of many simple identical plain houses in muted warm tones, stretching right across the page from edge to edge."),
+        ("sc6", "s4", "NONE", "The same long row of many identical plain houses seen from further back, calm and repetitive."),
+        ("sc7", "s5", "NONE", "The same long row of plain houses, with one visibly strange house right in the middle: a crooked roof and oddly shaped windows."),
+        ("sc8", "s6", "DIANA", "The girl looks straight ahead with her eyes drawn to one side, caught looking at something."),
+        ("sc9", "s7", "NONE", "A soft circular pool of warm light falls on the one strange crooked house in the long row, leaving all the ordinary houses dim."),
+        ("sc10", "s8", "DIANA", "The girl sits on the edge of her bed in the dark, thinking, one hand on the mattress."),
+        ("sc11", "s9", "NONE", "The long row of ordinary houses now all warmly and evenly lit, with the strange house barely noticeable among them."),
+        ("sc12", "s10", "NONE", "A very long row of many identical plain houses running right off both edges of the page, suggesting it continues far beyond the picture."),
+        ("sc13", "s11", "NONE", "The one strange crooked house drawn small and alone in the middle of the page, plainly there but not frightening."),
+        ("sc14", "s12", "NONE", "A simple footpath drawn on the page leading from the row of ordinary houses towards the strange house, with one plain arrow shape on it and no writing."),
+        ("sc15", "s13", "DIANA", "The girl stands calmly on a path in front of the long row of ordinary houses, facing the viewer."),
+        ("sc16", "s14", "DIANA", "The girl lies back down in bed with her head on the pillow, eyes open but calm, the covers loose."),
+        ("sc17", "s14", "NONE", "One small cat curled up asleep in the middle of the page, warm and settled."),
+        ("sc18", "s15", "NONE", "The long row of many ordinary houses at night, each with one softly glowing warm window, peaceful."),
+    ],
+    "heroes": {"sc9", "sc11", "sc12", "sc17", "sc18"},
+    "wides": {"sc5", "sc6", "sc11", "sc12", "sc18"},
+}
+
+STREET = ("The houses are simple flat storybook house shapes in muted warm tones, drawn in one straight horizontal "
+          "row seen from the side, all the same size. Do not label them, do not number them, and do not draw any "
+          "writing anywhere.")
+GENTLE = ("Nothing in this picture is frightening. No monsters, no faces in the dark, no threatening figures. Any "
+          "shadow is a soft simple shape.")
+
+FILM["clauses"] = {
+    "OPEN": (G.OPEN, {"sc1", "sc2", "sc3", "sc4", "sc8", "sc10", "sc13", "sc14", "sc15", "sc16", "sc17"}),
+    "NOICON": (G.NOICON, {"sc3", "sc4", "sc8", "sc10", "sc15", "sc16", "sc17"}),
+    "STREET": (STREET, {"sc5", "sc6", "sc7", "sc9", "sc11", "sc12", "sc13", "sc14", "sc18"}),
+    "GENTLE": (GENTLE, {"sc1", "sc2", "sc7", "sc9", "sc13"}),
+}
+
+if __name__ == "__main__":
+    if "init" in sys.argv:
+        G.init(FILM)
+    if "build" in sys.argv:
+        G.build(FILM)
+    if "sheet" in sys.argv:
+        G.sheet(FILM)

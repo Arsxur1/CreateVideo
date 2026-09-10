@@ -1,0 +1,231 @@
+"""Film 13: Why Familiar Feels True (cognitive ease and mere exposure, Ch 5)."""
+import sys
+import filmgen as G
+
+DL = "https://thedecisionlab.com/biases"
+
+FILM = {
+    "slug": "diana-familiarity", "comp_id": "DianaFamiliarity",
+    "title": "Why Familiar Feels True", "position": "13 of 18", "chapters": "Ch 5",
+    "source_url": DL, "source_title": "Cognitive Biases - The Decision Lab",
+    "topic": "Cognitive ease and the mere exposure effect, told for an 8-year-old as why something you have heard before feels true",
+    "summary": ("Film 13 of the series. Chapter 5. When something is easy to see, easy to say or already familiar, "
+                "the mind reads that ease as a signal of truth, safety and liking. Repetition alone raises "
+                "believability, which is the mere exposure effect, and it works even when the repeated thing is "
+                "known to be meaningless. For a child this explains why a rumour repeated at school starts to feel "
+                "factual, why she prefers the song she has heard most, and why easy-to-read writing is trusted "
+                "more than hard-to-read writing that says the same thing."),
+    "existing": [
+        {"title": "Jane the Brain (NIMH)", "url": G.NIMH, "source": "government site",
+         "angle": "Coping with big feelings", "what_it_covers": "Emotions, not why repetition changes belief"},
+        {"title": "Children's media-literacy material", "url": G.SCH, "source": "web",
+         "angle": "Check your sources",
+         "what_it_covers": "Tells children to verify without explaining why the unverified thing already felt true"},
+        {"title": "Cognitive Biases - The Decision Lab", "url": DL, "source": "reference site",
+         "angle": "Adult reference explainer", "what_it_covers": "Fluency and mere exposure through advertising and marketing framings"}],
+    "saturated": ["Check-your-sources media literacy",
+                  "Adult advertising, branding and marketing framings"],
+    "gaps": ["Explaining that the feeling of truth is produced by ease, before any checking happens",
+             "Naming repetition as the thing that manufactures the feeling",
+             "A version a child can test on herself with a word she says over and over"],
+    "data_points": [
+        ("Statements that are easier to process are judged more likely to be true, independently of their content.",
+         DL, "Thinking, Fast and Slow, Ch 5", "secondary_source", "counterintuitive",
+         "the whole spine: ease is read as truth"),
+        ("Mere repeated exposure increases liking and believability, even for meaningless stimuli.",
+         G.SN, "Thinking, Fast and Slow, Ch 5", "secondary_source", "surprising",
+         "why a rumour heard three times starts to feel like a fact"),
+        ("Cognitive strain, such as hard-to-read text, makes people more sceptical and more careful.",
+         G.SN, "Thinking, Fast and Slow, Ch 5", "secondary_source", "counterintuitive",
+         "the slow-it-down corrective and the rough-path image"),
+        ("By age 8 to 9 children can notice and report on the felt quality of their own thinking.",
+         G.PQ, "Pennequin et al., British Journal of Educational Psychology (2020)", "primary_source",
+         "expected", "asking her to notice the feeling of easiness itself")],
+    "knowledge_level": ("Age 8. Has seen films 1 to 12 and owns the fast one, the story machine, the anchor, the "
+                        "see-saw, the tiny spoon, the ordinary street and the shrinking circle."),
+    "questions": ["Why does something feel true just because I have heard it before?",
+                  "Why do I like the song I have heard the most?",
+                  "How can a rumour turn into a fact without anyone checking it?"],
+    "misconceptions": [
+        ("If something feels obviously true, it probably is", "That feeling is produced by ease, not by evidence.", "Ch 5"),
+        ("Hearing something again gives me more information", "Repetition adds a feeling of truth and no information at all.", "Ch 5"),
+        ("Struggling to understand means I am not clever", "Difficulty makes people more careful and more accurate.", "Ch 5")],
+    "pain_points": ["Believing playground rumours without meaning to",
+                    "Feeling stupid when something is hard to read"],
+    "angles": [
+        ("The Worn Path", "narrative",
+         "The more often a thought is walked, the smoother the path gets, and smooth feels true.",
+         "A worn path through grass is something a child has physically seen, and it carries repetition and ease at once.",
+         ["Ch 5"]),
+        ("Heard It Before", "evergreen", "Ask whether you know it, or whether you have just heard it a lot.",
+         "One separating question a child can run on any rumour.", ["Ch 5 corrective"]),
+        ("Hard Is Useful", "contrarian", "When something is difficult, you think better, not worse.",
+         "Reverses the shame a child feels at finding things hard, and it is what the chapter actually shows.",
+         ["Ch 5"])],
+    "kahneman": "Ease of processing is experienced as truth, familiarity and liking, independently of content.",
+    "excluded": ["The priming studies from Chapter 4, which have failed to replicate.",
+                 "Ego depletion and any glucose claims.",
+                 "The specific font and pupil-dilation experiments, which need laboratory framing."],
+    "concepts": [
+        {"id": "c1", "title": "Why Familiar Feels True",
+         "hook": "Somebody says something at school. Then somebody else says it. By the third time, it is a fact.",
+         "narrative_structure": "story",
+         "visual_approach": "A patch of long grass with a faint line of trodden stems that becomes, step by step, a smooth bare worn path.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 150,
+         "key_points": ["Easy to think feels true", "Repetition makes things easy",
+                        "So repetition manufactures the feeling of truth, with no new information",
+                        "Difficulty makes you think more carefully, not less",
+                        "Ask: do I know this, or have I just heard it a lot?"],
+         "core_message": "Smooth is not the same as true. A path gets smooth from feet, not from facts.",
+         "cta": "When something feels obviously true, ask whether you know it or have just heard it a lot.",
+         "tone": "Curious, then careful, then encouraging.",
+         "why_this_works": "It explains the feeling before the checking, which is the part every media-literacy lesson skips.",
+         "grounded_in": ["Ch 5"]},
+        {"id": "c2", "title": "Heard It Before", "hook": "Do you know it, or have you just heard it a lot?",
+         "narrative_structure": "tutorial", "visual_approach": "Two identical paths side by side, one worn smooth and one untouched.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 95,
+         "key_points": ["Separate knowing from hearing", "Count the hearings", "Then check"],
+         "core_message": "Knowing and hearing are different.", "cta": "Ask which one it is.", "tone": "Practical",
+         "why_this_works": "The actionable core with nothing behind it, so it becomes the payoff of c1.",
+         "grounded_in": ["Ch 5 corrective"]},
+        {"id": "c3", "title": "Hard Is Useful", "hook": "When it is difficult, you think better.",
+         "narrative_structure": "comparison", "visual_approach": "A rough stony path beside a smooth worn one, with careful footprints on the rough one.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 100,
+         "key_points": ["Strain makes you careful", "Careful is accurate", "Hard is not stupid"],
+         "core_message": "Hard is useful.", "cta": "Welcome the difficulty.", "tone": "Encouraging",
+         "why_this_works": "A genuinely useful reversal, but it needs the worn path established first, so it becomes the late middle of c1.",
+         "grounded_in": ["Ch 5"]}],
+    "rationale": ("c1 builds the worn path first, so that both the rumour and the hard-is-useful reversal land on a "
+                  "picture she has already watched form. The others are its ending and its late middle."),
+    "device_short": "the path worn smooth through long grass by repetition",
+    "art_direction": ("Series house style. New device: a patch of long grass on cream paper in which a faint line of "
+                      "trodden stems becomes, step by step, a smooth bare worn path."),
+    "device_lock": ("A patch of simple long grass blades on cream paper. A faint trodden line becomes a clearer "
+                    "track and finally a smooth bare earth path. Beside it, a rough stony path is difficulty. "
+                    "Nothing is counted and no numeral appears."),
+    "anti_patterns": ["asking the image model for an exact count of blades, footprints or paths",
+                      "two children in one frame", "numerals, labels or lettering of any kind",
+                      "a fully painted landscape; the grass is a patch on empty cream paper",
+                      "implying that finding something hard means she is not clever"],
+    "tradeoffs": [
+        {"tradeoff": "Showing repetition as a counter versus as a worn path",
+         "recommendation": "A worn path",
+         "quality_impact": "No numeral may appear and a counter would need one. A path that visibly smooths carries repetition and ease in the same image."},
+        {"tradeoff": "Using a real rumour versus an invented harmless one",
+         "recommendation": "An invented harmless one",
+         "quality_impact": "A real playground rumour would name someone. An invented, obviously trivial claim teaches the mechanism without inviting her to test it on a classmate."}],
+    "delivery_style": "warm parent reading a bedtime story, curious rather than warning",
+    "performance_intent": ("The same parent and child, twelve chapters on. This one is about a feeling rather than a "
+                           "mistake, so it should sound like noticing something together, not like a caution."),
+    "energy_curve": ("Light through the rumour. Curious as the path wears. Slower and firmer at smooth is not true. "
+                     "Warm and encouraging at hard is useful. Settled at the close."),
+    "pause_policy": "Three genuine silences: after by the third time it is a fact, after say your own name over and over, and after think of something you are sure about.",
+    "sample_section": "s10",
+    "human_note": "Section s10 is the reversal about difficulty. It should sound like relief, not like a lecture.",
+    "reading_age": "Written for a listener of 8. Cognitive ease, fluency and mere exposure never appear as terms.",
+    "pause_beats": [{"section": "s2", "purpose": "She recognises the rumour turning into a fact"},
+                    {"section": "s7", "purpose": "She actually repeats a word until it goes strange"},
+                    {"section": "s14", "purpose": "She tries the question on something she believes"}],
+    "grounded_in": {"s1_to_s3": "Ch 5, repetition raises believability with no new information",
+                    "s4_to_s6": "Ch 5, processing ease is experienced as truth",
+                    "s7_to_s9": "Ch 5, familiarity and liking rise with mere exposure",
+                    "s10_to_s12": "Ch 5, cognitive strain increases scepticism and care",
+                    "s13_to_s15": "Ch 5 corrective plus Pennequin on noticing the quality of one's own thinking"},
+    "guardrails": ["No priming material from Chapter 4, which has failed to replicate.",
+                   "No ego-depletion or glucose claims.",
+                   "The rumour used is invented and trivial so the film never invites her to test this on a real classmate.",
+                   "No numeral appears in any illustration."],
+    "sections": [
+        ("s1", "The rumour", "Somebody at school says the new hall is going to be painted green. You think, is it?",
+         'Somebody at school says the new hall is going to be painted green. <break time="0.5s"/> You think, <break time="0.3s"/> is it?',
+         1.4, "measured", "curious", ["green"], "Light and everyday."),
+        ("s2", "Third time", "Then somebody else says it. Then somebody says it again. And by the third time, it is not a rumour any more. It is just a fact.",
+         'Then somebody else says it. <break time="0.4s"/> Then somebody says it again. <break time="0.5s"/> And by the third time, it is not a rumour any more. <break time="0.4s"/> It is just a fact. <break time="2.5s"/>',
+         2.5, "measured", "curious", ["fact"], "Pause beat one. Let her recognise it."),
+        ("s3", "Nothing new", "But nobody checked anything. Nobody went and looked. Not one new thing was learned.",
+         'But nobody checked anything. <break time="0.4s"/> Nobody went and looked. <break time="0.5s"/> Not one new thing was learned.',
+         1.4, "slow", "steady", ["nothing"], "Flat and plain. This is the point."),
+        ("s4", "The grass", "So picture a patch of long grass. Nobody has ever walked across it.",
+         'So picture a patch of long grass. <break time="0.5s"/> Nobody has ever walked across it.',
+         1.4, "measured", "warm", ["grass"], "Picture-building."),
+        ("s5", "Walking it", "Walk across it once and you can just see where you went. Walk it again and the line is clearer. Again, and again, and now there is a path.",
+         'Walk across it once and you can just see where you went. <break time="0.4s"/> Walk it again and the line is clearer. <break time="0.4s"/> Again, <break time="0.3s"/> and again, <break time="0.4s"/> and now there is a path.',
+         1.4, "measured", "curious", ["path"], "Build with each repetition."),
+        ("s6", "Smooth", "Smooth. Easy. No effort at all. And your thoughts do exactly the same thing.",
+         'Smooth. <break time="0.3s"/> Easy. <break time="0.3s"/> No effort at all. <break time="0.5s"/> And your thoughts do exactly the same thing.',
+         1.4, "slow", "steady", ["smooth"], "The hinge."),
+        ("s7", "Try it", "Try this. Say your own name, over and over and over. Go on.",
+         'Try this. <break time="0.4s"/> Say your own name, <break time="0.3s"/> over and over and over. <break time="0.4s"/> Go on. <break time="2.5s"/>',
+         2.5, "measured", "playful", ["over"], "Pause beat two. She needs to actually do it."),
+        ("s8", "It goes strange", "It goes strange, does it not? Too smooth. It stops meaning anything.",
+         'It goes strange, does it not? <break time="0.5s"/> Too smooth. <break time="0.4s"/> It stops meaning anything.',
+         1.4, "measured", "curious", ["strange"], "Delighted."),
+        ("s9", "The trick", "Because your brain is not measuring whether a thing is true. It is measuring how easy the thing is.",
+         'Because your brain is not measuring whether a thing is true. <break time="0.5s"/> It is measuring how easy the thing is.',
+         1.4, "slow", "steady", ["easy"], "Plain and important."),
+        ("s10", "Hard is useful", "Which means something rather lovely. When a thing is hard, when you have to squint and go back and read it twice, you think better. Not worse.",
+         'Which means something rather lovely. <break time="0.5s"/> When a thing is hard, <break time="0.4s"/> when you have to squint and go back and read it twice, <break time="0.4s"/> you think better. <break time="0.4s"/> Not worse.',
+         1.4, "measured", "encouraging", ["better"], "This should feel like relief."),
+        ("s11", "The rough path", "On a smooth path you stop looking where you are going. On a rough one you watch every step.",
+         'On a smooth path you stop looking where you are going. <break time="0.5s"/> On a rough one you watch every step.',
+         1.4, "measured", "steady", ["watch"], "Clear."),
+        ("s12", "So", "So finding something hard does not mean you are not clever. It usually means you are being careful.",
+         'So finding something hard does not mean you are not clever. <break time="0.5s"/> It usually means you are being careful.',
+         1.4, "slow", "tender", ["careful"], "Say it like it matters, because it does."),
+        ("s13", "The tool", "So here is your thirteenth trick. When something feels obviously true, ask yourself one question. Do I actually know this? Or have I just heard it a lot?",
+         'So here is your thirteenth trick. <break time="0.5s"/> When something feels obviously true, ask yourself one question. <break time="0.5s"/> Do I actually know this? <break time="0.4s"/> Or have I just heard it a lot?',
+         1.4, "measured", "encouraging", ["heard"], "Bright and separating."),
+        ("s14", "Try it now", "Have a go. Think of something you are completely sure about, and ask it.",
+         'Have a go. <break time="0.4s"/> Think of something you are completely sure about, <break time="0.4s"/> and ask it. <break time="2.5s"/>',
+         2.5, "measured", "encouraging", ["sure"], "Pause beat three. Let her actually test one."),
+        ("s15", "Landing", "Smooth is not the same as true. A path gets smooth from feet. Not from facts.",
+         'Smooth is not the same as true. <break time="0.5s"/> A path gets smooth from feet. <break time="0.4s"/> Not from facts.',
+         0.0, "slow", "tender", ["feet"], "Land it quietly. End soft."),
+    ],
+    "spec": [
+        ("sc1", "s1", "DIANA", "The girl stands with her head tilted and one eyebrow slightly raised, listening to something with mild curiosity."),
+        ("sc2", "s2", "NONE", "Three plain empty rounded speech bubbles arranged in a row across the page, each one drawn a little darker and more solid than the one before it. All are completely empty inside."),
+        ("sc3", "s2", "NONE", "One plain empty rounded speech bubble in the middle of the page, drawn solid and heavy like a stone, with a small shadow beneath it."),
+        ("sc4", "s3", "NONE", "One plain closed wooden door in the middle of the page with a small unlit lamp beside it, quiet and unopened."),
+        ("sc5", "s4", "NONE", "A patch of simple upright long green grass blades in the middle of the page, completely untrodden and even, on plain empty cream paper."),
+        ("sc6", "s5", "NONE", "The same patch of long grass with one faint narrow line of slightly bent stems crossing it, barely visible."),
+        ("sc7", "s5", "NONE", "The same patch of long grass with a clearer flattened track worn across it, the grass along the line pressed down."),
+        ("sc8", "s5", "NONE", "The same patch of grass now with a smooth bare earth path worn right across it, the grass on either side untouched."),
+        ("sc9", "s6", "NONE", "A close view of a smooth bare earth path running across the page, flat and even and completely clear of obstacles."),
+        ("sc10", "s7", "DIANA", "The girl stands with her mouth open mid-word, repeating something out loud, one hand raised slightly."),
+        ("sc11", "s8", "NONE", "One plain empty rounded speech bubble in the middle of the page, drawn faded, wobbly and half dissolving at its edges."),
+        ("sc12", "s9", "NONE", "A simple flat balance scale shape on the page holding one smooth round pebble on its tray, with no dial face, no markings and no numbers anywhere on it."),
+        ("sc13", "s10", "DIANA", "The girl squints slightly with her brow furrowed in concentration, looking down at something and working hard at it."),
+        ("sc14", "s11", "NONE", "Two paths side by side across the page: the left one smooth bare flat earth, the right one rough and covered in small uneven stones."),
+        ("sc15", "s12", "NONE", "A close view of a rough stony path with a few careful footprints pressed slowly and deliberately between the stones."),
+        ("sc16", "s13", "DIANA", "The girl sits cross-legged working carefully at something on her lap, calm and absorbed and not at all upset."),
+        ("sc17", "s14", "DIANA", "The girl stops with one hand raised and her head tilted, catching a thought, alert and interested."),
+        ("sc18", "s15", "NONE", "A smooth worn bare path running across a patch of long grass, seen in warm low evening light, quiet and empty."),
+    ],
+    "heroes": {"sc8", "sc9", "sc14", "sc15", "sc18"},
+    "wides": {"sc5", "sc8", "sc14", "sc18"},
+}
+
+GRASS = ("The grass is a simple patch of upright green blades drawn flat and plain in the middle of the page, with "
+         "plain empty cream paper all around it. There is no landscape, no sky, no trees and no horizon. Any path "
+         "is bare warm brown earth.")
+BUBBLE = ("The speech bubbles are plain smooth rounded outlines with a small tail, completely EMPTY inside: no "
+          "words, no letters, no squiggles, no scribbles and no marks of any kind.")
+
+FILM["clauses"] = {
+    "OPEN": (G.OPEN, {"sc1", "sc2", "sc3", "sc4", "sc10", "sc11", "sc12", "sc13", "sc16", "sc17"}),
+    "NOICON": (G.NOICON, {"sc1", "sc4", "sc10", "sc12", "sc13", "sc16", "sc17"}),
+    "GRASS": (GRASS, {"sc5", "sc6", "sc7", "sc8", "sc9", "sc14", "sc15", "sc18"}),
+    "BUBBLE": (BUBBLE, {"sc2", "sc3", "sc11"}),
+}
+
+if __name__ == "__main__":
+    if "init" in sys.argv:
+        G.init(FILM)
+    if "build" in sys.argv:
+        G.build(FILM)
+    if "sheet" in sys.argv:
+        G.sheet(FILM)

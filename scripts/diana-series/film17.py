@@ -1,0 +1,230 @@
+"""Film 17: Same Thing, Different Words (framing effects, Ch 34)."""
+import sys
+import filmgen as G
+
+DL = "https://thedecisionlab.com/biases"
+
+FILM = {
+    "slug": "diana-framing", "comp_id": "DianaFraming",
+    "title": "Same Thing, Different Words", "position": "17 of 18", "chapters": "Ch 34",
+    "source_url": DL, "source_title": "Cognitive Biases - The Decision Lab",
+    "topic": "Framing effects, told for an 8-year-old as why the same fact can feel completely different depending on the words around it",
+    "summary": ("Film 17 of the series. Chapter 34. Logically identical descriptions produce different choices and "
+                "different feelings, because the mind responds to the words rather than to the state of the world. "
+                "Kahneman's conclusion is that preferences are frame-bound rather than reality-bound, and that "
+                "whoever chooses the wording, including whoever sets the default, holds real power. For a child "
+                "this covers half full and half empty, mostly right and partly wrong, and the discovery that she "
+                "can reframe things for herself."),
+    "existing": [
+        {"title": "Jane the Brain (NIMH)", "url": G.NIMH, "source": "government site",
+         "angle": "Coping with big feelings", "what_it_covers": "Feelings, not how wording produces them"},
+        {"title": "Children's positive-thinking material", "url": G.SCH, "source": "web",
+         "angle": "Look on the bright side",
+         "what_it_covers": "Tells a child to choose the cheerful frame without explaining that both frames are equally true"},
+        {"title": "Cognitive Biases - The Decision Lab", "url": DL, "source": "reference site",
+         "angle": "Adult reference explainer", "what_it_covers": "Framing through medical survival rates and consumer pricing"}],
+    "saturated": ["Look-on-the-bright-side positive thinking",
+                  "Adult medical, pricing and policy framings"],
+    "gaps": ["Showing a child that both wordings are equally true, rather than that one is nicer",
+             "Naming that whoever picks the words has quietly made part of the decision",
+             "Handing her the reframing power rather than only warning her about it"],
+    "data_points": [
+        ("Logically equivalent descriptions of the same situation produce systematically different choices.",
+         DL, "Thinking, Fast and Slow, Ch 34", "secondary_source", "counterintuitive",
+         "the whole spine and the two-window device"),
+        ("Preferences are frame-bound rather than reality-bound; often no true preference sits behind the frame.",
+         G.SN, "Thinking, Fast and Slow, Ch 34", "secondary_source", "surprising",
+         "why the film says both are true rather than one is nicer"),
+        ("Whoever sets the wording, including the default option, exercises real influence over the choice.",
+         G.SN, "Thinking, Fast and Slow, Ch 34", "secondary_source", "counterintuitive",
+         "the who-chose-the-words beat"),
+        ("By age 8 to 9 children can deliberately restate a situation in alternative terms.",
+         G.PQ, "Pennequin et al., British Journal of Educational Psychology (2020)", "primary_source",
+         "expected", "age appropriateness of the say-it-the-other-way tool")],
+    "knowledge_level": ("Age 8. Has seen films 1 to 16 and owns the fast one, the story machine, the anchor, the "
+                        "see-saw, the tiny spoon, the ordinary street, the shrinking circle, the worn path, the fog, "
+                        "the two door handles and the sealed box."),
+    "questions": ["Why does the same news feel different depending on how it is said?",
+                  "Is the cheerful version the true one?",
+                  "Can I change how something feels just by changing the words?"],
+    "misconceptions": [
+        ("One of the two versions must be the honest one", "Both can be exactly true. They describe the same fact.", "Ch 34"),
+        ("Positive thinking means pretending", "Choosing a frame is not pretending, as long as the frame is true.", "Ch 34"),
+        ("The wording is just decoration", "The wording changes what people choose, so it is part of the decision.", "Ch 34")],
+    "pain_points": ["Being talked into things by how they are phrased",
+                    "Feeling bad about a result that could equally be described well"],
+    "angles": [
+        ("Two Windows On One Garden", "narrative",
+         "Two windows, one garden. Neither window is lying.",
+         "One object seen through two frames is exactly the structure of the chapter and needs no numbers.",
+         ["Ch 34"]),
+        ("Who Picked The Words", "contrarian", "Whoever chose the wording has already made part of your decision.",
+         "Names the power in framing, which children's positive-thinking material never does.", ["Ch 34"]),
+        ("Say It The Other Way", "evergreen", "Say the same true thing in the opposite words and see what changes.",
+         "Turns the bias into a skill she can use rather than a trap to avoid.", ["Ch 34 corrective"])],
+    "kahneman": "Logically equivalent statements produce different choices, so preferences are frame-bound.",
+    "excluded": ["The Asian disease survival-rate problem, which needs numbers and involves deaths.",
+                 "Any suggestion that she should talk herself into believing something untrue.",
+                 "Anything from the priming or ego-depletion chapters."],
+    "concepts": [
+        {"id": "c1", "title": "Same Thing, Different Words",
+         "hook": "You got most of them right. You got some of them wrong. Which sentence would you rather hear?",
+         "narrative_structure": "story",
+         "visual_approach": "One garden seen through two different window frames on cream paper, each frame showing exactly the same garden but shaped differently.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 150,
+         "key_points": ["Two wordings, one fact, and both true",
+                        "The feeling changes even though nothing else did",
+                        "Whoever picked the words made part of the choice",
+                        "This is not pretending, because both are true",
+                        "You can pick the frame yourself"],
+         "core_message": "Both windows show the same garden. You are allowed to choose which one you stand at, as long as you know you are choosing.",
+         "cta": "When something is said one way, say it the other true way and notice what changes.",
+         "tone": "Playful, then quietly empowering.",
+         "why_this_works": "It gives her the power in framing rather than only the warning, which is what makes it usable rather than merely interesting.",
+         "grounded_in": ["Ch 34"]},
+        {"id": "c2", "title": "Who Picked The Words", "hook": "Somebody chose that wording. Who?",
+         "narrative_structure": "comparison", "visual_approach": "A hand quietly setting a window frame down over a view.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 100,
+         "key_points": ["Someone always chose", "Defaults are choices", "Notice the chooser"],
+         "core_message": "Someone picked the frame.", "cta": "Ask who chose the words.", "tone": "Alert",
+         "why_this_works": "The sharpest idea here, but it needs the two windows first, so it becomes the middle of c1.",
+         "grounded_in": ["Ch 34"]},
+        {"id": "c3", "title": "Say It The Other Way", "hook": "Try the same fact in the opposite words.",
+         "narrative_structure": "tutorial", "visual_approach": "The same garden reappearing through a second, different frame.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 95,
+         "key_points": ["Restate it", "Check it is still true", "Notice the change"],
+         "core_message": "Say it the other way.", "cta": "Try it.", "tone": "Practical",
+         "why_this_works": "The actionable core with nothing behind it, so it becomes the payoff of c1.",
+         "grounded_in": ["Ch 34 corrective"]}],
+    "rationale": ("c1 establishes that both frames are true before handing her the ability to choose one, which is "
+                  "what keeps the film from becoming positive-thinking advice. The others are its middle and end."),
+    "device_short": "one garden seen through two different window frames",
+    "art_direction": ("Series house style. New device: one small garden on cream paper seen through two different "
+                      "window frames, each showing exactly the same garden."),
+    "device_lock": ("One simple garden scene drawn small on cream paper. Two plain window frames of different "
+                    "shapes each surround the identical garden. The garden never changes; only the frame does. "
+                    "Nothing is counted and no numeral appears."),
+    "anti_patterns": ["asking the image model for an exact count of flowers or panes",
+                      "two children in one frame", "numerals, labels or lettering of any kind",
+                      "changing the garden between frames; only the frame may differ",
+                      "implying she should believe something untrue"],
+    "tradeoffs": [
+        {"tradeoff": "Using a marks-out-of-ten example versus most and some",
+         "recommendation": "Most and some",
+         "quality_impact": "No numeral may appear in an illustration, and mostly right versus partly wrong is the same structure in words a child already uses."},
+        {"tradeoff": "Teaching this as a warning versus as a power",
+         "recommendation": "As a power, with the warning inside it",
+         "quality_impact": "A warning alone leaves her defended and passive. Giving her the reframe makes the idea usable while still naming who else is using it on her."}],
+    "delivery_style": "warm parent reading a bedtime story, playful then quietly empowering",
+    "performance_intent": ("The same parent and child, sixteen chapters on. This one hands her something adults use "
+                           "on her all day, and lets her use it back."),
+    "energy_curve": ("Playful at the two sentences. Curious through the windows. Alert at who chose the words. "
+                     "Careful at this is not pretending. Warm and empowering at the close."),
+    "pause_policy": "Three genuine silences: after which would you rather hear, after nothing about the garden changed, and after try the other window.",
+    "sample_section": "s12",
+    "human_note": "Section s12 draws the line at pretending. It must be firm, or the film becomes an excuse.",
+    "reading_age": "Written for a listener of 8. Framing, frame-bound and invariance never appear as terms.",
+    "pause_beats": [{"section": "s2", "purpose": "She notices she has a preference between two identical facts"},
+                    {"section": "s7", "purpose": "She registers that nothing about the world changed"},
+                    {"section": "s14", "purpose": "She reframes something real of her own"}],
+    "grounded_in": {"s1_to_s3": "Ch 34, logically equivalent statements producing different responses",
+                    "s4_to_s7": "Ch 34, the frame changes the feeling while the fact stays fixed",
+                    "s8_to_s10": "Ch 34, whoever sets the wording or the default influences the choice",
+                    "s11_to_s12": "Ch 34, the limit: a frame must still be true",
+                    "s13_to_s15": "Ch 34 corrective, deliberate restatement, plus Pennequin"},
+    "guardrails": ["The film insists both frames must be true, so it never becomes permission to self-deceive.",
+                   "No survival-rate or death framing from the original experiment.",
+                   "No numeral appears in any illustration.",
+                   "No priming or ego-depletion material."],
+    "sections": [
+        ("s1", "Two sentences", "Here are two sentences. You got most of them right. You got some of them wrong.",
+         'Here are two sentences. <break time="0.5s"/> You got most of them right. <break time="0.5s"/> You got some of them wrong.',
+         1.4, "measured", "playful", ["most", "some"], "Same weight on both. Do not lean."),
+        ("s2", "Which one", "Which one would you rather hear?",
+         'Which one would you rather hear? <break time="2.5s"/>',
+         2.5, "slow", "warm", ["rather"], "Pause beat one. She will have a clear preference."),
+        ("s3", "Same marks", "They are the same marks. Exactly the same. Not one thing is different between them.",
+         'They are the same marks. <break time="0.4s"/> Exactly the same. <break time="0.5s"/> Not one thing is different between them.',
+         1.4, "measured", "curious", ["same"], "The turn."),
+        ("s4", "The garden", "Picture a little garden. And two windows looking out at it.",
+         'Picture a little garden. <break time="0.5s"/> And two windows looking out at it.',
+         1.4, "measured", "warm", ["two"], "Picture-building."),
+        ("s5", "Different windows", "One window is tall and narrow. One is wide and low. Same garden. Every flower in exactly the same place.",
+         'One window is tall and narrow. <break time="0.4s"/> One is wide and low. <break time="0.5s"/> Same garden. <break time="0.4s"/> Every flower in exactly the same place.',
+         1.4, "measured", "curious", ["same garden"], "Steady."),
+        ("s6", "Feels different", "But they feel completely different to look through. And neither one of them is lying to you.",
+         'But they feel completely different to look through. <break time="0.5s"/> And neither one of them is lying to you.',
+         1.4, "measured", "steady", ["neither"], "Important. Do not rush."),
+        ("s7", "Words are windows", "Words are windows. Change the window and the same garden feels different. Nothing about the garden changed at all.",
+         'Words are windows. <break time="0.4s"/> Change the window and the same garden feels different. <break time="0.5s"/> Nothing about the garden changed at all. <break time="2.5s"/>',
+         2.5, "slow", "steady", ["nothing"], "Pause beat two. The hinge."),
+        ("s8", "Somebody chose", "And here is the part worth knowing. Somebody chose that window. Every single time.",
+         'And here is the part worth knowing. <break time="0.5s"/> Somebody chose that window. <break time="0.4s"/> Every single time.',
+         1.4, "measured", "steady", ["chose"], "Alert."),
+        ("s9", "Not always on purpose", "Usually without thinking about it. Sometimes very much on purpose.",
+         'Usually without thinking about it. <break time="0.5s"/> Sometimes very much on purpose.',
+         1.4, "measured", "wry", ["on purpose"], "A shade darker on the second half."),
+        ("s10", "Half of the choosing", "And whoever picks the words has already done half of your choosing for you. Before you have even started.",
+         'And whoever picks the words has already done half of your choosing for you. <break time="0.5s"/> Before you have even started.',
+         1.4, "measured", "steady", ["half"], "Firm."),
+        ("s11", "So you can too", "Which means you can do it too. You can pick the window you stand at.",
+         'Which means you can do it too. <break time="0.5s"/> You can pick the window you stand at.',
+         1.4, "measured", "encouraging", ["you can"], "Hand it over."),
+        ("s12", "Not pretending", "But it has to be a real window. Both sentences have to be true. This is not about telling yourself something false. That is not a window. That is a painting of one.",
+         'But it has to be a real window. <break time="0.4s"/> Both sentences have to be true. <break time="0.5s"/> This is not about telling yourself something false. <break time="0.4s"/> That is not a window. <break time="0.4s"/> That is a painting of one.',
+         1.4, "measured", "steady", ["true"], "Firm. The line must hold."),
+        ("s13", "The tool", "So here is your seventeenth trick. When somebody says something one way, say it back to yourself the other true way. Then see what changed.",
+         'So here is your seventeenth trick. <break time="0.5s"/> When somebody says something one way, say it back to yourself the other true way. <break time="0.5s"/> Then see what changed.',
+         1.4, "measured", "encouraging", ["other true way"], "Bright."),
+        ("s14", "Try it", "Go on. Think of something somebody said about you today, and try the other window.",
+         'Go on. <break time="0.4s"/> Think of something somebody said about you today, <break time="0.4s"/> and try the other window. <break time="2.5s"/>',
+         2.5, "measured", "encouraging", ["other window"], "Pause beat three. Let her actually do it."),
+        ("s15", "Landing", "Both windows show the same garden. You are allowed to choose the one you stand at. As long as you know that you are choosing.",
+         'Both windows show the same garden. <break time="0.5s"/> You are allowed to choose the one you stand at. <break time="0.5s"/> As long as you know that you are choosing.',
+         0.0, "slow", "tender", ["choosing"], "Settled and empowering. End soft."),
+    ],
+    "spec": [
+        ("sc1", "s1", "NONE", "Two plain empty rounded speech bubbles side by side in the middle of the page, exactly the same size and shape as one another, both completely empty inside."),
+        ("sc2", "s2", "DIANA", "The girl looks straight ahead considering something, her mouth slightly pursed, weighing two things up."),
+        ("sc3", "s3", "NONE", "Two identical small plain paper cards side by side in the middle of the page, exactly alike in every way and completely blank."),
+        ("sc4", "s4", "NONE", "One small simple garden with a few flowers and a low bush, drawn small in the middle of the page on plain empty cream paper."),
+        ("sc5", "s5", "NONE", "One tall narrow plain window frame in the middle of the page, with the small simple garden visible through it."),
+        ("sc6", "s5", "NONE", "One wide low plain window frame in the middle of the page, with exactly the same small simple garden visible through it."),
+        ("sc7", "s5", "NONE", "The tall narrow window frame and the wide low window frame side by side on the page, each showing the identical garden."),
+        ("sc8", "s6", "DIANA", "The girl stands looking through a plain window frame with a thoughtful, considering expression."),
+        ("sc9", "s7", "NONE", "The small simple garden drawn alone in the middle of the page with no window frame around it at all."),
+        ("sc10", "s8", "NONE", "One open hand quietly lowering a plain window frame down over a view. Only the hand and forearm are visible, with no face and no body."),
+        ("sc11", "s9", "NONE", "One plain window frame resting slightly crooked over the garden, tilted deliberately to one side."),
+        ("sc12", "s10", "NONE", "One plain window frame in the middle of the page, cropping the garden so tightly that only a narrow strip of it can be seen."),
+        ("sc13", "s11", "DIANA", "The girl reaches out and takes hold of the edge of a plain window frame, about to move it herself."),
+        ("sc14", "s12", "NONE", "One plain framed picture of a garden hanging flat and solid, with no view behind it and no depth, clearly a painting rather than a window."),
+        ("sc15", "s12", "NONE", "A real open window frame with the actual garden visible in genuine depth beyond it, and daylight coming through."),
+        ("sc16", "s13", "DIANA", "The girl turns her head deliberately to look the other way, considering something from a new side."),
+        ("sc17", "s14", "DIANA", "The girl stands holding a plain window frame up in front of her, looking through it with interest."),
+        ("sc18", "s15", "NONE", "The small simple garden seen in warm golden evening light with two plain window frames standing open beside it, both empty and inviting."),
+    ],
+    "heroes": {"sc7", "sc9", "sc12", "sc15", "sc18"},
+    "wides": {"sc7", "sc9", "sc18"},
+}
+
+GARDEN = ("The garden is one small simple storybook garden with a few plain flowers and one low bush, drawn small "
+          "and flat on plain empty cream paper. It is IDENTICAL every time it appears: the same flowers in the "
+          "same places. Any window frame is a plain simple empty rectangular frame with no glass detail, no "
+          "curtains, no writing and no numbers.")
+
+FILM["clauses"] = {
+    "OPEN": (G.OPEN, {"sc1", "sc2", "sc3", "sc8", "sc10", "sc13", "sc16", "sc17"}),
+    "NOICON": (G.NOICON, {"sc1", "sc2", "sc3", "sc8", "sc13", "sc16", "sc17"}),
+    "GARDEN": (GARDEN, {"sc4", "sc5", "sc6", "sc7", "sc9", "sc10", "sc11", "sc12", "sc14", "sc15", "sc17", "sc18"}),
+}
+
+if __name__ == "__main__":
+    if "init" in sys.argv:
+        G.init(FILM)
+    if "build" in sys.argv:
+        G.build(FILM)
+    if "sheet" in sys.argv:
+        G.sheet(FILM)

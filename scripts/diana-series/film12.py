@@ -1,0 +1,231 @@
+"""Film 12: The More You Add, The Less Likely (conjunction fallacy, Ch 15)."""
+import sys
+import filmgen as G
+
+DL = "https://thedecisionlab.com/biases"
+
+FILM = {
+    "slug": "diana-conjunction", "comp_id": "DianaConjunction",
+    "title": "The More You Add, The Less Likely", "position": "12 of 18", "chapters": "Ch 15",
+    "source_url": DL, "source_title": "Cognitive Biases - The Decision Lab",
+    "topic": "The conjunction fallacy, told for an 8-year-old as why a story with more details feels more likely and is actually less likely",
+    "summary": ("Film 12 of the series. Chapter 15. Adding detail to a story makes it more plausible and less "
+                "probable at the same time, because every extra condition can only shrink the set of cases where "
+                "the whole story is true. People reliably rate the richer story as more likely, which Kahneman "
+                "calls the conjunction fallacy. For a child this is why an elaborate excuse sounds convincing, why "
+                "a detailed worry feels certain, and why the most vivid prediction is the safest one to doubt."),
+    "existing": [
+        {"title": "Jane the Brain (NIMH)", "url": G.NIMH, "source": "government site",
+         "angle": "Managing worry", "what_it_covers": "Feelings about worries, not the structure that makes a detailed worry feel certain"},
+        {"title": "Children's storytelling and comprehension material", "url": G.SCH, "source": "web",
+         "angle": "Add detail to make your writing vivid",
+         "what_it_covers": "Teaches that detail makes a story better, and never mentions it also makes it less likely"},
+        {"title": "Cognitive Biases - The Decision Lab", "url": DL, "source": "reference site",
+         "angle": "Adult reference explainer", "what_it_covers": "The conjunction fallacy through the Linda problem"}],
+    "saturated": ["Add-more-detail creative-writing advice",
+                  "Adult Linda-problem and forecasting framings"],
+    "gaps": ["Showing a child that each added detail shrinks the number of ways a story can come true",
+             "Connecting it to her own detailed worries, which feel most certain when they are least likely",
+             "A version that needs no probability arithmetic at all"],
+    "data_points": [
+        ("Adding a detail to a description makes people judge it more probable, though it can only be less probable.",
+         DL, "Thinking, Fast and Slow, Ch 15", "secondary_source", "counterintuitive",
+         "the whole spine and the shrinking-circle device"),
+        ("A richer story is more plausible and less probable, and plausibility is what the mind actually measures.",
+         G.SN, "Thinking, Fast and Slow, Ch 15", "secondary_source", "counterintuitive",
+         "why the detailed worry feels most certain"),
+        ("Framing the same question in frequencies rather than probabilities sharply reduces the error.",
+         G.SN, "Thinking, Fast and Slow, Ch 15", "secondary_source", "surprising",
+         "justifies drawing the idea as how many ways rather than how likely"),
+        ("By age 8 to 9 children can reason explicitly about the structure of their own thoughts.",
+         G.PQ, "Pennequin et al., British Journal of Educational Psychology (2020)", "primary_source",
+         "expected", "age appropriateness of counting the ands")],
+    "knowledge_level": ("Age 8. Has seen films 1 to 11 and owns the fast one, the story machine, the anchor, the "
+                        "see-saw, the tiny spoon and the ordinary street."),
+    "questions": ["Why does a really detailed worry feel so certain?",
+                  "Why do long excuses sound more believable?",
+                  "How can adding more true-sounding things make something less likely?"],
+    "misconceptions": [
+        ("More detail means more likely", "Every added detail can only shrink the number of ways it comes true.", "Ch 15"),
+        ("If I can picture it clearly it will probably happen", "Vividness measures how easy it is to imagine, not how often it occurs.", "Ch 15"),
+        ("A vague answer is a weak answer", "The vaguer story is usually the more likely one.", "Ch 15")],
+    "pain_points": ["Detailed bedtime worries that feel like predictions",
+                    "Being talked into things by elaborate stories"],
+    "angles": [
+        ("The Shrinking Circle", "narrative",
+         "Every and you add makes the circle of ways it could happen smaller.",
+         "Turns a probability theorem into one shrinking shape a child can watch.", ["Ch 15"]),
+        ("Count The Ands", "evergreen", "When a story convinces you, count how many ands are in it.",
+         "One countable move, and counting words is something a child can genuinely do.", ["Ch 15 corrective"]),
+        ("Vivid Is Not Likely", "contrarian", "The clearer you can picture it, the more suspicious you should be.",
+         "Directly contradicts the add-detail advice she gets at school, which is why it is worth saying.",
+         ["Ch 15"])],
+    "kahneman": "Adding detail makes a story more plausible and less probable, and people judge by plausibility.",
+    "excluded": ["The Linda problem itself, which needs probability ranking.",
+                 "Any percentage or probability figure.",
+                 "Anything from the priming or ego-depletion chapters."],
+    "concepts": [
+        {"id": "c1", "title": "The More You Add, The Less Likely",
+         "hook": "The longer and more detailed a story gets, the more you believe it. And the less likely it actually is.",
+         "narrative_structure": "story",
+         "visual_approach": "One large soft circle that shrinks a step at a time as each new detail is added, until only a tiny dot is left.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 150,
+         "key_points": ["Each detail shrinks the ways it can come true",
+                        "But each detail makes it easier to picture",
+                        "Your brain measures how easy it is to picture",
+                        "Detailed worries feel most certain and are least likely",
+                        "Count the ands"],
+         "core_message": "Every and makes the circle smaller. Your feeling of certainty goes the other way.",
+         "cta": "When a story really convinces you, count the ands in it.",
+         "tone": "Curious and slightly conspiratorial, then gentle at the worry.",
+         "why_this_works": "It contradicts something she is actively taught at school, which makes it memorable, and it defuses her bedtime worries with structure rather than reassurance.",
+         "grounded_in": ["Ch 15"]},
+        {"id": "c2", "title": "Count The Ands", "hook": "Count how many ands are holding the story up.",
+         "narrative_structure": "tutorial", "visual_approach": "A chain of small linked rings, each ring one and.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 95,
+         "key_points": ["Find the ands", "Each one is a condition", "All of them must be true"],
+         "core_message": "Count the ands.", "cta": "Count them.", "tone": "Practical",
+         "why_this_works": "The actionable core with nothing behind it, so it becomes the payoff of c1.",
+         "grounded_in": ["Ch 15 corrective"]},
+        {"id": "c3", "title": "Vivid Is Not Likely", "hook": "The clearer the picture, the more you should doubt it.",
+         "narrative_structure": "comparison", "visual_approach": "A sharp bright picture beside a blurry pale one, the blurry one much larger.",
+         "suggested_playbook": "custom-atelier-storybook", "target_audience": "The same 8-year-old",
+         "target_platform": "generic", "target_duration_seconds": 100,
+         "key_points": ["Sharpness is not evidence", "Vague is usually likelier", "Doubt the vivid one"],
+         "core_message": "Vivid is not likely.", "cta": "Doubt the clearest picture.", "tone": "Wry",
+         "why_this_works": "The sharpest single idea, but it needs the shrinking circle first, so it becomes the middle of c1.",
+         "grounded_in": ["Ch 15"]}],
+    "rationale": ("c1 builds the shrinking circle first, so that vivid-is-not-likely and count-the-ands both land on "
+                  "something she has already watched happen. The others are its middle and its ending."),
+    "device_short": "the circle that shrinks with every added detail",
+    "art_direction": ("Series house style. New device: one large soft circle on cream paper that shrinks a step at a "
+                      "time as details are added, ending as a tiny dot. Alongside it, a chain of small linked rings."),
+    "device_lock": ("One soft-edged circle in warm ochre represents all the ways something could come true. Each "
+                    "added detail draws a smaller circle inside the last. A chain of small linked rings is the "
+                    "ands. Nothing is counted numerically and no numeral appears."),
+    "anti_patterns": ["asking the image model for an exact count of circles or rings",
+                      "two children in one frame", "numerals, percentages, labels or lettering of any kind",
+                      "anything frightening in the worry scenes", "a fully painted background"],
+    "tradeoffs": [
+        {"tradeoff": "Teaching probability arithmetic versus showing a shrinking area",
+         "recommendation": "A shrinking area",
+         "quality_impact": "An 8-year-old cannot multiply probabilities, and no numeral may appear. A circle that visibly shrinks carries the whole theorem."},
+        {"tradeoff": "Using an excuse example versus a worry example",
+         "recommendation": "Both, excuse first",
+         "quality_impact": "The excuse is funny and safe and teaches the mechanism; the worry is where she actually needs it. Teaching on the safe one first makes the second land without alarm."}],
+    "delivery_style": "warm parent reading a bedtime story, playful at the excuse and gentle at the worry",
+    "performance_intent": ("The same parent and child, eleven chapters on. It starts as a joke about a ridiculous "
+                           "excuse and quietly turns into help with the worries she has at night."),
+    "energy_curve": ("Playful through the excuse. Curious as the circle shrinks. Quiet and careful at the worry. "
+                     "Bright at the tool. Settled at the close."),
+    "pause_policy": "Three genuine silences: after which one did you believe, after think of a worry, and after count the ands.",
+    "sample_section": "s11",
+    "human_note": "Section s11 is the worry. Slow right down there; it is the reason the film exists.",
+    "reading_age": "Written for a listener of 8. Conjunction fallacy, probability and plausibility never appear as terms.",
+    "pause_beats": [{"section": "s3", "purpose": "She notices she believed the longer story"},
+                    {"section": "s11", "purpose": "She retrieves one of her own detailed worries"},
+                    {"section": "s14", "purpose": "She counts the ands in it"}],
+    "grounded_in": {"s1_to_s3": "Ch 15, the richer description is judged more probable",
+                    "s4_to_s7": "Ch 15, every conjunction can only reduce the set of cases",
+                    "s8_to_s10": "Ch 15, plausibility is what the mind measures instead of probability",
+                    "s11_to_s12": "Ch 15 applied to a child's detailed worry",
+                    "s13_to_s15": "Ch 15 corrective, restated as a frequency question, plus Pennequin"},
+    "guardrails": ["The film never says her worry will not happen, only that the detailed version is the least likely one.",
+                   "No probability figure or numeral appears anywhere.",
+                   "The worry is drawn as a soft shape, never as anything frightening.",
+                   "No priming or ego-depletion material."],
+    "sections": [
+        ("s1", "Two excuses", "Here are two reasons the homework is not done. One. I forgot.",
+         'Here are two reasons the homework is not done. <break time="0.5s"/> One. <break time="0.4s"/> I forgot.',
+         1.4, "measured", "playful", ["forgot"], "Light and quick."),
+        ("s2", "The long one", "Two. I did it, and I put it in my bag, and the bag was by the door, and the dog knocked it over, and it went in a puddle.",
+         'Two. <break time="0.4s"/> I did it, <break time="0.3s"/> and I put it in my bag, <break time="0.3s"/> and the bag was by the door, <break time="0.3s"/> and the dog knocked it over, <break time="0.3s"/> and it went in a puddle.',
+         1.4, "measured", "playful", ["and"], "Gather speed with each and."),
+        ("s3", "Which one", "Now be honest. Which one did you believe?",
+         'Now be honest. <break time="0.5s"/> Which one did you believe? <break time="2.5s"/>',
+         2.5, "slow", "warm", ["believe"], "Pause beat one. She will pick the long one."),
+        ("s4", "The wrong way round", "Almost everybody picks the long one. And the long one is the least likely thing in the room.",
+         'Almost everybody picks the long one. <break time="0.5s"/> And the long one is the least likely thing in the room.',
+         1.4, "measured", "curious", ["least"], "The turn."),
+        ("s5", "The circle", "Picture a big circle. Inside it is every single way the homework could have gone missing.",
+         'Picture a big circle. <break time="0.5s"/> Inside it is every single way the homework could have gone missing.',
+         1.4, "measured", "warm", ["every"], "Picture-building."),
+        ("s6", "First and", "Now add, and it was in the bag. The circle gets smaller. Because now the bag has to be part of it.",
+         'Now add, <break time="0.3s"/> and it was in the bag. <break time="0.5s"/> The circle gets smaller. <break time="0.4s"/> Because now the bag has to be part of it.',
+         1.4, "measured", "curious", ["smaller"], "Watch it shrink."),
+        ("s7", "Every and", "And the dog. Smaller. And the puddle. Smaller again. Every single and makes the circle smaller. Every one.",
+         'And the dog. <break time="0.3s"/> Smaller. <break time="0.4s"/> And the puddle. <break time="0.3s"/> Smaller again. <break time="0.5s"/> Every single and makes the circle smaller. <break time="0.4s"/> Every one.',
+         1.4, "measured", "steady", ["every"], "Relentless, then stop."),
+        ("s8", "Down to a dot", "By the end there is almost nothing left. A tiny dot.",
+         'By the end there is almost nothing left. <break time="0.5s"/> A tiny dot.',
+         1.4, "slow", "steady", ["dot"], "Let it be small."),
+        ("s9", "But it got clearer", "But something else happened while the circle was shrinking. The picture in your head got clearer and clearer.",
+         'But something else happened while the circle was shrinking. <break time="0.5s"/> The picture in your head got clearer and clearer.',
+         1.4, "measured", "curious", ["clearer"], "The hinge."),
+        ("s10", "The swap", "And your brain does not measure how likely something is. It measures how easily it can picture it.",
+         'And your brain does not measure how likely something is. <break time="0.5s"/> It measures how easily it can picture it.',
+         1.4, "slow", "steady", ["picture"], "Plain and important."),
+        ("s11", "The worry", "Which brings us to night time. Think of a worry you have had. A really detailed one, with all the bits filled in.",
+         'Which brings us to night time. <break time="0.5s"/> Think of a worry you have had. <break time="0.4s"/> A really detailed one, with all the bits filled in. <break time="2.5s"/>',
+         2.5, "slow", "gentle", ["detailed"], "Pause beat two. Very gentle. This is the point of the film."),
+        ("s12", "Tiny dot", "That worry felt like the surest thing in the world, did it not? And every single detail in it was making it smaller. Down to a dot.",
+         'That worry felt like the surest thing in the world, did it not? <break time="0.5s"/> And every single detail in it was making it smaller. <break time="0.4s"/> Down to a dot.',
+         1.4, "slow", "tender", ["smaller"], "Kind, not clever."),
+        ("s13", "Not never", "That does not mean nothing bad ever happens. It means the very detailed version, the one with all the ands, is the least likely one of all.",
+         'That does not mean nothing bad ever happens. <break time="0.5s"/> It means the very detailed version, <break time="0.4s"/> the one with all the ands, <break time="0.4s"/> is the least likely one of all.',
+         1.4, "measured", "steady", ["least"], "Honest. Do not overclaim."),
+        ("s14", "The tool", "So here is your twelfth trick. When a story really convinces you, count the ands in it. The more ands, the smaller the circle.",
+         'So here is your twelfth trick. <break time="0.5s"/> When a story really convinces you, count the ands in it. <break time="0.5s"/> The more ands, the smaller the circle. <break time="2.5s"/>',
+         2.5, "measured", "encouraging", ["count"], "Pause beat three. She should count them in her own worry."),
+        ("s15", "Landing", "A clear picture is not a promise. It is just a clear picture.",
+         'A clear picture is not a promise. <break time="0.5s"/> It is just a clear picture.',
+         0.0, "slow", "tender", ["promise"], "Quiet and freeing. End soft."),
+    ],
+    "spec": [
+        ("sc1", "s1", "DIANA", "The girl stands with her empty hands turned upwards and her shoulders raised in a small shrug, a little sheepish."),
+        ("sc2", "s2", "NONE", "A soft chain of small linked rings running left to right across the middle of the page, each ring joined to the next."),
+        ("sc3", "s2", "NONE", "One school bag lying on its side on the page with a puddle of water spreading beneath it and a few loose blank sheets of paper floating in it."),
+        ("sc4", "s3", "DIANA", "The girl looks straight at the viewer with one eyebrow slightly raised, amused and caught out."),
+        ("sc5", "s4", "NONE", "Two empty rounded speech bubbles on the page, the right one much longer and more elaborate than the short left one, both completely empty inside."),
+        ("sc6", "s5", "NONE", "One very large soft-edged warm ochre circle filling most of the page, plain and empty inside."),
+        ("sc7", "s6", "NONE", "A large soft ochre circle with a noticeably smaller ochre circle drawn inside it, the outer ring left pale."),
+        ("sc8", "s7", "NONE", "A set of soft ochre circles nested one inside another, each smaller than the last, the innermost one small and strong in colour."),
+        ("sc9", "s7", "NONE", "The same nested ochre circles seen closer, the outer rings very pale and the small inner circle warm and solid."),
+        ("sc10", "s8", "NONE", "One tiny warm ochre dot alone in the very centre of a large empty page, with the faintest trace of a large pale ring around it."),
+        ("sc11", "s9", "NONE", "On the left a blurred pale soft shape, on the right the same shape drawn sharp and clear and brightly coloured."),
+        ("sc12", "s10", "DIANA", "The girl looks upward with a small frown of concentration, as if watching something forming above her."),
+        ("sc13", "s11", "DIANA", "The girl lies in bed at night with her eyes open, one small soft grey cloud shape hovering above the pillow."),
+        ("sc14", "s12", "NONE", "One small soft grey cloud shape on the page with a tiny warm ochre dot glowing at its centre."),
+        ("sc15", "s13", "NONE", "A large pale ochre circle with one tiny solid dot near its centre, the vast pale area around the dot clearly visible."),
+        ("sc16", "s14", "NONE", "A soft chain of small linked rings lying across the page with a gentle hand touching one ring, as if counting along it."),
+        ("sc17", "s14", "DIANA", "The girl sits up in bed, calmer now, one hand resting on the covers, thinking."),
+        ("sc18", "s15", "DIANA", "The girl sleeps peacefully with her head on the pillow in warm low lamplight, the covers loose and settled."),
+    ],
+    "heroes": {"sc8", "sc10", "sc14", "sc15", "sc18"},
+    "wides": {"sc2", "sc6", "sc10", "sc15"},
+}
+
+CIRCLE = ("The circles are soft-edged flat warm ochre discs, plainly drawn with nothing inside them: no faces, no "
+          "patterns, no writing and no numbers. Draw them centred on plain empty cream paper.")
+CHAIN = ("The chain is made of simple small rounded rings linked one to the next in a single line, drawn flat and "
+         "plain with no writing and no markings.")
+GENTLE = ("Nothing in this picture is frightening. Any cloud or shadow is a soft simple rounded shape with no face "
+          "and nothing threatening about it.")
+
+FILM["clauses"] = {
+    "OPEN": (G.OPEN, {"sc1", "sc3", "sc4", "sc5", "sc11", "sc12", "sc13", "sc17", "sc18"}),
+    "NOICON": (G.NOICON, {"sc1", "sc3", "sc4", "sc5", "sc12", "sc17", "sc18"}),
+    "CIRCLE": (CIRCLE, {"sc6", "sc7", "sc8", "sc9", "sc10", "sc14", "sc15"}),
+    "CHAIN": (CHAIN, {"sc2", "sc16"}),
+    "GENTLE": (GENTLE, {"sc11", "sc13", "sc14"}),
+}
+
+if __name__ == "__main__":
+    if "init" in sys.argv:
+        G.init(FILM)
+    if "build" in sys.argv:
+        G.build(FILM)
+    if "sheet" in sys.argv:
+        G.sheet(FILM)
