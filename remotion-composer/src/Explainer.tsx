@@ -31,6 +31,7 @@ import { ScreenshotScene } from "./components/ScreenshotScene";
 import type { ScreenshotStep } from "./components/ScreenshotScene";
 import { ProviderChip } from "./components/ProviderChip";
 import { resolveAsset } from "./lib/resolveAsset";
+import { injectLocalFonts } from "./lib/fonts";
 import type { ParticleType } from "./components/ParticleOverlay";
 import { resolveTheme, type ThemeConfig, DEFAULT_THEME } from "./Root";
 
@@ -841,6 +842,12 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
   // Resolve theme from props — playbook name, theme name, or custom themeConfig
   const theme = resolveTheme(props as Record<string, unknown>);
 
+  // Inject any bundled local fonts (non-Latin scripts like Devanagari/CJK
+  // render blank in headless Chromium without this).
+  if (theme.localFonts && theme.localFonts.length > 0) {
+    injectLocalFonts(theme.localFonts as any);
+  }
+
   return (
     <AbsoluteFill style={{ background: theme.backgroundColor, fontFamily: theme.headingFont || fontFamily }}>
       {/* Layer 0: Animated gradient background — driven by theme */}
@@ -876,11 +883,12 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {captions && captions.length > 0 && (
         <CaptionOverlay
           words={captions}
-          wordsPerPage={6}
-          fontSize={42}
+          wordsPerPage={5}
+          fontSize={52}
           color={theme.textColor}
           highlightColor={theme.captionHighlightColor}
           backgroundColor={theme.captionBackgroundColor}
+          fontFamily="Shobhika, system-ui, sans-serif"
         />
       )}
 
