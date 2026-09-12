@@ -83,17 +83,15 @@ const PageRenderer: React.FC<{
       style={{
         justifyContent: "flex-end",
         alignItems: "center",
-        paddingBottom: 80,
+        paddingBottom: 64,
       }}
     >
       <div
         style={{
-          opacity: entrance,
-          transform: `translateY(${interpolate(entrance, [0, 1], [20, 0])}px)`,
           backgroundColor,
-          borderRadius: 12,
-          padding: "14px 28px",
-          maxWidth: "80%",
+          borderRadius: 14,
+          padding: "16px 30px",
+          maxWidth: "82%",
           textAlign: "center",
         }}
       >
@@ -102,26 +100,38 @@ const PageRenderer: React.FC<{
             fontSize,
             fontWeight: 700,
             fontFamily,
-            lineHeight: 1.4,
+            lineHeight: 1.45,
             whiteSpace: "pre-wrap",
           }}
         >
           {page.words.map((w, i) => {
+            // Cumulative reveal: a word only appears once its time has come.
+            const appeared = w.startMs <= currentMs;
+            if (!appeared) return null;
             const isActive = w.startMs <= currentMs && w.endMs > currentMs;
-            const isPast = w.endMs <= currentMs;
+            // Per-word spring entrance keyed to its start time.
+            const wordFrame = Math.max(
+              0,
+              Math.round(((currentMs - w.startMs) / 1000) * fps)
+            );
+            const entrance = spring({
+              frame: wordFrame,
+              fps,
+              config: { damping: 16, stiffness: 160, mass: 0.7 },
+              from: 0,
+              to: 1,
+            });
             return (
               <span
                 key={`${w.startMs}-${i}`}
                 style={{
-                  // Keep each word unbroken so lines wrap only at word
-                  // boundaries. For space-delimited text this matches the
-                  // previous behavior; for CJK it prevents mid-word breaks.
                   display: "inline-block",
                   whiteSpace: "nowrap",
-                  color: isActive ? highlightColor : isPast ? color : `${color}99`,
-                  transition: "none", // CSS transitions forbidden in Remotion
+                  opacity: entrance,
+                  transform: `translateY(${interpolate(entrance, [0, 1], [18, 0])}px) scale(${interpolate(entrance, [0, 1], [0.9, 1])})`,
+                  color: isActive ? highlightColor : color,
                   textShadow: isActive
-                    ? `0 0 20px ${highlightColor}66, 0 2px 4px rgba(0,0,0,0.5)`
+                    ? `0 0 22px ${highlightColor}66, 0 2px 4px rgba(0,0,0,0.5)`
                     : "0 2px 4px rgba(0,0,0,0.5)",
                 }}
               >
@@ -142,7 +152,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
   color = "#F8FAFC",
   highlightColor = "#22D3EE",
   backgroundColor = "rgba(15, 23, 42, 0.75)",
-  fontFamily = "Space Grotesk, Inter, system-ui, sans-serif",
+  fontFamily = "Baloo2, system-ui, sans-serif",
   wordSeparator = " ",
 }) => {
   const { fps } = useVideoConfig();

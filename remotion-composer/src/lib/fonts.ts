@@ -12,9 +12,10 @@
 export interface LocalFont {
   /** Font-family name used in CSS (e.g. "Shobhika"). */
   family: string;
-  /** Path relative to public/ (e.g. "/Shobhika.ttf"). */
-  url: string;
-  /** Format hint for the @font-face src. */
+  /** Single font file path (relative to public/) OR array of sources (woff2/ttf). */
+  url?: string;
+  src?: string | string[];
+  /** Format hint for the @font-face src (used when url is a single string). */
   format?: "truetype" | "opentype" | "woff2";
   /** Weight range, e.g. "400 700". */
   weight?: string;
@@ -23,10 +24,22 @@ export interface LocalFont {
 export function localFontFaceCss(font: LocalFont): string {
   const format = font.format ?? "truetype";
   const weight = font.weight ?? "400 700";
+  let src: string;
+  if (typeof font.src === "string") {
+    src = `url('${font.src}') format('${format}')`;
+  } else if (Array.isArray(font.src)) {
+    src = font.src
+      .map((s) => `url('${s}') format('${s.split(".").pop()}')`)
+      .join(", ");
+  } else if (font.url) {
+    src = `url('${font.url}') format('${format}')`;
+  } else {
+    src = "";
+  }
   return `
     @font-face {
       font-family: '${font.family}';
-      src: url('${font.url}') format('${format}');
+      src: ${src};
       font-weight: ${weight};
       font-display: swap;
     }
