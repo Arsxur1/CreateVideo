@@ -1,3 +1,4 @@
+export { ImageCard } from "./ImageCard";
 export { TextCard } from "./TextCard";
 export { StatCard } from "./StatCard";
 export { ProgressBar } from "./ProgressBar";

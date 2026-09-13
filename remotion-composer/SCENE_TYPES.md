@@ -32,10 +32,11 @@ When you add a new component, append it here and in `src/components/index.ts`.
 
 | `type` | Component | Required fields | Common fields | Purpose |
 |---|---|---|---|---|
-| `section_title` | `SectionTitle` | `text` | `accentColor`, `position` (top-left, etc.) | Tiny section label |
+| `section_title` | `SectionTitle` | `text` | `accentColor`, `position` (top-left, etc.), `textColor`, `textTransform` (none/uppercase), `backgroundColor` | Tiny section label |
 | `stat_reveal` | `StatReveal` | `text` | `subtitle`, `accentColor`, `position` | Corner stat badge |
 | `hero_title` | `HeroTitle` (as overlay) | `text` | `subtitle` | Full-frame title overlay |
 | **`provider_chip`** | **`ProviderChip`** | **`providers`** (list of strings) | **`cycleSeconds`, `position`, `accentColor`, `label`** | **Rotating badge that cycles through provider names — used in AI-generated-motion scenes to show which model produced the clip** |
+| `image` | `ImageCard` | `src` | `widthPercent` (10–70, default 42), `anchor` (left/right/center), `borderColor`; renders in `safe_upper` | Picture-in-picture still over talking-head footage, timed to the spoken word (branded-reel) |
 
 ---
 

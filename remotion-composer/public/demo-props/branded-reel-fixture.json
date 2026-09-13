@@ -1,0 +1,7 @@
+{ "videoSrc": "talking-head/take.mp4", "wordsPerPage": 8, "fontSize": 68, "highlightColor": "#FFD166",
+  "captionPaddingBottom": 480, "captionFontFamily": "Inter",
+  "captions": [ {"word":"Tu","startMs":0,"endMs":71}, {"word":"entends","startMs":91,"endMs":231}, {"word":"parler","startMs":251,"endMs":371}, {"word":"de","startMs":391,"endMs":431,"pageBreakAfter":true},
+                {"word":"l'intelligence","startMs":451,"endMs":792}, {"word":"artificielle","startMs":832,"endMs":1232,"pageBreakAfter":true} ],
+  "overlays": [ {"type":"image","src":"talking-head/fixture-a.png","in_seconds":0.5,"out_seconds":1.7,"anchor":"right","borderColor":"#FFD166"},
+                {"type":"image","src":"talking-head/fixture-b.png","in_seconds":2.0,"out_seconds":3.2,"anchor":"left","widthPercent":30},
+                {"type":"section_title","text":"Tom Soucy","in_seconds":0.5,"out_seconds":3.0,"position":"safe_upper","textTransform":"none","backgroundColor":"rgba(255,255,255,0.94)","textColor":"#111111","accentColor":"#FFD166"} ] }

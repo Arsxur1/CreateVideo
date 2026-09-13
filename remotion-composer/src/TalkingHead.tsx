@@ -8,6 +8,7 @@ import {
 } from "remotion";
 import { CaptionOverlay, WordCaption } from "./components/CaptionOverlay";
 import { resolveAsset } from "./lib/resolveAsset";
+import { ImageCard } from "./components/ImageCard";
 import { TextCard } from "./components/TextCard";
 import { StatCard } from "./components/StatCard";
 import { CalloutBox } from "./components/CalloutBox";
@@ -63,6 +64,14 @@ export interface TalkingHeadOverlay {
   color?: string;
   accentColor?: string;
   fontSize?: number;
+  // branded-reel `image` overlay (ImageCard)
+  src?: string;
+  widthPercent?: number;
+  anchor?: "left" | "right" | "center";
+  borderColor?: string;
+  // section_title styling (branded-reel)
+  textColor?: string;
+  textTransform?: "none" | "uppercase";
 }
 
 // ---------------------------------------------------------------------------
@@ -124,6 +133,17 @@ const OverlayContent: React.FC<{ overlay: TalkingHeadOverlay }> = ({
 }) => {
   const bgColor = overlay.backgroundColor || "#0F172A";
 
+  if (overlay.type === "image" && overlay.src) {
+    return (
+      <ImageCard
+        src={overlay.src}
+        holdSeconds={overlay.out_seconds - overlay.in_seconds}
+        widthPercent={overlay.widthPercent}
+        anchor={overlay.anchor}
+        borderColor={overlay.borderColor}
+      />
+    );
+  }
   if (overlay.type === "text_card" && overlay.text) {
     return (
       <TextCard
@@ -236,6 +256,9 @@ const OverlayContent: React.FC<{ overlay: TalkingHeadOverlay }> = ({
         title={overlay.text}
         subtitle={overlay.subtitle}
         accentColor={overlay.accentColor}
+        textColor={overlay.textColor}
+        textTransform={overlay.textTransform}
+        backgroundColor={overlay.backgroundColor}
         position="top-left"
       />
     );
@@ -276,7 +299,8 @@ const PositionedOverlay: React.FC<{ overlay: TalkingHeadOverlay }> = ({
   );
   const opacity = fadeIn * fadeOut;
 
-  const position = overlay.position || "lower_third";
+  const position =
+    overlay.position || (overlay.type === "image" ? "safe_upper" : "lower_third");
   const posStyle = POSITION_STYLES[position] || POSITION_STYLES.lower_third;
   const isFullOverlay = position === "full_overlay";
   const isSafeUpper = position === "safe_upper";
