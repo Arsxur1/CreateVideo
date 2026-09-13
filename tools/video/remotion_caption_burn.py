@@ -124,13 +124,21 @@ class RemotionCaptionBurn(BaseTool):
                 "type": "array",
                 "description": (
                     "Array of overlay objects to render on top of the video. "
-                    "Each overlay has: type (text_card, stat_card, callout, "
+                    "Each overlay has: type (image, text_card, stat_card, callout, "
                     "comparison, bar_chart, line_chart, pie_chart, kpi_grid, "
                     "hero_title, section_title, stat_reveal), in_seconds, "
                     "out_seconds, position (lower_third, upper_third, "
                     "left_panel, right_panel, full_overlay), and component-"
                     "specific props (text, stat, chartData, etc.). "
                     "See asset_manifest overlays from the asset-director."
+                ),
+            },
+            "composition_props": {
+                "type": "object",
+                "description": (
+                    "Extra props merged into the TalkingHead composition props file "
+                    "(e.g. captionPaddingBottom, captionColor, captionBackgroundColor, "
+                    "captionFontFamily). Keys here override the derived ones."
                 ),
             },
             "force_ffmpeg": {
@@ -198,11 +206,14 @@ class RemotionCaptionBurn(BaseTool):
                         trailing = raw[-1]
                     if fixed != raw and not fixed.endswith(trailing):
                         fixed = fixed + trailing
-                    captions.append({
+                    cap = {
                         "word": fixed,
                         "startMs": int(w["start"] * 1000),
                         "endMs": int(w["end"] * 1000),
-                    })
+                    }
+                    if w.get("page_break_after"):
+                        cap["pageBreakAfter"] = True   # CaptionOverlay pages on this flag
+                    captions.append(cap)
             elif "text" in seg:
                 text_words = seg["text"].strip().split()
                 dur = seg["end"] - seg["start"]
@@ -273,6 +284,7 @@ class RemotionCaptionBurn(BaseTool):
         font_size: int,
         highlight_color: str,
         overlays: list[dict] | None = None,
+        composition_props: dict | None = None,
     ) -> ToolResult:
         root = self._find_remotion_root()
         if root is None:
@@ -310,15 +322,29 @@ class RemotionCaptionBurn(BaseTool):
         dest_video = pub_dir / video_filename
         shutil.copy2(input_path, dest_video)
 
+        # Copy overlay image/video assets beside the video so the composition can resolve them.
+        resolved_overlays = []
+        for ov in overlays or []:
+            ov = dict(ov)
+            src_path = Path(str(ov.get("src", "")))
+            if ov.get("src") and src_path.is_file():
+                shutil.copy2(src_path, pub_dir / src_path.name)
+                ov["src"] = f"talking-head/{src_path.name}"
+            resolved_overlays.append(ov)
+        overlays = resolved_overlays
+
         # Build props JSON
         props = {
-            "videoSrc": f"public/talking-head/{video_filename}",
+            # staticFile() paths are relative to public/ — a "public/" prefix throws
+            "videoSrc": f"talking-head/{video_filename}",
             "captions": captions,
             "overlays": overlays or [],
             "wordsPerPage": words_per_page,
             "fontSize": font_size,
             "highlightColor": highlight_color,
         }
+        if composition_props:
+            props.update(composition_props)
         props_dir = root / "public" / "demo-props"
         props_dir.mkdir(parents=True, exist_ok=True)
         props_file = props_dir / f"caption-burn-{Path(input_path).stem}.json"
@@ -473,6 +499,7 @@ class RemotionCaptionBurn(BaseTool):
             return ToolResult(success=False, error="No caption words extracted.")
 
         overlays = inputs.get("overlays")
+        composition_props = inputs.get("composition_props")
 
         # Choose render method
         if not force_ffmpeg and self._remotion_available():
@@ -480,6 +507,7 @@ class RemotionCaptionBurn(BaseTool):
                 input_path, output_path, captions,
                 words_per_page, font_size, highlight_color,
                 overlays=overlays,
+                composition_props=composition_props,
             )
         else:
             result = self._render_ffmpeg(input_path, output_path, captions)
