@@ -1,0 +1,63 @@
+name: Security Scan
+
+on:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 21 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  strix-pr:
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Strix
+        run: curl -sSL https://strix.ai/install | bash
+
+      - name: Run Strix quick scan
+        env:
+          STRIX_LLM: ${{ secrets.STRIX_LLM }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: strix -n -t ./ --scan-mode quick
+
+      - name: Upload Strix report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strix-report-quick
+          path: strix_runs/
+          if-no-files-found: warn
+          retention-days: 30
+
+  strix-nightly:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Strix
+        run: curl -sSL https://strix.ai/install | bash
+
+      - name: Run Strix deep scan
+        env:
+          STRIX_LLM: ${{ secrets.STRIX_LLM }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+        run: strix -n -t ./ --scan-mode deep
+
+      - name: Upload Strix report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: strix-report-deep
+          path: strix_runs/
+          if-no-files-found: warn
+          retention-days: 30
