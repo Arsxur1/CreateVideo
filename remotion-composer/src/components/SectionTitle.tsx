@@ -12,6 +12,10 @@ interface SectionTitleProps {
   accentColor?: string;
   /** Title color. Defaults to near-white; pass the theme's textColor on light themes. */
   textColor?: string;
+  /** Casing applied to the title. Defaults to "uppercase" (upstream behaviour). */
+  textTransform?: "none" | "uppercase";
+  /** When set, the title block (bar + title + subtitle) renders on this background. */
+  backgroundColor?: string;
   position?: "top-left" | "bottom-left" | "center";
 }
 
@@ -20,6 +24,8 @@ export const SectionTitle: React.FC<SectionTitleProps> = ({
   subtitle,
   accentColor = "#22D3EE",
   textColor = "#F8FAFC",
+  textTransform = "uppercase",
+  backgroundColor,
   position = "top-left",
 }) => {
   const frame = useCurrentFrame();
@@ -54,6 +60,9 @@ export const SectionTitle: React.FC<SectionTitleProps> = ({
         style={{
           opacity,
           transform: `translateX(${interpolate(slideIn, [0, 1], [-40, 0])}px)`,
+          ...(backgroundColor
+            ? { backgroundColor, padding: "12px 16px", borderRadius: 12 }
+            : {}),
         }}
       >
         {/* Accent bar */}
@@ -73,7 +82,7 @@ export const SectionTitle: React.FC<SectionTitleProps> = ({
             color: textColor,
             fontFamily: "Space Grotesk, Inter, system-ui, sans-serif",
             letterSpacing: "0.05em",
-            textTransform: "uppercase",
+            textTransform,
             textShadow: "0 2px 8px rgba(0,0,0,0.6)",
           }}
         >
