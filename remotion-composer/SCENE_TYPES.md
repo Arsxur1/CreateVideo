@@ -36,7 +36,7 @@ When you add a new component, append it here and in `src/components/index.ts`.
 | `stat_reveal` | `StatReveal` | `text` | `subtitle`, `accentColor`, `position` | Corner stat badge |
 | `hero_title` | `HeroTitle` (as overlay) | `text` | `subtitle` | Full-frame title overlay |
 | **`provider_chip`** | **`ProviderChip`** | **`providers`** (list of strings) | **`cycleSeconds`, `position`, `accentColor`, `label`** | **Rotating badge that cycles through provider names — used in AI-generated-motion scenes to show which model produced the clip** |
-| `image` | `ImageCard` | `src` | `widthPercent` (10–70, default 42), `anchor` (left/right/center), `borderColor`; renders in `safe_upper` | Picture-in-picture still over talking-head footage, timed to the spoken word (branded-reel) |
+| `image` | `ImageCard` | `src` | `widthPercent` (10–70, default 42), `anchor` (left/right/center), `borderColor`; renders in `safe_upper` by default, or `safe_mid` (hands height) via `position` | Picture-in-picture still over talking-head footage, timed to the spoken word (branded-reel) |
 
 ---
 

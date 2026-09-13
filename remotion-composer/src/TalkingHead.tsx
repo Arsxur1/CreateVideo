@@ -36,7 +36,8 @@ export interface TalkingHeadOverlay {
     | "left_panel"
     | "right_panel"
     | "full_overlay"
-    | "safe_upper";
+    | "safe_upper"
+    | "safe_mid";
   // Component-specific props (same as Explainer Cut)
   text?: string;
   stat?: string;
@@ -118,6 +119,14 @@ const POSITION_STYLES: Record<string, React.CSSProperties> = {
     // Inside the 240/480/60 safe zone (branded-reel); shares the band with ImageCard.
     position: "absolute",
     top: 360,
+    left: 60,
+    right: 60,
+    height: 480,
+  },
+  safe_mid: {
+    // Hands-height band inside the 240/480/60 safe zone (branded-reel): below the face, above the caption box.
+    position: "absolute",
+    top: 800,
     left: 60,
     right: 60,
     height: 480,
@@ -303,16 +312,16 @@ const PositionedOverlay: React.FC<{ overlay: TalkingHeadOverlay }> = ({
     overlay.position || (overlay.type === "image" ? "safe_upper" : "lower_third");
   const posStyle = POSITION_STYLES[position] || POSITION_STYLES.lower_third;
   const isFullOverlay = position === "full_overlay";
-  const isSafeUpper = position === "safe_upper";
+  const isSafeBand = position === "safe_upper" || position === "safe_mid";
 
   return (
     <div
       style={{
         ...posStyle,
         opacity,
-        overflow: isSafeUpper ? "visible" : "hidden",
-        borderRadius: isSafeUpper ? 0 : isFullOverlay ? 0 : 16,
-        boxShadow: isSafeUpper
+        overflow: isSafeBand ? "visible" : "hidden",
+        borderRadius: isSafeBand ? 0 : isFullOverlay ? 0 : 16,
+        boxShadow: isSafeBand
           ? "none"
           : isFullOverlay
           ? "none"
