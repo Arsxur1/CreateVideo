@@ -34,7 +34,8 @@ export interface TalkingHeadOverlay {
     | "upper_third"
     | "left_panel"
     | "right_panel"
-    | "full_overlay";
+    | "full_overlay"
+    | "safe_upper";
   // Component-specific props (same as Explainer Cut)
   text?: string;
   stat?: string;
@@ -103,6 +104,14 @@ const POSITION_STYLES: Record<string, React.CSSProperties> = {
     left: 0,
     right: 0,
     bottom: 0,
+  },
+  safe_upper: {
+    // Inside the 240/480/60 safe zone (branded-reel); shares the band with ImageCard.
+    position: "absolute",
+    top: 360,
+    left: 60,
+    right: 60,
+    height: 480,
   },
 };
 
@@ -270,15 +279,18 @@ const PositionedOverlay: React.FC<{ overlay: TalkingHeadOverlay }> = ({
   const position = overlay.position || "lower_third";
   const posStyle = POSITION_STYLES[position] || POSITION_STYLES.lower_third;
   const isFullOverlay = position === "full_overlay";
+  const isSafeUpper = position === "safe_upper";
 
   return (
     <div
       style={{
         ...posStyle,
         opacity,
-        overflow: "hidden",
-        borderRadius: isFullOverlay ? 0 : 16,
-        boxShadow: isFullOverlay
+        overflow: isSafeUpper ? "visible" : "hidden",
+        borderRadius: isSafeUpper ? 0 : isFullOverlay ? 0 : 16,
+        boxShadow: isSafeUpper
+          ? "none"
+          : isFullOverlay
           ? "none"
           : "0 8px 32px rgba(0, 0, 0, 0.4)",
       }}
@@ -308,6 +320,7 @@ export interface TalkingHeadProps {
   captionFontFamily?: string;
   // Pass "" for CJK captions (no inter-word spacing); defaults to " ".
   captionWordSeparator?: string;
+  captionPaddingBottom?: number;
 }
 
 export const TalkingHead: React.FC<TalkingHeadProps> = ({
@@ -321,6 +334,7 @@ export const TalkingHead: React.FC<TalkingHeadProps> = ({
   captionBackgroundColor = "rgba(0, 0, 0, 0.65)",
   captionFontFamily,
   captionWordSeparator,
+  captionPaddingBottom = 80,
 }) => {
   const { fps } = useVideoConfig();
 
@@ -357,6 +371,7 @@ export const TalkingHead: React.FC<TalkingHeadProps> = ({
         highlightColor={highlightColor}
         backgroundColor={captionBackgroundColor}
         color={captionColor}
+        paddingBottom={captionPaddingBottom}
         {...(captionFontFamily ? { fontFamily: captionFontFamily } : {})}
         {...(captionWordSeparator !== undefined ? { wordSeparator: captionWordSeparator } : {})}
       />

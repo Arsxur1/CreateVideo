@@ -29,6 +29,7 @@ type CaptionOverlayProps = {
   // Separator rendered between words. Space-delimited languages want the
   // default " "; CJK languages (no inter-word spacing) should pass "".
   wordSeparator?: string;
+  paddingBottom?: number;
 };
 
 interface CaptionPage {
@@ -65,7 +66,8 @@ const PageRenderer: React.FC<{
   backgroundColor: string;
   fontFamily: string;
   wordSeparator: string;
-}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator }) => {
+  paddingBottom: number;
+}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator, paddingBottom }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
@@ -83,7 +85,7 @@ const PageRenderer: React.FC<{
       style={{
         justifyContent: "flex-end",
         alignItems: "center",
-        paddingBottom: 80,
+        paddingBottom,
       }}
     >
       <div
@@ -144,6 +146,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
   backgroundColor = "rgba(15, 23, 42, 0.75)",
   fontFamily = "Space Grotesk, Inter, system-ui, sans-serif",
   wordSeparator = " ",
+  paddingBottom = 80,
 }) => {
   const { fps } = useVideoConfig();
   const pages = buildPages(words, wordsPerPage);
@@ -168,6 +171,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
               backgroundColor={backgroundColor}
               fontFamily={fontFamily}
               wordSeparator={wordSeparator}
+              paddingBottom={paddingBottom}
             />
           </Sequence>
         );
