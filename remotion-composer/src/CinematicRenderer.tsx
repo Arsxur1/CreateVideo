@@ -21,6 +21,12 @@ const ALLOWED_FPS = [24, 25, 30, 50, 60];
 // Unknown or missing values fall back to 30, so existing props render exactly as before.
 const resolveFps = (fps: unknown): number =>
   typeof fps === "number" && ALLOWED_FPS.includes(fps) ? fps : DEFAULT_FPS;
+// Animation constants below were tuned in 30 fps frames. These keep their
+// wall-clock timing identical at any output fps.
+// Unrounded on purpose: interpolate() accepts fractional frame ranges.
+const framesAt = (framesAt30: number, fps: number): number =>
+  (framesAt30 * fps) / DEFAULT_FPS;
+const frameAs30 = (frame: number, fps: number): number => (frame * DEFAULT_FPS) / fps;
 
 const { fontFamily } = loadFont("normal", {
   weights: ["400", "500", "700"],
@@ -45,8 +51,8 @@ const SceneVideo: React.FC<{ scene: CinematicVideoScene }> = ({ scene }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const durationInFrames = Math.max(1, Math.round(scene.durationSeconds * fps));
-  const fadeInFrames = scene.fadeInFrames ?? 10;
-  const fadeOutFrames = scene.fadeOutFrames ?? 10;
+  const fadeInFrames = scene.fadeInFrames ?? framesAt(10, fps);
+  const fadeOutFrames = scene.fadeOutFrames ?? framesAt(10, fps);
   const fadeOutStart = Math.max(0, durationInFrames - fadeOutFrames);
   const fadeInOpacity =
     fadeInFrames === 0
@@ -124,11 +130,12 @@ const SignalTexture: React.FC<{
   lineCount: number;
 }> = ({ accent, intensity, lineCount }) => {
   const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
 
   return (
     <AbsoluteFill style={{ pointerEvents: "none" }}>
       {new Array(lineCount).fill(true).map((_, index) => {
-        const pulse = Math.max(0, Math.sin(frame * 0.06 + index * 0.85));
+        const pulse = Math.max(0, Math.sin(frameAs30(frame, fps) * 0.06 + index * 0.85));
         const opacity = (0.025 + pulse * 0.07) * intensity;
         const width = 18 + ((index * 37) % 56);
         const top = 140 + index * 42;
@@ -197,7 +204,7 @@ const TitleCard: React.FC<{
 
   const exit = interpolate(
     frame,
-    [durationInFrames - 14, durationInFrames],
+    [durationInFrames - framesAt(14, fps), durationInFrames],
     [1, 0],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" },
   );
@@ -207,16 +214,16 @@ const TitleCard: React.FC<{
   // \n separators (e.g. "TITLE 1\nTITLE 2") that the old whitespace
   // regex was collapsing into a single space.
   const lines = text.split(/\r?\n/);
-  const staggerFrames = 3;
-  const wordFadeFrames = 14;
+  const staggerFrames = (3 * fps) / DEFAULT_FPS;
+  const wordFadeFrames = framesAt(14, fps);
 
-  const lineGrow = interpolate(frame, [0, 22], [0, 1], {
+  const lineGrow = interpolate(frame, [0, framesAt(22, fps)], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
   const lineExit = exit;
   const flareOpacity =
-    0.22 + Math.max(0, Math.sin(frame * 0.09)) * 0.18 * intensity;
+    0.22 + Math.max(0, Math.sin(frameAs30(frame, fps) * 0.09)) * 0.18 * intensity;
 
   const bgScale = interpolate(frame, [0, durationInFrames], [1.04, 1.1], {
     extrapolateLeft: "clamp",
