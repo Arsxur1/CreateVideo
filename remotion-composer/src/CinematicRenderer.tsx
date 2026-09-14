@@ -16,7 +16,11 @@ import { CinematicRendererProps, CinematicTone, CinematicVideoScene } from "./ci
 import { CaptionOverlay } from "./components/CaptionOverlay";
 import { resolveAsset } from "./lib/resolveAsset";
 
-const FPS = 30;
+const DEFAULT_FPS = 30;
+const ALLOWED_FPS = [24, 25, 30, 50, 60];
+// Unknown or missing values fall back to 30, so existing props render exactly as before.
+const resolveFps = (fps: unknown): number =>
+  typeof fps === "number" && ALLOWED_FPS.includes(fps) ? fps : DEFAULT_FPS;
 
 const { fontFamily } = loadFont("normal", {
   weights: ["400", "500", "700"],
@@ -447,9 +451,10 @@ export const calculateCinematicMetadata: CalculateMetadataFunction<CinematicRend
             ...props.scenes.map((scene) => scene.startSeconds + scene.durationSeconds),
           );
 
+    const fps = resolveFps(props.fps);
     return {
-      durationInFrames: Math.max(1, Math.ceil(totalSeconds * FPS)),
-      fps: FPS,
+      durationInFrames: Math.max(1, Math.ceil(totalSeconds * fps)),
+      fps,
       width: 1920,
       height: 1080,
     };
@@ -464,6 +469,7 @@ export const CinematicRenderer: React.FC<CinematicRendererProps> = ({
   music,
   captions,
 }) => {
+  const { fps } = useVideoConfig();
   return (
     <AbsoluteFill style={{ backgroundColor: "#000000" }}>
       {/* Layer 1: Narration audio */}
@@ -492,8 +498,8 @@ export const CinematicRenderer: React.FC<CinematicRendererProps> = ({
       {scenes.map((scene) => (
         <Sequence
           key={scene.id}
-          from={Math.round(scene.startSeconds * FPS)}
-          durationInFrames={Math.round(scene.durationSeconds * FPS)}
+          from={Math.round(scene.startSeconds * fps)}
+          durationInFrames={Math.round(scene.durationSeconds * fps)}
         >
           {scene.kind === "video" ? (
             <SceneVideo scene={scene} />
