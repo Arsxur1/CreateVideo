@@ -68,18 +68,23 @@ const PageRenderer: React.FC<{
   fontFamily: string;
   wordSeparator: string;
   paddingBottom: number;
-}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator, paddingBottom }) => {
+  // The hook page (first word starts at frame 0) must be visible immediately —
+  // there is no earlier frame for a spring-in to animate from.
+  skipEntrance?: boolean;
+}> = ({ page, fontSize, color, highlightColor, backgroundColor, fontFamily, wordSeparator, paddingBottom, skipEntrance }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
   const currentMs = page.startMs + (frame / fps) * 1000;
 
   // Spring entrance
-  const entrance = spring({
-    frame,
-    fps,
-    config: { damping: 18, stiffness: 120 },
-  });
+  const entrance = skipEntrance
+    ? 1
+    : spring({
+        frame,
+        fps,
+        config: { damping: 18, stiffness: 120 },
+      });
 
   return (
     <AbsoluteFill
@@ -175,6 +180,7 @@ export const CaptionOverlay: React.FC<CaptionOverlayProps> = ({
               fontFamily={fontFamily}
               wordSeparator={wordSeparator}
               paddingBottom={paddingBottom}
+              skipEntrance={fromFrame === 0}
             />
           </Sequence>
         );

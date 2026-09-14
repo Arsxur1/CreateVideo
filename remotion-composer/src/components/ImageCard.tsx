@@ -19,16 +19,21 @@ export interface ImageCardProps {
 const POP_SPRING = { damping: 14, mass: 0.5, stiffness: 120 };
 
 export const ImageCard: React.FC<ImageCardProps> = ({
-  src, holdSeconds, widthPercent = 42, anchor = "right", borderColor, canvasWidth = 1080,
+  src, holdSeconds, widthPercent = 42, anchor = "right", borderColor, canvasWidth,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, width: videoWidth } = useVideoConfig();
   const enter = spring({ frame, fps, config: POP_SPRING });
   const total = Math.round(holdSeconds * fps);
   const exit = interpolate(frame, [total - Math.round(0.2 * fps), total], [1, 0], {
     extrapolateLeft: "clamp", extrapolateRight: "clamp",
   });
-  const width = (widthPercent / 100) * canvasWidth;
+  // canvasWidth is an override for a non-standard composition; the composition's own
+  // width (from useVideoConfig) is the correct default — 1080 was only ever right by
+  // coincidence for the 1080x1920 talking-head composition.
+  const effectiveCanvasWidth = canvasWidth ?? videoWidth;
+  const clampedWidthPercent = Math.min(70, Math.max(10, widthPercent));
+  const width = (clampedWidthPercent / 100) * effectiveCanvasWidth;
   const scale = 0.86 + enter * 0.14;
   const horizontal: React.CSSProperties =
     anchor === "left" ? { left: 0, transform: `scale(${scale})`, transformOrigin: "left top" }
