@@ -150,7 +150,7 @@ class RemotionCaptionBurn(BaseTool):
     }
 
     resource_profile = ResourceProfile(cpu_cores=4, ram_mb=2048, vram_mb=0, disk_mb=500)
-    idempotency_key_fields = ["input_path", "segments", "srt_path"]
+    idempotency_key_fields = ["input_path", "segments", "srt_path", "overlays", "composition_props"]
     side_effects = ["writes captioned video to output_path"]
     user_visible_verification = [
         "Play the output video and verify captions appear at the bottom of the frame",
@@ -290,6 +290,22 @@ class RemotionCaptionBurn(BaseTool):
         if root is None:
             return ToolResult(success=False, error="Remotion root not found")
 
+        # Fail fast: every overlay src must resolve to something real before we spend
+        # time on ffprobe/copy/render. Valid: an existing local file, an http(s):// or
+        # data: URL, or a path already copied beside the video (talking-head/...).
+        for ov in overlays or []:
+            src = ov.get("src")
+            if not src:
+                continue
+            src_str = str(src)
+            if Path(src_str).is_file():
+                continue
+            if src_str.startswith(("http://", "https://", "data:")):
+                continue
+            if src_str.startswith("talking-head/"):
+                continue
+            return ToolResult(success=False, error=f"overlay src not found: {src}")
+
         # Get video duration in frames
         dur_cmd = [
             "ffprobe", "-v", "error",
@@ -344,7 +360,14 @@ class RemotionCaptionBurn(BaseTool):
             "highlightColor": highlight_color,
         }
         if composition_props:
-            props.update(composition_props)
+            # captions/videoSrc/overlays are derived above from real inputs (the actual
+            # transcript, the actual copied video, the actual resolved overlays) —
+            # never let a caller-supplied composition_props silently override them.
+            safe_composition_props = {
+                k: v for k, v in composition_props.items()
+                if k not in ("captions", "videoSrc", "overlays")
+            }
+            props.update(safe_composition_props)
         props_dir = root / "public" / "demo-props"
         props_dir.mkdir(parents=True, exist_ok=True)
         props_file = props_dir / f"caption-burn-{Path(input_path).stem}.json"
