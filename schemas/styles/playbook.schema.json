@@ -184,7 +184,8 @@
         "section_title": { "$ref": "#/$defs/overlay_style" },
         "stat_reveal": { "$ref": "#/$defs/overlay_style" },
         "hero_title": { "$ref": "#/$defs/overlay_style" },
-        "provider_chip": { "$ref": "#/$defs/overlay_style" }
+        "provider_chip": { "$ref": "#/$defs/overlay_style" },
+        "image": { "$ref": "#/$defs/overlay_style" }
       },
       "additionalProperties": false
     },

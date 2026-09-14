@@ -19,14 +19,15 @@ from styles.playbook_loader import list_playbooks, load_playbook
 
 PLAYBOOK_NAMES = sorted(list_playbooks())
 
-# The overlay types remotion-composer actually renders, from the `Overlay`
-# union in remotion-composer/src/Explainer.tsx. A playbook must be able to
-# style any of them.
+# The overlay types remotion-composer actually renders: the `Overlay` union in
+# remotion-composer/src/Explainer.tsx plus the `image` overlay TalkingHead renders.
+# A playbook must be able to style any of them.
 RENDERER_OVERLAY_TYPES = (
     "section_title",
     "stat_reveal",
     "hero_title",
     "provider_chip",
+    "image",
 )
 
 
