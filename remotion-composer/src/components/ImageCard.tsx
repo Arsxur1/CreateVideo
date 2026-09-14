@@ -3,9 +3,9 @@ import { Img, interpolate, spring, useCurrentFrame, useVideoConfig } from "remot
 import { resolveAsset } from "../lib/resolveAsset";
 
 /**
- * Picture-in-picture still over talking-head footage (branded-reel). Renders inside the
+ * Picture-in-picture still over talking-head footage. Renders inside the
  * overlay's Sequence + position box: frame 0 here is the pop-in's first frame. Spring in,
- * fade out over the last 0.2 s, framed and shadowed. Never full-frame — montage.md Rule 1.
+ * fade out over the last 0.2 s, framed and shadowed. Never full-frame: the footage stays visible.
  */
 export interface ImageCardProps {
   src: string;

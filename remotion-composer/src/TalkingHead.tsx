@@ -65,12 +65,12 @@ export interface TalkingHeadOverlay {
   color?: string;
   accentColor?: string;
   fontSize?: number;
-  // branded-reel `image` overlay (ImageCard)
+  // `image` overlay (ImageCard)
   src?: string;
   widthPercent?: number;
   anchor?: "left" | "right" | "center";
   borderColor?: string;
-  // section_title styling (branded-reel)
+  // section_title styling pass-through
   textColor?: string;
   textTransform?: "none" | "uppercase";
 }
@@ -116,7 +116,7 @@ const POSITION_STYLES: Record<string, React.CSSProperties> = {
     bottom: 0,
   },
   safe_upper: {
-    // Inside the 240/480/60 safe zone (branded-reel); shares the band with ImageCard.
+    // Inside the 9:16 platform safe zone (240 top / 480 bottom / 60 sides); shares the band with ImageCard.
     position: "absolute",
     top: 360,
     left: 60,
@@ -124,7 +124,7 @@ const POSITION_STYLES: Record<string, React.CSSProperties> = {
     height: 480,
   },
   safe_mid: {
-    // Hands-height band inside the 240/480/60 safe zone (branded-reel): below the face, above the caption box.
+    // Hands-height band inside the same safe zone: below the face, above the caption box.
     position: "absolute",
     top: 800,
     left: 60,
