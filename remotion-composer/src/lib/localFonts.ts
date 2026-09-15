@@ -1,4 +1,4 @@
-import { continueRender, delayRender } from "remotion";
+import { cancelRender, continueRender, delayRender } from "remotion";
 
 import playfairItalicUrl from "../fonts/PlayfairDisplay-Italic-latin.woff2";
 import playfairUrl from "../fonts/PlayfairDisplay-latin.woff2";
@@ -10,7 +10,16 @@ import spaceGroteskUrl from "../fonts/SpaceGrotesk-latin.woff2";
  * it. The files are the exact latin woff2 files @remotion/google-fonts
  * requested (Space Grotesk v22, Playfair Display v40; SIL OFL 1.1, licences in
  * ../fonts), registered the same way: one FontFace per requested weight, same
- * family name, same unicode range — so glyphs render identically.
+ * family name, same unicode range, so glyphs render identically.
+ *
+ * Registration is DEFERRED to a microtask. Remotion's delay-render module runs
+ * `window.remotion_delayRenderHandles = []` when it is evaluated, and this
+ * bundle holds two copies of it. A handle created during bundle evaluation,
+ * before the second copy ran, was wiped from the list while its timeout
+ * survived: continueRender could not find it and the render failed "not
+ * cleared after 28000ms" (2 of 3 collage renders, measured 2026-09-16). A
+ * microtask runs after the whole synchronous bundle evaluation — so after every
+ * Remotion init — and before any frame can be captured.
  */
 
 const LATIN =
@@ -24,18 +33,18 @@ const register = (family: string, url: string, style: "normal" | "italic", weigh
     const key = `${family}-${style}-${weight}`;
     if (loaded.has(key)) continue;
     loaded.add(key);
-    const handle = delayRender(`Loading bundled font ${key}`);
-    const face = new FontFace(family, `url(${url}) format('woff2')`, { weight, style, unicodeRange: LATIN });
-    face
-      .load()
-      .then(() => {
-        document.fonts.add(face);
-        continueRender(handle);
-      })
-      .catch((err) => {
+    queueMicrotask(() => {
+      const handle = delayRender(`Loading bundled font ${key}`);
+      const face = new FontFace(family, `url(${url}) format('woff2')`, { weight, style, unicodeRange: LATIN });
+      face
+        .load()
+        .then(() => {
+          document.fonts.add(face);
+          continueRender(handle);
+        })
         // Never silently fall back to a system font: fail the render.
-        throw new Error(`Bundled font ${key} failed to load: ${err}`);
-      });
+        .catch((err) => cancelRender(new Error(`Bundled font ${key} failed to load: ${err}`)));
+    });
   }
   return family;
 };
