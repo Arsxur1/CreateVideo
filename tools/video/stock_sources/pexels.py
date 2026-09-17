@@ -25,6 +25,12 @@ from .base import Candidate, SearchFilters
 _VIDEO_SEARCH_URL = "https://api.pexels.com/videos/search"
 _IMAGE_SEARCH_URL = "https://api.pexels.com/v1/search"
 _PEXELS_LICENSE = "Pexels License (free, no attribution required)"
+# Pexels' edge (Cloudflare) 403s the default `python-requests/x` User-Agent.
+_USER_AGENT = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/122.0 Safari/537.36"
+)
 
 
 class PexelsSource:
@@ -87,7 +93,10 @@ class PexelsSource:
         out_path.parent.mkdir(parents=True, exist_ok=True)
 
         with requests.get(
-            candidate.download_url, stream=True, timeout=120
+            candidate.download_url,
+            stream=True,
+            timeout=120,
+            headers={"User-Agent": _USER_AGENT},
         ) as r:
             r.raise_for_status()
             with open(out_path, "wb") as f:
@@ -107,7 +116,10 @@ class PexelsSource:
                 "PEXELS_API_KEY not set. Get a free key at "
                 "https://www.pexels.com/api/ and add it to .env."
             )
-        return {"Authorization": key}
+        return {
+            "Authorization": key,
+            "User-Agent": _USER_AGENT,
+        }
 
     def _search_videos(
         self, query: str, filters: SearchFilters
