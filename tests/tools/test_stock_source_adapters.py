@@ -4,6 +4,7 @@ import types
 import pytest
 
 from tools.video.stock_sources import SearchFilters, all_sources, get_source
+from tools.video.stock_sources.pexels import PexelsSource, _USER_AGENT
 from tools.video.stock_sources.unsplash import _build_download_url, _orientation_for_unsplash
 from tools.video.stock_sources.wikimedia import (
     _build_search_queries,
@@ -219,3 +220,66 @@ def test_search_returns_empty_when_the_source_has_no_results(
         )
         == []
     )
+
+
+# ---------------------------------------------------------------------
+# Pexels User-Agent (issue #587)
+#
+# Cloudflare in front of api.pexels.com / the CDN 401/403s the default
+# `python-requests/x` UA. Both API search (`_headers`) and file download
+# must send a browser-like User-Agent alongside the API key.
+# ---------------------------------------------------------------------
+
+
+def test_pexels_headers_include_user_agent(monkeypatch):
+    monkeypatch.setenv("PEXELS_API_KEY", "test-pexels-key")
+    headers = PexelsSource()._headers()
+    assert headers["Authorization"] == "test-pexels-key"
+    assert headers["User-Agent"] == _USER_AGENT
+    assert "Mozilla" in headers["User-Agent"]
+
+
+def test_pexels_download_sends_user_agent(monkeypatch, tmp_path):
+    from tools.video.stock_sources.base import Candidate
+
+    captured = {}
+
+    class _Resp:
+        def raise_for_status(self):
+            return None
+
+        def iter_content(self, chunk_size=0):
+            yield b"clip-bytes"
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *_exc):
+            return False
+
+    def fake_get(url, **kwargs):
+        captured["url"] = url
+        captured["headers"] = kwargs.get("headers") or {}
+        return _Resp()
+
+    requests_stub = types.ModuleType("requests")
+    requests_stub.get = fake_get
+    monkeypatch.setitem(sys.modules, "requests", requests_stub)
+
+    candidate = Candidate(
+        source="pexels",
+        source_id="1",
+        source_url="https://www.pexels.com/video/1/",
+        download_url="https://videos.pexels.com/video-files/1.mp4",
+        kind="video",
+        width=1920,
+        height=1080,
+        duration=5.0,
+        creator="tester",
+        license="Pexels",
+    )
+    out = tmp_path / "clip.mp4"
+    PexelsSource().download(candidate, out)
+
+    assert captured["headers"].get("User-Agent") == _USER_AGENT
+    assert out.read_bytes() == b"clip-bytes"
