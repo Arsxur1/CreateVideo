@@ -110,6 +110,8 @@ Key capability families to look for in the output:
 | â†³ VEO Prompting | `creative/prompting/veo-prompting.md` | VEO 3.1 14-component structure, art movements | `ai-video-gen` |
 | â†³ LTX Prompting | `creative/prompting/ltx-prompting.md` | LTX-2 6-element structure, audio prompting | `ltx2` |
 | â†³ HunyuanVideo Prompting | `creative/prompting/hunyuan-prompting.md` | HunyuanVideo formula, I2V best practices | â€" |
+| Shopee Product Ad | `creative/shopee-product-ad.md` | A product link (Shopee/TikTok Shop/Lazada) or product description → short vertical ad; measured Repeat-Reveal DNA, archetype picker, no-text/no-watermark handling | `ai-video-gen`, `ffmpeg` |
+| Printed Apparel Ad | `creative/printed-apparel-ad.md` | Extends the above for AOP/POD garments: never describe the print, settle stills at 0 credits before spending on video, Showcase-Reaction archetype, why no ad of this kind gets an undressing beat | `ai-video-gen`, `ffmpeg` |
 | Storytelling | `creative/storytelling.md` | Narrative structure, hooks, pacing, Mayer's principles | â€" |
 | Sound Design | `creative/sound-design.md` | Audio ducking, LUFS targets, SFX timing, AI TTS mixing | `elevenlabs` |
 | Typography | `creative/typography.md` | Font selection, text sizing, safe zones, caption styling | â€" |
