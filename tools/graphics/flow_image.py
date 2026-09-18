@@ -66,7 +66,7 @@ class FlowImage(BaseTool):
     supports = {
         "text_to_image": True,
         "multiple_outputs": True,
-        "reference_image": False,   # ponytail: the add-media menu exists; wire it when a job needs it
+        "reference_image": True,    # via the prompt bar's "Thêm thành phần" picker
         "transparent_background": False,
         "offline": False,
         "no_api_key": True,
@@ -98,6 +98,15 @@ class FlowImage(BaseTool):
             "n": {"type": "integer", "default": 1, "minimum": 1, "maximum": 4,
                   "description": "Images per call (Flow's x1..x4). Files are numbered _1.._n."},
             "output_path": {"type": "string", "description": "Base path; .jpg or .png (converted)."},
+            "reference_images": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": (
+                    "Local image paths uploaded to the project library and dropped into "
+                    "the prompt as reference chips. Use when the output must match a real "
+                    "product, character or style rather than a text description of it."
+                ),
+            },
             "quality": {
                 "type": "string",
                 "default": "max",
@@ -162,8 +171,14 @@ class FlowImage(BaseTool):
             "count": n,
             "output_paths": [str(p) for p in jpg_paths],
             "quality": inputs.get("quality", "max"),
+            "reference_images": [str(Path(r).resolve()) for r in
+                                 (inputs.get("reference_images") or [])],
             "timeout_seconds": int(inputs.get("timeout_seconds", 600)),
         }
+        missing = [r for r in job["reference_images"] if not Path(r).is_file()]
+        if missing:
+            return ToolResult(success=False,
+                              error=f"reference_images not found: {missing}")
 
         start = time.time()
         lock = self._lock_path()

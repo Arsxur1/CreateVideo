@@ -29,7 +29,7 @@ step is now UI-driven. Measured against the live app, not guessed:
   (`flow.google.com/asb/<token>`, not `flow-content.google/video/<id>`).
 
 Getting the finished clip onto disk is the fiddliest part and the comments on
-`download_clip`, `_submenu_point` and `_catch_download` are the record of why
+`download_clip`, `_download_tile` and `_catch_download` are the record of why
 each step is shaped the way it is. The short version: the tile's own "Tải
 xuống" → "720p Kích thước gốc", opened by hovering *across* the parent row,
 found by `elementFromPoint` because those rows have no box, clicked from script
@@ -44,6 +44,7 @@ the credit cost of every clip and deliver landscape for a 9:16 series.
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import unicodedata
@@ -81,18 +82,37 @@ ADD_MEDIA_MENU = "Trình đơn thêm nội dung nghe nhìn"
 UPLOAD_ITEM = "Tải lên"
 START_FRAME_SLOT = "Bắt đầu"
 END_FRAME_SLOT = "Kết thúc"
+# Video mode's two sub-modes. "Khung hình" renders the start/end frame slots;
+# "Thành phần" replaces them with prompt-chip references and is the only one
+# that accepts more than two images.
+FRAMES_SUBMODE = "Khung hình"
+ELEMENTS_SUBMODE = "Thành phần"
 FRAME_REMOVE = "Thành phần tạo hình ảnh"
 ADD_TO_PROMPT = "Thêm vào câu lệnh"
+# Image mode's own attach control, on the prompt bar rather than the toolbar.
+# Video mode fills named "Bắt đầu"/"Kết thúc" slots; image mode has no slots and
+# instead drops reference chips into the prompt box through this button.
+PROMPT_ADD_ELEMENT = "Thêm thành phần vào ô nhập câu lệnh"
+MEDIA_UPLOAD_ITEM = "Tải nội dung nghe nhìn lên"
+# The attached reference itself. Measured 2026-09-13: the chip is a
+# `button.chip-container` labelled just "Thành phần", wrapping an
+# `img.chip-image` — NOT `FRAME_REMOVE` ("Thành phần tạo hình ảnh"), which
+# belongs to video mode's frame slots. Checking for the wrong one reported a
+# perfectly good attach as a failure.
+REF_CHIP = "button.chip-container, img.chip-image"
+# One chip renders as both nodes above, so REF_CHIP counts every chip twice.
+# Use this when the number of chips is the thing being checked.
+REF_CHIP_BUTTON = "button.chip-container"
 SETTINGS_PILL = "Điều kiện kích hoạt cài đặt"
 START_GENERATION = "Bắt đầu tạo"
 MODEL_ROW = "Chọn nhóm mô hình"
-TILE_MORE = "Tuỳ chọn khác"
-DOWNLOAD_ITEM = "Tải xuống"
-NATIVE_SIZE = "Kích thước gốc"
+TILE_MORE = ["Tuỳ chọn khác", "Lựa chọn khác", "More options"]
+DOWNLOAD_ITEM = ["Tải xuống", "Download"]
+NATIVE_SIZE = ["Kích thước gốc", "Original size"]
 # Rows above the native one are upscales. "Nâng cấp" marks a tier the current plan
 # does not include — clicking it opens a paywall instead of downloading.
-UPSCALED = "Đã tăng độ phân giải"
-PLAN_GATED = "Nâng cấp"
+UPSCALED = ["Đã tăng độ phân giải", "Upscaled"]
+PLAN_GATED = ["Nâng cấp", "Upgrade"]
 # Leading resolution token of a submenu row: "720p", "1080p", "1K", "2K", "4K".
 RES_RE = re.compile(r"^\s*(\d+)\s*([pk])", re.I)
 
@@ -221,8 +241,12 @@ class FlowDriver:
         loc = self.page.get_by_role(role, name=name)
         return loc if loc.count() else None
 
-    def _menu_item(self, text: str, scope=None):
+    def _menu_item(self, text, scope=None):
         """First visible menu entry whose own text carries `text`.
+
+        `text` may be a list of alternatives: Flow renders some menus in the
+        account's language and some in the page's, so a label that exists is
+        not necessarily the label this driver was written against.
 
         Not `get_by_role`: these entries render the Material Symbols ligature as
         a text node, so the accessible name is "upload Tải lên" for some and the
@@ -242,11 +266,12 @@ class FlowDriver:
             try:
                 # A bounding box rather than `is_visible()`: cheaper, and the
                 # same test the caller cares about, since anything without a box
-                # cannot be clicked. Menu rows that have no box at all are found
-                # by `_submenu_point` instead.
+                # cannot be clicked.
                 if not item.bounding_box():
                     continue
-                if _same_text(text, " ".join(item.inner_text(timeout=1500).split())):
+                label = " ".join(item.inner_text(timeout=1500).split())
+                wanted = [text] if isinstance(text, str) else text
+                if any(_same_text(w, label) for w in wanted):
                     return item.element_handle()
             except Exception:
                 continue
@@ -267,11 +292,33 @@ class FlowDriver:
                 break
         # Angular leaves a transparent backdrop behind a dismissed overlay, and
         # it intercepts every later click with no visible sign that it is there.
+        # It is clicked, not Escaped: a backdrop exists precisely to be clicked
+        # through, and Escape leaves the transparent kind in place — after which
+        # every following run failed on its first click, quoting the backdrop as
+        # the thing intercepting pointer events.
         for _ in range(4):
-            if not self.page.locator(".cdk-overlay-backdrop").count():
+            backdrop = self.page.locator(".cdk-overlay-backdrop")
+            if not backdrop.count():
                 break
-            self.page.keyboard.press("Escape")
+            try:
+                backdrop.last.click(timeout=3000, force=True)
+            except Exception:
+                self.page.keyboard.press("Escape")
             self.page.wait_for_timeout(500)
+
+    def _ensure_vi(self) -> None:
+        """Force the Vietnamese UI, because every selector below is a VI label.
+
+        Flow follows the Google account's display language, and it can flip to
+        English on its own — after which the settings pill is called "Settings
+        trigger" and every label lookup in this file fails with a message about
+        a missing pill rather than about the language. `?hl=vi` pins it.
+        """
+        if self.page.evaluate("document.documentElement.lang") == "vi":
+            return
+        url = self.page.url.split("?")[0]
+        self.page.goto(f"{url}?hl=vi", wait_until="domcontentloaded", timeout=60_000)
+        self.page.wait_for_timeout(4000)
 
     def ensure_project(self) -> None:
         wrong_project = self.project_url and self.project_url not in self.page.url
@@ -288,7 +335,18 @@ class FlowDriver:
                 else:
                     raise FlowError("project: no open project and no 'Dự án mới' button")
             self.page.wait_for_timeout(4000)
+        self._ensure_vi()
         self.dismiss_modals()
+
+        # Last resort, and only here at the start of a clip where nothing is
+        # staged yet: a reload is the one thing that always clears an overlay.
+        # One clip failing mid-menu used to poison every clip after it — the
+        # leftover backdrop swallowed the first click of the next attach, and a
+        # run of seven came back with four generated and three that never began.
+        if self.page.locator(".cdk-overlay-backdrop").count():
+            self.page.reload(wait_until="domcontentloaded", timeout=60_000)
+            self.page.wait_for_timeout(4000)
+            self.dismiss_modals()
 
     def wait_prompt_bar(self, timeout_s: int = 90) -> None:
         try:
@@ -391,11 +449,21 @@ class FlowDriver:
     def apply_settings(self, *, aspect: str, model: str,
                        duration: Optional[str] = None,
                        resolution: Optional[str] = None,
-                       count: int = 1) -> dict[str, Any]:
+                       count: int = 1,
+                       submode: str = FRAMES_SUBMODE) -> dict[str, Any]:
+        """Apply the video settings popover.
+
+        `submode` picks between Flow's two video sub-modes, and they are not
+        interchangeable: `FRAMES_SUBMODE` ("Khung hình") gives the composer its
+        "Bắt đầu"/"Kết thúc" frame slots and is what `attach_image` fills, while
+        `ELEMENTS_SUBMODE` ("Thành phần") drops that pair of slots and instead
+        takes any number of reference images as prompt chips — the only one of
+        the two that can carry more than a start and an end frame.
+        """
         self._open_panel()
 
         self._set_radio("Video", "video mode")
-        self._set_radio("Khung hình", "frames sub-mode")
+        self._set_radio(submode, "video sub-mode")
 
         # Model first: it decides whether the duration and resolution rows exist
         # at all. The Omni models render both; the Veo ones render neither and
@@ -520,20 +588,187 @@ class FlowDriver:
         `end_path` fills the closing slot, which is how a chained sequence lands
         on an exact artwork instead of wherever the model drifts to.
         """
+        start_name = self.upload_only(path)
+        end_name = self.upload_only(end_path) if end_path else None
+        return self.attach_uploaded(start_name, end_name)
+
+    def upload_only(self, path: Path) -> str:
+        """Send one image to the project library, without touching either slot.
+
+        Split out of `attach_image` so a batch can pre-upload every shot's
+        frame before any generation starts, instead of uploading one shot at
+        a time in the middle of its own run. Returns the library's unique
+        filename — pass it to `attach_uploaded` later, from any FlowDriver
+        session, since the library lives on the project, not the tab.
+        """
+        unique = f"{path.stem}_{uuid.uuid4().hex[:8]}{path.suffix}"
+        staged = Path(tempfile.gettempdir()) / unique
+        shutil.copyfile(path, staged)
+        try:
+            self._upload_to_library(staged)
+        finally:
+            staged.unlink(missing_ok=True)
+        return unique
+
+    def attach_reference_images(self, paths: list[Path]) -> list[str]:
+        """Attach reference images to the prompt bar. Returns library names.
+
+        Used by image mode and by video's "Thành phần" sub-mode, which share
+        this control. Neither has "Bắt đầu"/"Kết thúc" slots — `_fill_slot` does
+        not apply, and a reference is not a start frame: it pins what a subject
+        looks like without dictating frame one. Its attach control lives on the
+        prompt bar itself
+        (`PROMPT_ADD_ELEMENT`, the `add` button) and drops the picked assets in
+        as reference chips beside the prompt text.
+
+        **One asset per picker session.** Measured in video's elements sub-mode:
+        clicking a library entry attaches it and closes the pane immediately —
+        there is no multi-select and no "Thêm vào câu lệnh" confirm (the confirm
+        click below is kept only because image mode may still show one). The
+        pane also has no search box there, so its "Gần đây" list is whatever was
+        rendered when it opened and never refreshes. Re-opening is therefore not
+        just how the next asset is picked, it is the only way to see a file that
+        finished uploading after the pane appeared — which is exactly how the
+        first two-reference run failed, timing out on an asset that was in the
+        library the whole time.
+
+        A file is uploaded under a fresh unique name the first time it is seen —
+        the picker identifies assets by filename, and re-using one name across
+        runs leaves the list ambiguous — and that name is then remembered in
+        `_upload_cache()`, so the same still attached to ten shots is uploaded
+        once and picked out of the library nine times. A cached name that the
+        picker no longer offers (the asset was deleted in Flow) just falls back
+        to a fresh upload.
+        """
+        if not paths:
+            return []
+        self._clear_reference_chips()
+
+        names = []
+        for index, path in enumerate(paths):
+            path = Path(path)
+            name = self._cached_upload(path)
+            # A short look for a remembered asset, a long one for a fresh upload:
+            # the library takes a while to list a file it has only just accepted,
+            # but one it accepted last week is either there now or gone for good.
+            asset = self._pick_from_library(name, 30) if name else None
+            if asset is None:
+                name = self.upload_only(path)
+                self._remember_upload(path, name)
+                asset = self._pick_from_library(name, 90)
+            if asset is None:
+                raise FlowError(f"attach: {name} is not offered by the reference picker")
+            names.append(name)
+            asset.click(timeout=10_000)
+            self.page.wait_for_timeout(1200)
+
+            if self.page.locator(".cdk-overlay-pane").count():
+                confirm = self._menu_item(
+                    ADD_TO_PROMPT, self.page.locator(".cdk-overlay-pane").last)
+                if confirm is not None:
+                    confirm.click(timeout=10_000)
+                    self.page.wait_for_timeout(1200)
+            self.dismiss_modals()
+
+            # A chip that did not land leaves the prompt a plain text-only run,
+            # which silently ignores the reference the whole shot was built on —
+            # the elements-mode twin of the empty-start-frame failure. Counting
+            # matters as much as presence: a two-SKU shot that attaches one chip
+            # renders a perfectly plausible clip carrying half the products.
+            # `REF_CHIP` matches two nodes per chip, so chips are counted on the
+            # button alone.
+            landed = self.page.locator(REF_CHIP_BUTTON).count()
+            if landed != index + 1:
+                raise FlowError(
+                    f"attach: {landed} reference chip(s) on the prompt bar after "
+                    f"adding {name} — expected {index + 1}")
+        return names
+
+    def _pick_from_library(self, name: str, seconds: float):
+        """Open the reference picker and hand back `name`'s entry, or None.
+
+        Left open on success so the caller can click the entry; closed on
+        failure. Re-opens on each pass because the pane's list is rendered once
+        and never refreshed — see `attach_reference_images`.
+        """
+        deadline = time.time() + seconds
+        while True:
+            opener = self._visible("button", PROMPT_ADD_ELEMENT)
+            if opener is None:
+                raise FlowError(
+                    f"attach: no {PROMPT_ADD_ELEMENT!r} button on the prompt bar "
+                    '— Flow may not be in "Hình ảnh" mode or video\'s "Thành '
+                    'phần" sub-mode')
+            opener.first.click(timeout=10_000)
+            self.page.wait_for_timeout(2000)
+            pane = self.page.locator(".cdk-overlay-pane").last
+            search = pane.get_by_placeholder(re.compile("Tìm kiếm|Search"))
+            if search.count():
+                search.first.fill(Path(name).stem)
+                self.page.wait_for_timeout(2000)
+            asset = self._menu_item(name, pane)
+            if asset is not None:
+                return asset
+            self.dismiss_modals()
+            if time.time() >= deadline:
+                return None
+            self.page.wait_for_timeout(3000)
+
+    @staticmethod
+    def _upload_cache() -> Path:
+        return Path.home() / ".openmontage" / "flow_uploads.json"
+
+    @staticmethod
+    def _upload_key(path: Path) -> str:
+        # Size and mtime, not a content hash: re-reading every reference image to
+        # hash it costs more than the occasional redundant upload an edited file
+        # with an unchanged mtime would cause.
+        stat = path.stat()
+        return f"{path.resolve()}|{stat.st_size}|{stat.st_mtime_ns}"
+
+    def _cached_upload(self, path: Path) -> Optional[str]:
+        """The library name this exact file was last uploaded under, if any."""
+        cache = self._upload_cache()
+        if not cache.is_file():
+            return None
+        try:
+            return json.loads(cache.read_text(encoding="utf-8")).get(self._upload_key(path))
+        except (json.JSONDecodeError, OSError):
+            return None  # a corrupt cache costs one upload, never a run
+
+    def _remember_upload(self, path: Path, name: str) -> None:
+        cache = self._upload_cache()
+        try:
+            known = json.loads(cache.read_text(encoding="utf-8")) if cache.is_file() else {}
+        except (json.JSONDecodeError, OSError):
+            known = {}
+        known[self._upload_key(path)] = name
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps(known, indent=1), encoding="utf-8")
+
+    def _clear_reference_chips(self) -> None:
+        """Remove any reference chips left on the prompt bar by an earlier run.
+
+        The page outlives a FlowDriver, so without this the next image inherits
+        the previous job's references and nothing in the output says why.
+        """
+        for _ in range(6):
+            chips = self.page.locator(REF_CHIP_BUTTON)
+            if not chips.count():
+                return
+            chips.first.click(timeout=10_000)
+            self.page.wait_for_timeout(600)
+        raise FlowError("attach: the prompt bar's reference chips would not clear")
+
+    def attach_uploaded(self, filename: str, end_filename: Optional[str] = None) -> str:
+        """Fill the composer's frame slots from assets already in the library."""
         self._clear_frames()
         names = []
-        for image, slot in ((path, START_FRAME_SLOT), (end_path, END_FRAME_SLOT)):
-            if image is None:
+        for name, slot in ((filename, START_FRAME_SLOT), (end_filename, END_FRAME_SLOT)):
+            if name is None:
                 continue
-            unique = f"{image.stem}_{uuid.uuid4().hex[:8]}{image.suffix}"
-            staged = Path(tempfile.gettempdir()) / unique
-            shutil.copyfile(image, staged)
-            try:
-                self._upload_to_library(staged)
-                self._fill_slot(slot, unique)
-            finally:
-                staged.unlink(missing_ok=True)
-            names.append(unique)
+            self._fill_slot(slot, name)
+            names.append(name)
         return " + ".join(names)
 
     def _upload_to_library(self, staged: Path) -> None:
@@ -726,11 +961,38 @@ class FlowDriver:
 
     def wait_generation(self, before: Optional[str], timeout_s: float,
                         tag: str = VIDEO_TILE) -> str:
+        """Wait for a render to be visibly in flight, then for it to land.
+
+        The caption is not identity. Flow now titles a tile with a short
+        model-authored summary, so re-running a shot with the same prompt
+        produces the *same* caption every time and `newest != before` never
+        fires. Counting mounted tiles does not help either: the grid is a
+        `cdk-virtual-scroll-viewport`, so `locator(tag).count()` is how many
+        tiles are mounted in the visible window, not how many exist. Comparing
+        the top-3 caption *sequence* was the next attempt, and it aliases too —
+        once three identical captions sit at the top, the sequence before and
+        after a new arrival is the same list.
+
+        What cannot alias is `flow-pending-tile`. Measured live on one image:
+
+            t=10s  "67% <prompt>"                    pending=1
+            t=30s  "99% <prompt>"                    pending=1
+            t=40s  "Woman stripping hydrangea stem"  pending=0
+
+        So wait for the render to start, then for it to stop. `before` only
+        still matters for the case where the render finishes between two polls
+        and was never observed in flight.
+        """
         deadline = time.time() + timeout_s
+        started = False
         while time.time() < deadline:
             self.page.wait_for_timeout(5000)
             newest = self._newest_tile(tag)
-            if newest and newest != before:
+            in_flight = bool(self.page.locator("flow-pending-tile").count()) or                 bool(newest and PROGRESS_RE.match(newest))
+            if in_flight:
+                started = True
+                continue
+            if newest and (started or newest != before):
                 if PROGRESS_RE.match(newest):
                     continue          # still rendering; the caption is not final
                 if FAILED_RE.search(newest):
@@ -746,54 +1008,71 @@ class FlowDriver:
                     return newest
         raise FlowError(f"generation timeout after {timeout_s:.0f}s")
 
+    def _top_captions(self, tag: str, n: int) -> list[str]:
+        self.page.evaluate(
+            "() => { const v = document.querySelector('.cdk-virtual-scroll-viewport');"
+            "        if (v) v.scrollTop = 0; }")
+        self.page.wait_for_timeout(600)
+        tiles = self.page.locator(tag)
+        count = min(n, tiles.count())
+        return [_caption(tiles.nth(i).inner_text()) for i in range(count)]
+
     def _open_tile_menu(self, tile) -> None:
         """Open a tile's "Tuỳ chọn khác" menu.
 
         Video tiles expose the button to `get_by_role`; image tiles render it
         only while hovered and its accessible name does not resolve, so it is
         found by aria-label and clicked from script.
+
+        A single `.hover()` teleports the cursor straight to the tile's
+        centre, and Flow's hover-reveal — already known flaky for the inner
+        download submenu, see the mouse dance in `_download_tile` — turned
+        out to be just as flaky for this outer toolbar. Confirmed live
+        2026-09-10: a plain `.hover()` left "Tuỳ chọn khác" absent from the
+        accessibility tree entirely, no error, just nothing revealed. The fix
+        is the same one that already works below: move *across* the tile
+        rather than jump to its middle, and retry a few times before falling
+        back to the aria-label script click.
         """
-        tile.hover(timeout=10_000)
-        self.page.wait_for_timeout(1200)
-        more = tile.get_by_role("button", name=TILE_MORE)
-        if more.count():
-            more.first.click(timeout=10_000)
+        box = tile.bounding_box()
+        if box is None:
+            raise FlowError("download: the tile has no position on screen")
+        cx, cy = box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+        candidates = [tile.get_by_role("button", name=lbl) for lbl in TILE_MORE]
+        for _ in range(4):
+            self.page.mouse.move(box["x"] - 20, cy)
+            self.page.wait_for_timeout(200)
+            self.page.mouse.move(cx, cy)
+            self.page.wait_for_timeout(900)
+            hit = next((c for c in candidates if c.count()), None)
+            if hit is not None:
+                hit.first.click(timeout=10_000)
+                self.page.wait_for_timeout(1200)
+                return
         else:
             clicked = tile.evaluate(
-                """(t, label) => {
-                    const b = [...t.querySelectorAll('button')]
-                        .find(b => (b.getAttribute('aria-label') || '').includes(label));
+                """(t, labels) => {
+                    const b = [...t.querySelectorAll('button')].find(b => {
+                        const a = b.getAttribute('aria-label') || '';
+                        return labels.some(l => a.includes(l));
+                    });
                     if (!b) return false;
                     b.click();
                     return true;
                 }""", TILE_MORE)
             if not clicked:
-                raise FlowError("download: the tile has no options button")
+                seen = tile.evaluate(
+                    "t => [...t.querySelectorAll('button')]"
+                    "      .map(b => b.getAttribute('aria-label')).filter(Boolean)")
+                raise FlowError(
+                    f"download: the tile has no options button. It offers: {seen}. "
+                    f"Looked for any of {TILE_MORE} — Flow renders this toolbar in the "
+                    f"account's language, not the page's, so a new locale needs adding.")
         self.page.wait_for_timeout(1200)
 
-    def _submenu_rows(self, anchor: dict) -> list[tuple[float, str]]:
-        """Every row of the open download submenu as (y, text), top to bottom.
-
-        Same `elementFromPoint` trick as `_submenu_point`: the rows are
-        `<flow-menu-item>` elements with no box of their own.
-        """
-        x = anchor["x"] + anchor["width"] + 40
-        rows: list[tuple[float, str]] = []
-        for dy in range(8, 260, 8):
-            y = anchor["y"] + dy
-            found = self.page.evaluate(
-                """([x, y]) => {
-                    const el = document.elementFromPoint(x, y);
-                    return el ? (el.textContent || '').replace(/\s+/g, ' ').trim() : '';
-                }""", [x, y])
-            # A long text is the panel that contains every row, not a row.
-            if found and len(found) <= 44 and (not rows or rows[-1][1] != found):
-                rows.append((y, found))
-        return rows
-
     @staticmethod
-    def _pick_row(rows: list[tuple[float, str]], quality: str) -> Optional[tuple[float, str]]:
-        """Choose the download row for `quality`.
+    def _pick_row(rows: list[str], quality: str) -> Optional[str]:
+        """Choose the download row's text for `quality`.
 
         "native"  — the size the clip was rendered at, always included in the plan.
         "max"     — the highest resolution the plan actually allows: upscale rows are
@@ -803,19 +1082,19 @@ class FlowDriver:
         Rows whose leading token is not a resolution (e.g. "270p Ảnh GIF động" is,
         but a bare "Kích thước gốc" panel echo is not) are ignored.
         """
-        native = next(((y, t) for y, t in rows if _same_text(NATIVE_SIZE, t) and RES_RE.match(t)), None)
+        native = next((t for t in rows if any(_same_text(x, t) for x in NATIVE_SIZE) and RES_RE.match(t)), None)
         if quality == "native":
             return native
         if quality != "max":
             # An explicit tier such as "1080p" or "2K": match the row's leading token.
             want = quality.strip().lower()
-            exact = next(((y, t) for y, t in rows
+            exact = next((t for t in rows
                           if RES_RE.match(t) and (RES_RE.match(t).group(1) + RES_RE.match(t).group(2)).lower() == want
-                          and not _same_text(PLAN_GATED, t) and "GIF" not in t.upper()), None)
+                          and not any(_same_text(x, t) for x in PLAN_GATED) and "GIF" not in t.upper()), None)
             if exact is None:
                 raise FlowError(
                     f"download: Flow does not offer {quality!r} for this media. "
-                    f"Offered: {' | '.join(t for _, t in rows) or 'nothing'}")
+                    f"Offered: {' | '.join(rows) or 'nothing'}")
             return exact
         def px(text: str) -> int:
             m = RES_RE.match(text)
@@ -823,43 +1102,75 @@ class FlowDriver:
                 return -1
             n = int(m.group(1))
             return n * 1000 if m.group(2).lower() == "k" else n
-        allowed = [(y, t) for y, t in rows
-                   if RES_RE.match(t) and not _same_text(PLAN_GATED, t) and "GIF" not in t.upper()]
+        allowed = [t for t in rows
+                   if RES_RE.match(t) and not any(_same_text(x, t) for x in PLAN_GATED) and "GIF" not in t.upper()]
         if not allowed:
             return native
-        best = max(allowed, key=lambda r: px(r[1]))
-        return best if px(best[1]) >= (px(native[1]) if native else 0) else native
+        best = max(allowed, key=px)
+        return best if px(best) >= (px(native) if native else 0) else native
 
-    def _download_tile(self, tile, out_path: Path, min_bytes: int, quality: str = "native") -> int:
-        """Tile menu → "Tải xuống" → the row for `quality`, then collect the file."""
-        self._open_tile_menu(tile)
-        entry = self._menu_item(DOWNLOAD_ITEM)
-        if entry is None:
-            raise FlowError(f"download: no {DOWNLOAD_ITEM!r} entry on the tile menu")
-        box = entry.bounding_box()
-        if box is None:
-            raise FlowError("download: the download entry has no position on screen")
-        middle = box["y"] + box["height"] / 2
-        point = None
-        for _ in range(4):
-            self.page.mouse.move(box["x"] - 30, middle)
-            self.page.wait_for_timeout(400)
-            self.page.mouse.move(box["x"] + 20, middle)
-            self.page.wait_for_timeout(600)
-            self.page.mouse.move(box["x"] + box["width"] - 12, middle)
-            self.page.wait_for_timeout(2200)
-            rows = self._submenu_rows(box)
+    def _download_tile(self, tile, out_path: Path, min_bytes: int, quality: str = "native",
+                       attempts: int = 2) -> int:
+        """Tile menu → "Tải xuống" → the row for `quality`, then collect the file.
+
+        Flow's download submenu is a proper ARIA `menu` of `menuitem` rows now,
+        not the boxless custom elements the pixel-sweep code this replaced had
+        to fight with `elementFromPoint` across up to 64 point-probes per
+        attempt. Confirmed live via accessibility snapshot and a real
+        `get_by_role(...).click()`, 2026-09-10 — a genuine Playwright click
+        lands and starts the download; the old code's "a real click does
+        nothing here" note describes a UI Flow has since changed. Role-based
+        locators auto-wait properly besides being faster, which is most of why
+        this used to need a retry loop with a 300s blind wait at all.
+
+        A click that starts no download is still recovered rather than eaten
+        by one long wait: `_catch_download` waits 100s per attempt, and a miss
+        reopens the tile menu from scratch (the outer hover dance in
+        `_open_tile_menu` is untouched — that one's tuned against a specific
+        past failure) and tries again.
+        """
+        last_err: Optional[FlowError] = None
+        for attempt in range(1, attempts + 1):
+            self._open_tile_menu(tile)
+            entry = self._menu_item(DOWNLOAD_ITEM)
+            if entry is None:
+                raise FlowError(f"download: no entry matching {DOWNLOAD_ITEM} on the tile menu")
+
+            rows: list[str] = []
+            for _ in range(3):
+                entry.hover(timeout=5000)
+                self.page.wait_for_timeout(700)
+                # Only rows this plan can actually click. Flow used to mark a
+                # paywalled tier with the word "Nâng cấp" in the row; it now
+                # ships the row `disabled` with its normal label, so the text
+                # filter below let "4K Đã tăng độ phân giải" through and the
+                # click sat waiting for an element that would never enable.
+                rows = [t.strip() for t in self.page.evaluate(
+                    """() => [...document.querySelectorAll('[role=menuitem]')]
+                        .filter(b => !b.disabled
+                                     && b.getAttribute('aria-disabled') !== 'true'
+                                     && !(b.className || '').includes('menu-item-disabled'))
+                        .map(b => (b.innerText || '').trim())""")
+                       if RES_RE.match(t.strip())]
+                if rows:
+                    break
             chosen = self._pick_row(rows, quality)
-            if chosen:
-                point = (box["x"] + box["width"] + 40, chosen[0])
-                break
-        if point is None or chosen is None:
-            offered = " | ".join(t for _, t in (rows or [])) or "nothing"
-            raise FlowError(f"download: no usable size row in the download submenu. Offered: {offered}")
-        self.last_download_row = chosen[1]
-        return self._catch_download(out_path, point, min_bytes, expect=chosen[1])
+            if chosen is None:
+                offered = " | ".join(rows) or "nothing"
+                raise FlowError(f"download: no usable size row in the download submenu. Offered: {offered}")
+            self.last_download_row = chosen
+            try:
+                return self._catch_download(out_path, chosen, min_bytes, timeout_s=100)
+            except FlowError as err:
+                last_err = err
+                if attempt >= attempts:
+                    raise
+                self.page.keyboard.press("Escape")
+                self.page.wait_for_timeout(800)
+                self.dismiss_modals()
+        raise last_err  # unreachable, satisfies type-checkers
 
-    def download_images(self, out_paths: list[Path], caption: Optional[str], quality: str = "native") -> list[int]:
+    def download_images(self, out_paths: list[Path], quality: str = "native") -> list[int]:
         """Save the newest `len(out_paths)` images, newest first.
 
         An `xN` generation lands N tiles at the top of the grid, all captioned
@@ -871,10 +1182,13 @@ class FlowDriver:
         self.dismiss_modals()
         tiles = self.page.locator(IMAGE_TILE)
         tiles.first.wait_for(state="visible", timeout=60_000)
-        if caption is not None and _caption(tiles.first.inner_text()) != caption:
-            raise FlowError(
-                f"download: the newest image is not the one this run generated. "
-                f"Looking for a tile reading {caption!r}. Nothing was saved.")
+        # No caption re-check here: `wait_generation` already proved the new
+        # tile(s) landed at the top via the top-N sequence shift, same as the
+        # video path. A second equality check against this reload's own
+        # (possibly re-rendered) caption text is exactly the kind of check
+        # that produced "the newest image is not the one this run generated"
+        # against a tile that actually was the right one — confirmed live
+        # 2026-09-13. Position after the reload is the trustworthy signal.
         sizes = []
         for i, out_path in enumerate(out_paths):
             if i >= tiles.count():
@@ -921,87 +1235,62 @@ class FlowDriver:
 
         Named rather than positional, because "index 0" means different clips
         before and after the reload this class performs, and downloading the
-        wrong one produces a valid mp4 under the right filename.
+        wrong one produces a valid mp4 under the right filename (Ngày 7,
+        shot 02 came back a byte-for-byte copy of shot 01).
+
+        But the search is bounded to the top few tiles, not the whole grid.
+        A genuinely new clip always lands within a handful of the top — Flow
+        never buries it — while a project that has accumulated retries
+        carries many *older* tiles sharing this shot's exact caption: Flow
+        captions a tile with a short model-authored summary, not the prompt,
+        so retrying one shot with identical or even reworded input produces
+        the same caption on tile after tile. An unbounded scan happily
+        matches whichever one it meets first, which on a cluttered grid can
+        be several retries back. Confirmed 2026-09-10: chrome://downloads
+        history showed only this driver's own genuinely-successful past
+        downloads and nothing from the recent failed attempts at all — the
+        click was landing on a tile whose menu never produced a real
+        download, not on the fresh one.
         """
         self.page.locator("flow-video-tile").first.wait_for(
             state="visible", timeout=60_000)
         if caption is None:
             return self.page.locator("flow-video-tile").first
 
+        window = 6
         deadline = time.time() + 90
         while time.time() < deadline:
             tiles = self.page.locator("flow-video-tile")
-            for i in range(tiles.count()):
+            for i in range(min(window, tiles.count())):
                 tile = tiles.nth(i)
                 if _caption(tile.inner_text()) == caption:
                     return tile
             self.page.wait_for_timeout(3000)
         raise FlowError(
-            f"download: the clip this run generated is not in the grid any more. "
-            f"Looking for a tile reading {caption!r}. Nothing was saved.")
+            f"download: the clip this run generated is not among the top "
+            f"{window} tiles. Looking for a tile reading {caption!r}. "
+            f"Nothing was saved.")
 
-    def _submenu_point(self, anchor: dict, label: str) -> Optional[tuple[float, float]]:
-        """Find a download-submenu row by asking what is painted at each point.
-
-        These rows are `<flow-menu-item>` elements with no box of their own, so
-        `getBoundingClientRect()` reports nothing for them and every locator and
-        `querySelectorAll` sweep in this file walked straight past — for a dozen
-        runs the driver reported "Flow did not open the submenu" while a
-        screenshot of the same instant showed it open. `elementFromPoint` sees
-        them.
-
-        The row is still identified by reading its text back, never by trusting
-        an offset: one row below "720p Kích thước gốc" is "1080p Đã tăng độ
-        phân giải", which is a paid upscale of a clip that has already been
-        paid for.
-        """
-        x = anchor["x"] + anchor["width"] + 40
-        for dy in range(8, 220, 8):
-            found = self.page.evaluate(
-                """([x, y]) => {
-                    const el = document.elementFromPoint(x, y);
-                    return el ? (el.textContent || '').replace(/\\s+/g, ' ').trim() : '';
-                }""",
-                [x, anchor["y"] + dy])
-            # A short text is one row; a long one is the panel that contains
-            # every row, and its text carries the wanted label too. Clicking
-            # where the panel answers lands on the first row — "270p Ảnh GIF
-            # động" — and would have written a GIF into the episode.
-            if len(found) <= 40 and _same_text(label, found):
-                return x, anchor["y"] + dy
-        return None
-
-    def _catch_download(self, out_path: Path, click_at: tuple[float, float],
-                        min_bytes: int = MIN_VIDEO_BYTES, expect: str = NATIVE_SIZE) -> int:
+    def _catch_download(self, out_path: Path, row_text: str,
+                        min_bytes: int = MIN_VIDEO_BYTES,
+                        timeout_s: float = 300) -> int:
         """Take the chosen row's file.
 
-        The row is clicked from script — `elementFromPoint`, then `.click()` on
-        the `<button>` inside it. A real mouse click at the same coordinates
-        lands on the right element and does nothing at all: the menu closes, no
-        file appears anywhere, and Chrome's own download history stays empty, so
-        the listener is on the inner button and the wrapper swallows the press.
+        The row is a real `menuitem` now, and a genuine Playwright click on it
+        starts the download — verified live 2026-09-10. An older version of
+        this method clicked via `elementFromPoint` + a script-dispatched
+        `.click()` because a real mouse click supposedly landed and did
+        nothing; that was true of an older Flow UI, not this one.
 
-        The file is then collected from a directory this driver names, not from
-        `expect_download`. That event never fires here — attaching over CDP does
-        not give Playwright ownership of this browser's downloads — and waiting
-        on it only cost two minutes per clip before the fallback ran.
+        The file is still collected from a directory this driver names, not
+        from `expect_download`. That event never fires here — attaching over
+        CDP does not give Playwright ownership of this browser's downloads.
         """
         out_path.parent.mkdir(parents=True, exist_ok=True)
         sink = self._download_sink()
-        clicked = self.page.evaluate(
-            """([x, y]) => {
-                const row = document.elementFromPoint(x, y);
-                if (!row) return '';
-                const button = row.querySelector('button') || row.closest('button') || row;
-                button.click();
-                return (button.textContent || '').replace(/\\s+/g, ' ').trim();
-            }""",
-            list(click_at))
-        if not _same_text(expect, clicked):
-            raise FlowError(f"download: the row under the cursor read {clicked!r}, "
-                            f"not {expect!r} — nothing was clicked")
+        self.page.get_by_role("menuitem", name=row_text, exact=True).first.click(timeout=5000)
 
-        landed = self._wait_for_downloaded_file(sink)
+        landed = self._wait_for_downloaded_file(sink, timeout_s=timeout_s)
         shutil.move(str(landed), str(out_path))
 
         size = out_path.stat().st_size
@@ -1013,17 +1302,21 @@ class FlowDriver:
     def _download_sink(self) -> Path:
         """Point Chrome's downloads at a directory this driver owns.
 
-        Attaching over CDP puts Playwright in charge of download behaviour for
-        this browser, and the observable result was that nothing downloaded at
-        all: the click was accepted, the menu closed, no file appeared in the
-        user's Downloads folder, and Chrome's own history table had no record of
-        a download ever starting. Naming a directory explicitly takes that
-        decision back.
+        `Browser.setDownloadBehavior` has to be sent on a **browser-level** CDP
+        session (`browser.new_browser_cdp_session()`) — a page-scoped session
+        (`context.new_cdp_session(page)`) accepts the call without error and
+        still applies the GUID naming, but silently ignores `downloadPath` on
+        current Chrome (152.x). The observable symptom was a download that
+        genuinely fired, landed in the user's real Downloads folder under a
+        random-GUID `.tmp` name, and was never found — because this driver was
+        watching a directory Chrome was never told about. Confirmed 2026-09-10
+        by inspecting the live browser with Playwright MCP while the CDP call
+        above raised nothing.
         """
         sink = Path(tempfile.gettempdir()) / "openmontage-flow-downloads"
         sink.mkdir(parents=True, exist_ok=True)
         try:
-            session = self.page.context.new_cdp_session(self.page)
+            session = self._browser.new_browser_cdp_session()
             session.send("Browser.setDownloadBehavior",
                          {"behavior": "allowAndName", "downloadPath": str(sink),
                           "eventsEnabled": True})
@@ -1035,19 +1328,28 @@ class FlowDriver:
         return sink
 
     def _wait_for_downloaded_file(self, folder: Path, timeout_s: float = 300) -> Path:
+        """Poll `folder` for a file that arrived after this shot started.
+
+        `allowAndName` writes under a random GUID, and on current Chrome that
+        file keeps a `.tmp` suffix even once complete — it is never renamed away
+        and no sibling `.crdownload` marker exists either. So `.tmp` is not
+        excluded here; instead "done" is "the same size on two checks in a
+        row", which a still-downloading file fails and a finished one passes.
+        """
         deadline = time.time() + timeout_s
+        last_seen: dict[Path, int] = {}
         while time.time() < deadline:
-            # `allowAndName` writes the file under a GUID with no extension,
-            # so anything that arrived after this run started counts.
             fresh = [f for f in folder.iterdir()
                      if f.is_file() and f.stat().st_mtime > self._started_at
-                     and f.suffix not in (".crdownload", ".tmp")
+                     and f.suffix != ".crdownload"
                      and not Path(str(f) + ".crdownload").exists()]
-            if fresh:
-                newest = max(fresh, key=lambda f: f.stat().st_mtime)
-                self.page.wait_for_timeout(1500)   # let the last block flush
-                return newest
-            self.page.wait_for_timeout(2000)
+            for f in fresh:
+                size = f.stat().st_size
+                if last_seen.get(f) == size and size > 0:
+                    self.page.wait_for_timeout(500)   # let the last block flush
+                    return f
+                last_seen[f] = size
+            self.page.wait_for_timeout(1500)
         raise FlowError(f"download: nothing arrived in {folder} within {timeout_s:.0f}s")
 
     # ----------------------------------------------------------------- run
@@ -1061,20 +1363,30 @@ class FlowDriver:
         resolution = job.get("resolution")
         aspect = job.get("aspect_ratio", "16:9")
 
+        # References and frame slots live in different sub-modes, so the choice
+        # has to be made before the popover is closed, not after.
+        refs = [Path(p) for p in (job.get("reference_images") or [])]
         applied = self.apply_settings(
             aspect=aspect,
             model=job.get("model_variant", "Quality"),
             duration=duration,
             resolution=resolution,
+            submode=ELEMENTS_SUBMODE if refs else FRAMES_SUBMODE,
         )
         self.verify_settings(aspect=aspect, duration=duration,
                              resolution=resolution, count=1)
 
         media_ref = None
-        if job.get("operation") == "image_to_video" and job.get("asset_path"):
-            end = job.get("end_asset_path")
-            media_ref = self.attach_image(Path(job["asset_path"]),
-                                          Path(end) if end else None)
+        if refs:
+            media_ref = " + ".join(self.attach_reference_images(refs))
+        elif job.get("operation") == "image_to_video":
+            uploaded = job.get("asset_uploaded_name")
+            if uploaded:
+                media_ref = self.attach_uploaded(uploaded, job.get("end_asset_uploaded_name"))
+            elif job.get("asset_path"):
+                end = job.get("end_asset_path")
+                media_ref = self.attach_image(Path(job["asset_path"]),
+                                              Path(end) if end else None)
 
         self.type_prompt(job["prompt"])
 
@@ -1082,7 +1394,18 @@ class FlowDriver:
         self.submit()
         media_id = self.wait_generation(
             before, float(job.get("timeout_seconds", 900)) - 90)
-        size = self.download_clip(Path(job["output_path"]), media_id, job.get("quality", "native"))
+        # Position, not caption: `wait_generation` already proved the new clip is
+        # at index 0 via the top-N sequence shift, and `download_clip` moves
+        # straight from there into `_back_to_grid()` with nothing in between that
+        # could reorder the list. Caption matching stays available as
+        # `_tile_for`'s fallback (bounded to the top few tiles) for callers that
+        # don't have this guarantee, but on a grid carrying many retries of the
+        # same shot — same model-authored caption on every one — a caption
+        # search can find an older tile before the fresh one. Verified
+        # 2026-09-10: `download_clip(..., caption=None, ...)` against a tile the
+        # generation loop had just confirmed pulled the right clip every time;
+        # caption search had been missing it.
+        size = self.download_clip(Path(job["output_path"]), None, job.get("quality", "native"))
 
         return {
             "output": job["output_path"],
@@ -1148,6 +1471,9 @@ class FlowDriver:
         applied = self.apply_image_settings(aspect=aspect, model=job["model"], count=count)
         self.verify_image_settings(aspect=aspect, count=count)
 
+        refs = [Path(p) for p in (job.get("reference_images") or [])]
+        media_ref = self.attach_reference_images(refs) if refs else []
+
         self.type_prompt(job["prompt"])
         before = self.newest_image()
         self.submit()
@@ -1164,11 +1490,12 @@ class FlowDriver:
                 if len(captions) == count and not any(PROGRESS_RE.match(c) for c in captions):
                     break
                 self.page.wait_for_timeout(4000)
-        sizes = self.download_images([Path(p) for p in job["output_paths"]], caption, job.get("quality", "native"))
+        sizes = self.download_images([Path(p) for p in job["output_paths"]], job.get("quality", "native"))
         return {
             "outputs": [str(p) for p in job["output_paths"]],
             "bytes": sizes,
             "media_id": caption,
+            "reference_media_id": " + ".join(media_ref) if media_ref else None,
             "model": applied["model"],
             "credits": applied["credits"],
             "download_row": getattr(self, "last_download_row", None),

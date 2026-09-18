@@ -139,6 +139,16 @@ class FlowVideo(BaseTool):
                 "type": "string",
                 "description": "Local first-frame image for image_to_video.",
             },
+            "reference_images": {
+                "type": "array",
+                "items": {"type": "string"},
+                "description": (
+                    "Local images attached as reference chips in Flow's 'Thành phần' "
+                    "sub-mode. Any number allowed, and none becomes the opening frame — "
+                    "use when several subjects or products must appear in one shot. "
+                    "Mutually exclusive with reference_image_path, which sets a start frame."
+                ),
+            },
             "end_image_path": {
                 "type": "string",
                 "description": (
@@ -308,12 +318,18 @@ class FlowVideo(BaseTool):
         operation = inputs.get("operation", "text_to_video")
         asset_path = inputs.get("reference_image_path")
         if operation == "image_to_video":
-            if not asset_path or not Path(asset_path).is_file():
+            # Either a real file to upload, or the name of one already sitting
+            # in the Flow project's library from a prior upload_only() call.
+            if inputs.get("asset_uploaded_name"):
+                asset_path = str(Path(asset_path).resolve()) if asset_path else None
+            elif not asset_path or not Path(asset_path).is_file():
                 return ToolResult(
                     success=False,
-                    error="image_to_video needs reference_image_path pointing at a real file",
+                    error="image_to_video needs reference_image_path pointing at a real "
+                          "file, or asset_uploaded_name from a prior upload_only() call",
                 )
-            asset_path = str(Path(asset_path).resolve())
+            else:
+                asset_path = str(Path(asset_path).resolve())
         else:
             asset_path = None
 
@@ -332,8 +348,23 @@ class FlowVideo(BaseTool):
             "asset_path": asset_path,
             "end_asset_path": (str(Path(inputs["end_image_path"]).resolve())
                                if inputs.get("end_image_path") else None),
+            # A filename already sitting in the Flow project's library from a
+            # prior upload_only() call. When set, generate() fills the frame
+            # slot straight from the library and skips re-uploading asset_path.
+            "asset_uploaded_name": inputs.get("asset_uploaded_name"),
+            "end_asset_uploaded_name": inputs.get("end_asset_uploaded_name"),
+            # Reference images attached as prompt chips in Flow's "Thành phần"
+            # sub-mode. Unlike reference_image_path (a start frame), any number
+            # can be given and none of them is the opening frame — use these when
+            # several things must appear in one shot.
+            "reference_images": [str(Path(r).resolve()) for r in
+                                 (inputs.get("reference_images") or [])],
             "timeout_seconds": timeout,
         }
+        missing_refs = [r for r in job["reference_images"] if not Path(r).is_file()]
+        if missing_refs:
+            return ToolResult(success=False,
+                              error=f"reference_images not found: {missing_refs}")
 
         start = time.time()
         lock = self._lock_path()
@@ -401,6 +432,9 @@ class FlowVideo(BaseTool):
                 "flow_media_id": result.get("media_id"),
                 "flow_download_row": result.get("download_row"),
                 "reference_image": asset_path,
+                # The library names Flow actually attached. The only evidence
+                # after the fact that every reference chip landed.
+                "flow_reference_media_id": result.get("reference_media_id"),
                 **probed,
             },
             artifacts=[str(output_path)],
