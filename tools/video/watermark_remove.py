@@ -79,6 +79,13 @@ from tools.base_tool import (
 PRESETS: dict[str, dict[str, float]] = {
     # Detected from six clips, then padded a little on each side.
     "flow": {"x": 0.79, "y": 0.878, "w": 0.085, "h": 0.052},
+    # Flow puts the mark somewhere else on VERTICAL output: measured on six 9:16
+    # Veo clips at 1080x1920 it sits at x 1016-1076, y 1866-1912 - far right and
+    # far lower than the "flow" box above, which lands on empty picture and leaves
+    # the mark untouched. A delogo that reports success while the watermark is
+    # still there is the failure mode this preset exists to stop, so check the
+    # corner after running, not the box you asked for.
+    "flow_9x16": {"x": 0.9407, "y": 0.9719, "w": 0.0556, "h": 0.0240},
 }
 
 
@@ -318,8 +325,11 @@ class WatermarkRemove(BaseTool):
             "ffprobe", "-v", "error", "-select_streams", "v:0",
             "-show_entries", "stream=width,height", "-of", "csv=p=0:s=x", str(path),
         ])
-        w, h = out.stdout.strip().splitlines()[0].split("x")
-        return int(w), int(h)
+        # Some ffprobe builds emit a trailing separator ("1080x1920x"), which makes
+        # a bare two-way unpack raise "too many values to unpack" on a perfectly
+        # normal file. Take the first two fields and ignore whatever follows.
+        parts = [p for p in out.stdout.strip().splitlines()[0].split("x") if p]
+        return int(parts[0]), int(parts[1])
 
     def _pick_source(self, src: Path, w: int, h: int,
                      px: int, py: int, pw: int, ph: int):
