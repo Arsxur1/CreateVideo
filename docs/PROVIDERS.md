@@ -82,6 +82,51 @@ COMFYUI_VIDEO_SERVER_URL=    # Optional video-specific ComfyUI server
 
 ---
 
+## Pipeline / provider compatibility
+
+Which keys you need depends on the **pipeline**, not on configuring every provider. Each manifest in `pipeline_defs/` marks tools as `required_tools` (the stage cannot succeed unless that tool — or a tool-level fallback — is available) versus `optional_tools` (quality upgrades). Capability selectors (`tts_selector`, `image_selector`, `video_selector`) auto-route to **any configured provider** in that family.
+
+Almost every pipeline requires local **Post-Production**: FFmpeg via `video_compose` and `audio_mixer`. Remotion and HyperFrames are optional composition runtimes (Node.js; HyperFrames also wants Node ≥ 22). They need no API key.
+
+This table is a setup map. Live availability on your machine is `make preflight` / `registry.provider_menu_summary()`. Full provider lists: [Capability Coverage](#capability-coverage) and [Provider-to-Tool Mapping](#provider-to-tool-mapping). Env-var groups in the last column are expanded in [Env vars by capability](#env-vars-by-capability) below.
+
+`framework-smoke` is a contract-test fixture with no tools and is omitted.
+
+| Pipeline | Required capabilities | Supported providers | Relevant env vars |
+|----------|----------------------|---------------------|-------------------|
+| `animated-explainer` | **Required:** Text-to-Speech, Image Generation, Post-Production<br>**Optional:** Video Generation, Music Generation, Graphics | **Required:** any TTS provider (Piper is the local fallback); any image provider (Pexels/Pixabay stock or cloud gen); FFmpeg compose/mix (Remotion/HyperFrames optional runtimes)<br>**Fallback:** any video-generation provider; ElevenLabs / Suno / Google Lyria music; mermaid / Manim / Pygments | **Required:** one TTS path + one image path<br>**Optional:** Video Generation, Music Generation |
+| `animation` | **Required:** Post-Production<br>**Optional:** Text-to-Speech, Image Generation, Video Generation, Music Generation, Graphics, 3D world/asset tools | **Required:** FFmpeg compose/mix (Remotion/HyperFrames optional)<br>**Fallback:** same selector families as explainer; local `threejs_world` / `blender_world`; `atlas_3d` / `fal_3d` | **Required:** — (local compose)<br>**Optional:** TTS, Image, Video, Music, `ATLASCLOUD_API_KEY`, `FAL_KEY` |
+| `avatar-spokesperson` | **Required:** Post-Production<br>**Optional:** Avatar, Text-to-Speech, Image Generation, Video Generation, Subtitles, Enhancement | **Required:** FFmpeg compose/mix<br>**Intended avatar path (optional in the YAML):** local SadTalker (`talking_head`) and Wav2Lip (`lip_sync`), or Kling Official `kling_avatar` / `kling_lip_sync`; any TTS provider for the voice | **Required:** —<br>**Optional:** `KLING_API_KEY`; TTS; Image; Video |
+| `character-animation` | **Production path** (the YAML has no `required_tools`; these come from `tools_available`): Character Animation, Post-Production<br>**Optional:** Image Generation, Text-to-Speech, Music Generation, Analysis | Local `character_spec_generator`, `svg_rig_builder`, `pose_library_builder`, `action_timeline_compiler`, `character_rig_renderer`, `character_animation_reviewer` plus `video_compose` / `audio_mixer`. Remotion or HyperFrames is the intended acting runtime (not FFmpeg-only stills).<br>**Optional:** any image / TTS / music provider | **Required:** — (local)<br>**Optional:** TTS, Image, Music |
+| `cinematic` | **Required:** Post-Production<br>**Optional:** Video Generation, Image Generation, Analysis, Music Generation / search, 3D, Enhancement | **Required:** FFmpeg compose/mix<br>**Fallback:** any video provider (stock or generated). Motion-led trailers should not silently fall back to stills. Music: Pixabay / Freesound search or ElevenLabs / Suno / Lyria. 3D tools as in `animation`. | **Required:** —<br>**Optional:** Video (or stock `PEXELS_API_KEY` / `PIXABAY_API_KEY`); Music; `ATLASCLOUD_API_KEY` / `FAL_KEY` for 3D |
+| `clip-factory` | **Required:** Analysis, Subtitles, Post-Production<br>**Optional:** Enhancement | **Required:** Whisper `transcriber`; `subtitle_gen`; FFmpeg compose / trim / mix<br>**Optional:** `scene_detect`, `frame_sampler`, color/audio enhance | **Required:** — (`faster-whisper`, FFmpeg)<br>**Optional:** `HF_TOKEN`; Azure STT keys |
+| `documentary-montage` | **Required:** Post-Production (`video_compose`)<br>**Optional (assets):** clip acquisition / CLIP retrieval, Music Generation. Fast path needs `direct_clip_search`; standard path needs `corpus_builder` + `clip_search`. | **Required:** FFmpeg compose<br>**Fast path:** `direct_clip_search` over Pexels, Unsplash, archive.org, NASA, Wikimedia<br>**Standard path:** `corpus_builder` + `clip_search`<br>**Fallback:** `pexels_video`; ElevenLabs / Suno / Lyria music | **Required:** —<br>**Typical:** `PEXELS_API_KEY` and/or `UNSPLASH_ACCESS_KEY` (archive.org / NASA / Wikimedia need no key)<br>**Optional:** Music |
+| `hybrid` | **Required:** Post-Production<br>**Optional:** Analysis, Text-to-Speech, Image Generation, Video Generation, Graphics, Music Generation, Enhancement | **Required:** FFmpeg compose/mix (source footage is the base)<br>**Fallback:** any TTS / image / video / music provider; mermaid / Pygments | **Required:** — (footage + FFmpeg)<br>**Optional:** TTS, Image, Video, Music |
+| `localization-dub` | **Required:** Analysis, Text-to-Speech, Subtitles, Post-Production<br>**Optional:** Avatar (lip-sync), Enhancement | **Required:** Whisper `transcriber`; any TTS provider (Piper fallback); `subtitle_gen`; FFmpeg compose/mix<br>**Fallback:** Wav2Lip `lip_sync` or Kling Official `kling_lip_sync` | **Required:** one TTS path<br>**Optional:** `KLING_API_KEY`; `HF_TOKEN`; Azure STT keys |
+| `podcast-repurpose` | **Required:** Analysis, Subtitles, Post-Production<br>**Optional:** Image Generation, Graphics, Music Generation, Enhancement | **Required:** Whisper `transcriber`; `subtitle_gen`; FFmpeg compose/mix<br>**Fallback:** any image provider; mermaid; ElevenLabs / Suno / Lyria music | **Required:** — (`faster-whisper`, FFmpeg)<br>**Optional:** Image, Music; `HF_TOKEN` |
+| `screen-demo` | **Required:** Post-Production; Analysis (`transcriber` on the script stage)<br>**Mode `real_capture`:** Screen Capture<br>**Mode `synthetic_terminal`:** Remotion `video_compose`<br>**Optional:** Text-to-Speech, Image Generation, Graphics, Enhancement, `cap_recorder` | **Required:** FFmpeg compose/mix; Whisper<br>**real_capture:** `screen_recorder` (FFmpeg); fallback `cap_recorder`<br>**synthetic_terminal:** Remotion `TerminalScene` (no capture key) | **Required:** —<br>**Optional:** TTS, Image |
+| `talking-head` | **Required:** Analysis, Subtitles, Post-Production<br>**Optional:** Image Generation, Enhancement, extra analysis / video-post tools | **Required:** Whisper `transcriber`; `subtitle_gen`; FFmpeg compose/mix (source footage is the base)<br>**Optional:** any image provider; face / eye / color / audio enhance; Remotion caption burn | **Required:** — (footage + Whisper + FFmpeg)<br>**Optional:** Image; `HF_TOKEN` |
+
+### Env vars by capability
+
+Any **one** configured provider is enough for a selector family. Names below are from [Provider-to-Tool Mapping](#provider-to-tool-mapping), the Environment Variable Summary, and `.env.example`.
+
+| Capability | Relevant env vars | Zero-key / local fallback |
+|------------|-------------------|---------------------------|
+| Post-Production | — | `ffmpeg`; Remotion (Node.js); HyperFrames (Node ≥ 22 + `ffmpeg` + `npx`) |
+| Analysis (STT) | Optional `HF_TOKEN` (diarization); `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION`; `DASHSCOPE_API_KEY` | `transcriber` (`faster-whisper`) |
+| Text-to-Speech | `GOOGLE_API_KEY`, `ELEVENLABS_API_KEY`, `OPENAI_API_KEY`, `AZURE_SPEECH_KEY` + `AZURE_SPEECH_REGION`, `FISH_AUDIO_API_KEY`, `KLING_API_KEY`, `FAL_KEY`, `DASHSCOPE_API_KEY`, `DOUBAO_SPEECH_API_KEY` | Piper (`piper-tts`) |
+| Image Generation | `PEXELS_API_KEY`, `PIXABAY_API_KEY`, `FAL_KEY`, `GOOGLE_API_KEY`, `OPENAI_API_KEY`, `XAI_API_KEY`, `KLING_API_KEY`, `ATLASCLOUD_API_KEY`, `MINIMAX_API_KEY`, `TENCENT_TOKENHUB_API_KEY`, `DASHSCOPE_API_KEY` | Local Diffusion (GPU); stock keys are free |
+| Video Generation | `FAL_KEY`, `GOOGLE_API_KEY`, `XAI_API_KEY`, `KLING_API_KEY`, `ARK_API_KEY`, `MINIMAX_API_KEY`, `ATLASCLOUD_API_KEY`, `RUNWAY_API_KEY`, `HEYGEN_API_KEY`, `HIGGSFIELD_API_KEY` + `HIGGSFIELD_API_SECRET`, `TENCENT_TOKENHUB_API_KEY`, `VOLC_ACCESSKEY` + `VOLC_SECRETKEY`, `REPLICATE_API_TOKEN`, `VIDEO_GEN_LOCAL_ENABLED`, `MODAL_LTX2_ENDPOINT_URL`, plus stock `PEXELS_API_KEY` / `PIXABAY_API_KEY` | Local WAN / Hunyuan / CogVideo / LTX (GPU); Pexels / Pixabay stock |
+| Music Generation | `ELEVENLABS_API_KEY`, `SUNO_API_KEY`, `GOOGLE_API_KEY`, `FAL_KEY` | Drop tracks in `music_library/` |
+| Avatar | `KLING_API_KEY` | SadTalker, Wav2Lip (local clones) |
+| Screen Capture | — | `screen_recorder` (FFmpeg); optional Cap |
+| Documentary clip search | `PEXELS_API_KEY`, `UNSPLASH_ACCESS_KEY` | archive.org, NASA, Wikimedia (no key) |
+| Character Animation | — | Local OpenMontage character tools |
+| 3D (optional on `animation` / `cinematic`) | `ATLASCLOUD_API_KEY` (`atlas_3d`), `FAL_KEY` (`fal_3d`) | `threejs_world`, `blender_world` (local) |
+
+---
+
 ## Current Video Model Coverage
 
 The following integrations are based on documented, currently exposed model
@@ -1473,4 +1518,4 @@ A: Set `VIDEO_GEN_LOCAL_ENABLED=true` and install `diffusers`. You get WAN 2.1, 
 A: For quality → ElevenLabs. For localization (50+ languages) → Google TTS. For budget → Google free tier (1M chars/month). For offline → Piper.
 
 **Q: Do I need all these providers?**
-A: No. Start with what you have. The selector pattern auto-routes to whatever's available. Missing a provider? The system falls through to the next one automatically.
+A: No. Start with what you have. The selector pattern auto-routes to whatever's available. Missing a provider? The system falls through to the next one automatically. See [Pipeline / provider compatibility](#pipeline--provider-compatibility) for required vs optional capabilities per pipeline.
