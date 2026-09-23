@@ -1027,7 +1027,7 @@ def test_scaffold_workspace_generates_html_and_assets(tmp_path: Path):
                     }
                 },
                 "typography": {
-                    "heading": {"font": "Inter"},
+                    "headings": {"font": "Inter"},
                     "body": {"font": "Inter"},
                 },
             },
@@ -1119,7 +1119,7 @@ def test_style_bridge_picks_up_playbook_palette():
             }
         },
         "typography": {
-            "heading": {"font": "Space Grotesk"},
+            "headings": {"font": "Space Grotesk"},
             "body": {"font": "Inter"},
         },
         "motion": {"pace": "fast"},

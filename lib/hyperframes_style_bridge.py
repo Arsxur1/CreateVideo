@@ -57,14 +57,27 @@ def _font(typo: dict[str, Any], key: str, default: str) -> str:
     return default
 
 
-def _motion_easing(motion: dict[str, Any]) -> tuple[str, str]:
-    """Derive (duration, ease) from the playbook motion block."""
-    pace = (motion.get("pace") or "moderate").lower()
-    if pace == "fast":
-        return "0.4s", "cubic-bezier(0.33, 1, 0.68, 1)"
-    if pace == "slow":
-        return "0.9s", "cubic-bezier(0.65, 0, 0.35, 1)"
-    return "0.6s", "cubic-bezier(0.5, 0, 0.5, 1)"
+# identity.pace enum from schemas/styles/playbook.schema.json -> (duration, ease).
+# Every enum value gets its own profile so `deliberate` and `rapid` do not
+# silently collapse into `moderate`.
+_PACE_PROFILES: dict[str, tuple[str, str]] = {
+    "rapid": ("0.3s", "cubic-bezier(0.22, 1, 0.36, 1)"),
+    "fast": ("0.4s", "cubic-bezier(0.33, 1, 0.68, 1)"),
+    "moderate": ("0.6s", "cubic-bezier(0.5, 0, 0.5, 1)"),
+    "deliberate": ("0.75s", "cubic-bezier(0.4, 0, 0.2, 1)"),
+    "slow": ("0.9s", "cubic-bezier(0.65, 0, 0.35, 1)"),
+}
+
+
+def _motion_easing(motion: dict[str, Any], identity_pace: Any = None) -> tuple[str, str]:
+    """Derive (duration, ease) from the playbook pace.
+
+    `pace` is an `identity` field in the playbook schema
+    (`slow|deliberate|moderate|fast|rapid`); `motion.pace` is kept only as a
+    legacy fallback. Unrecognized values use the `moderate` profile.
+    """
+    pace = str(identity_pace or motion.get("pace") or "moderate").lower()
+    return _PACE_PROFILES.get(pace, _PACE_PROFILES["moderate"])
 
 
 def style_bridge(
@@ -85,8 +98,10 @@ def style_bridge(
     playbook_name = ""
 
     if playbook:
+        identity = playbook.get("identity", {}) or {}
         playbook_name = str(
-            playbook.get("name")
+            identity.get("name")
+            or playbook.get("name")
             or playbook.get("id")
             or playbook.get("display_name")
             or ""
@@ -101,10 +116,10 @@ def style_bridge(
         accent = _first(palette.get("accent"), css["--color-accent"])
         primary = _first(palette.get("primary"), css["--color-primary"])
         secondary = _first(palette.get("secondary"), css["--color-secondary"])
-        surface = _first(palette.get("surface"), css["--color-surface"])
-        muted = _first(palette.get("muted_text"), css["--color-muted"])
+        surface = _first(palette.get("surface") or palette.get("background"), css["--color-surface"])
+        muted = _first(palette.get("muted") or palette.get("muted_text"), css["--color-muted"])
 
-        duration, ease = _motion_easing(motion)
+        duration, ease = _motion_easing(motion, identity.get("pace"))
 
         css.update(
             {
@@ -115,7 +130,7 @@ def style_bridge(
                 "--color-secondary": secondary,
                 "--color-surface": surface,
                 "--color-muted": muted,
-                "--font-heading": _font(typo, "heading", css["--font-heading"]),
+                "--font-heading": _font(typo, "headings", css["--font-heading"]),
                 "--font-body": _font(typo, "body", css["--font-body"]),
                 "--font-mono": _font(typo, "code", css["--font-mono"]),
                 "--ease-primary": ease,

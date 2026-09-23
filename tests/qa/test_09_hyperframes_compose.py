@@ -92,7 +92,7 @@ def _minimal_scenario(workspace: Path, asset: Path) -> dict:
                 }
             },
             "typography": {
-                "heading": {"font": "Inter"},
+                "headings": {"font": "Inter"},
                 "body": {"font": "Inter"},
             },
             "motion": {"pace": "moderate"},
