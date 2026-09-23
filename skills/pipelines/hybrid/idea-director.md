@@ -24,6 +24,7 @@ A `render_runtime_selection` decision with only one runtime in `options_consider
 - `docs/hybrid-video-best-practices.md`
 - `skills/creative/storytelling.md`
 - `skills/creative/video-editing.md`
+- `skills/creative/review-kit.md` for product or gadget reviews: ask whether to use a saved channel theme (`python -m lib.themes list`) or a fresh look
 
 ## Process
 
