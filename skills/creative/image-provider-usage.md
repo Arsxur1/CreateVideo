@@ -11,7 +11,7 @@
 |------|----------|------|-------|----------|
 | `flux_image` | FLUX 2 Pro via fal.ai | ~$0.03-0.05 | ~5-10s | Photorealism, general purpose, workhorse |
 | `grok_image` | Grok Imagine Image (xAI) | $0.02/output + $0.002/input edit image | ~5-15s | Image edits, style transfer, multi-image compositing |
-| `openai_image` | GPT Image 2 (OpenAI) | ~$0.01-0.21 | ~5-15s | Complex instructions, text in images, multi-element |
+| `openai_image` | GPT Image 2.5 Flare (OpenAI) | ~$0.006-0.21 | ~5-15s | Complex instructions, text in images, multi-element |
 | `recraft_image` | Recraft V4 via fal.ai | ~$0.04-0.25 | ~5-10s | Logos, SVG vectors, brand assets, text rendering (see caveat below) |
 | `local_diffusion` | Stable Diffusion (local) | Free | ~30s+ | Offline, privacy, free |
 | `image_gen` | Multi (legacy, deprecated) | Varies | Varies | **Deprecated** — use `image_selector` or per-provider tools |
@@ -53,6 +53,11 @@
 - **Text rendering is unreliable for exact business names.** Recraft (like all AI image models) may hallucinate wrong text. For any scene where text must be verbatim (CTA screens, business names, phone numbers), use Remotion `text_card` instead of generating an image with text.
 
 ## Cost-Quality Tradeoff
+
+**Draft cheap, finalize once.** `openai_image` defaults to `quality="low"` (~$0.006/img).
+Iterate prompts and compositions at that quality; when a draft is approved, regenerate the
+same prompt with `quality="medium"` (~$0.05) or `"high"` (~$0.21) for the final asset. The
+idempotency key includes `quality`, so the final call is never deduplicated against the draft.
 
 ```
 
