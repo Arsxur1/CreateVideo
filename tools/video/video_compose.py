@@ -1061,6 +1061,16 @@ class VideoCompose(BaseTool):
             if not mux_result.success:
                 return mux_result
 
+        # Opt-in delivery loudness (e.g. -14 LUFS for Reels/Shorts). Atelier
+        # renders mix audio inside the composition, so nothing else levels them.
+        loudness_report = None
+        if bespoke.get("loudnorm_target") is not None:
+            from lib.loudness import normalize_loudness
+            try:
+                loudness_report = normalize_loudness(output_path, target_lufs=float(bespoke["loudnorm_target"]))
+            except Exception as e:
+                return ToolResult(success=False, error=f"Atelier loudness normalisation failed: {e}")
+
         # --- Atelier post-render review -------------------------------------
         # The cut-schema paths run _run_final_review (technical/visual/audio
         # probes + transcript-vs-script). Atelier MUST do the same so hero
@@ -1096,6 +1106,7 @@ class VideoCompose(BaseTool):
             "output": str(output_path),
             "final_review": final_review,
             "final_review_status": final_review.get("status"),
+            "loudness": loudness_report,
         }
 
         if final_review.get("status") == "fail":
@@ -1110,6 +1121,40 @@ class VideoCompose(BaseTool):
             )
 
         return ToolResult(success=True, data=data, artifacts=[str(output_path)])
+
+    @staticmethod
+    def _burned_in_subtitle_source_exists(ed_subs: dict[str, Any], edit_decisions: dict[str, Any]) -> bool:
+        """True when burned-in captions can be traced to a real source.
+
+        Accepts a plain subtitle file path, a ``file.json#key`` reference whose
+        key holds a non-empty value, and, for atelier renders, a non-empty
+        ``captions`` list in the bespoke props (captions drawn by the composition).
+        Relative paths resolve against the project dir (parent of artifacts/).
+        """
+        bespoke = edit_decisions.get("bespoke") or {}
+        props_path = bespoke.get("props_path")
+        candidates: list[tuple[Path, str | None]] = []
+        sub_source = ed_subs.get("source")
+        if sub_source:
+            file_part, _, key = str(sub_source).partition("#")
+            path = Path(file_part)
+            if not path.is_absolute() and props_path:
+                path = Path(props_path).resolve().parent.parent / file_part
+            candidates.append((path, key or None))
+        if edit_decisions.get("composition_mode") == "atelier" and props_path:
+            candidates.append((Path(props_path), "captions"))
+        for path, key in candidates:
+            if not path.exists():
+                continue
+            if key is None:
+                return True
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            if isinstance(data, dict) and data.get(key):
+                return True
+        return False
 
     # Source-file extensions that get staged into the composer tree at render time.
     # Anything not in this set lives only under the real project dir (assets, renders,
@@ -2622,8 +2667,7 @@ class VideoCompose(BaseTool):
                     if (subtitle_check["subtitles_expected"]
                             and not subtitle_check["subtitles_present"]):
                         # Check if subtitle_path was used (burned in)
-                        sub_source = ed_subs.get("source")
-                        if sub_source and Path(sub_source).exists():
+                        if self._burned_in_subtitle_source_exists(ed_subs, edit_decisions):
                             # Burned-in subtitles are not detectable as streams
                             subtitle_check["subtitles_present"] = True
                             subtitle_check["coverage_ratio"] = 1.0

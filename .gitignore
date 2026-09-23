@@ -37,6 +37,9 @@ corpus/
 
 # User music library (personal royalty-free tracks — not part of repo)
 music_library/
+# Channel themes (personal saved looks, managed by `python -m lib.themes`)
+themes/*
+!themes/README.md
 
 # Environment & credentials
 .env
