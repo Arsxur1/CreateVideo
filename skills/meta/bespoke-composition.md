@@ -114,8 +114,8 @@ hero beats per video, not every beat. **Compose 2–4 distinct atomic rules per 
 animation skill, not optional polish.
 
 For HF creative direction (palette/type/narration/beat planning) read `/hyperframes-creative`.
-For HF assets (TTS/BGM/SFX/transcription/background-removal) read `/hyperframes-media` or
-`/media-use`. For HF CLI workflow (init/lint/validate/inspect/snapshot/beats/render) read
+For HF assets (TTS/BGM/SFX/transcription/background-removal) read `/media-use`; for mixing
+placed tracks (ducking, carve, effects) read `/hyperframes-audio`. For HF CLI workflow (init/lint/validate/inspect/snapshot/beats/render) read
 `/hyperframes-cli`. The `/hyperframes` router skill maps it all.
 
 ### 4. Get the engine mechanics right — the gotcha codex

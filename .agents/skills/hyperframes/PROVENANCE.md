@@ -1,63 +1,53 @@
-# HyperFrames Skills — Provenance
+# HyperFrames Skills: Provenance
 
-The 12 HyperFrames-family skills under `.agents/skills/` are vendored from the upstream HyperFrames monorepo:
+The HyperFrames-family skills under `.agents/skills/` are vendored from the HyperFrames monorepo.
 
-- **Source**: https://github.com/heygen-com/hyperframes
-- **Vendored commit**: `3351fb1a` (`chore: release v0.7.17`, 2026-06-27)
-- **Vendored tag**: `v0.7.17`
-- **Vendor date**: 2026-06-27
-- **Vendored by**: re-vendor on branch `chore/version-bumps-and-hf-resync`
+- **Source**: https://github.com/Aarul5/hyperframes (fork of https://github.com/heygen-com/hyperframes, identical to upstream `main` at vendor time)
+- **Vendored commit**: `b1cf88a` (`ci: generate catalog artifacts through a standing publish PR (#4337)`, 2026-09-23)
+- **CLI at vendor time**: `hyperframes` 0.8.65 (`npx hyperframes doctor` passes on Windows with Node 22)
+- **Previous vendor**: `3351fb1a` (v0.7.17, 2026-06-27)
 
 ## What's vendored
 
-**Re-vendored from prior 0.4.2-era copies (renamed/restructured upstream):**
+All 21 skills from the upstream `skills/` directory:
 
-| Skill | Notes |
-|---|---|
-| `hyperframes` | Slim entry-point in 0.7; deep content moved to focused skills below. |
-| `hyperframes-cli` | Greatly expanded in 0.7 (was 1 file, now 7). Now covers `validate`, `inspect`, `snapshot`, `benchmark`, `lambda`, etc. natively — the old OM-local patch teaching `validate` is obsolete and was dropped. |
-| `hyperframes-registry` | Block/component registry workflow. |
-| `website-to-video` | Renamed upstream from `website-to-hyperframes`. |
+`hyperframes`, `hyperframes-core`, `hyperframes-creative`, `hyperframes-animation`, `hyperframes-audio`,
+`hyperframes-keyframes`, `hyperframes-cli`, `hyperframes-registry`, `hyperframes-studio`, `media-use`,
+`motion-graphics`, `music-to-video`, `remotion-to-hyperframes`, `embedded-captions`, `product-launch-video`,
+`talking-head-recut`, `general-video`, `slideshow`, `faceless-explainer`, `pr-to-video`, `figma`.
 
-**Newly vendored (strategic additions in 0.5–0.7):**
+Changes since v0.7.17:
 
-| Skill | Why we want it in OpenMontage |
-|---|---|
-| `hyperframes-core` | The composition contract — `data-*` timing, tracks, sub-compositions. The split-out core of what was in `hyperframes` 0.4. |
-| `hyperframes-creative` | Non-animation creative direction — palette, type, narration, beat planning. |
-| `hyperframes-media` | Audio + media assets — TTS, BGM, SFX, transcription, captions, background removal. |
-| `hyperframes-animation` | All animation knowledge (rules, blueprints, transitions, techniques, 7 runtime adapters). Replaces ad-hoc motion guidance previously scattered in `hyperframes`. |
-| `media-use` | Agent Media OS — one `resolve` verb resolves BGM/SFX/image/icon needs into local files via project/global cache + HeyGen catalog. Strategic for OpenMontage asset stages. |
-| `motion-graphics` | Short design-led motion graphic patterns (kinetic typography, stat reveals, logo stings, lower-thirds). |
-| `remotion-to-hyperframes` | Migration guidance — directly relevant given OpenMontage runs BOTH runtimes. |
-| `music-to-video` | Beat-synced music-driven video workflow using `hyperframes beats`. |
+- `hyperframes-media` was removed upstream. TTS, BGM, SFX, captions, images and grades moved to
+  `media-use`; mixing placed tracks moved to the new `hyperframes-audio`.
+- New atomic skills: `hyperframes-audio`, `hyperframes-keyframes`, `hyperframes-studio`.
+- The 0.8 router (`hyperframes/SKILL.md`) routes fresh creation to the workflow skills
+  (`product-launch-video`, `general-video`, ...). v0.7.17 left those out; they are vendored now so the
+  router's references resolve.
 
-## Intentionally NOT vendored
+## Kept from the previous vendor
 
-These upstream skills are HF-workflow-specific and would compete with or duplicate OpenMontage's own pipeline routing. Re-evaluate per pipeline need:
+- `website-to-video` (v0.7.17). Upstream folded it into `product-launch-video` in 0.8. Kept because
+  `hyperframes_compose` advertises it in `agent_skills` (see `tests/contracts/test_agent_skill_pointers.py`).
 
-`embedded-captions`, `faceless-explainer`, `general-video`, `pr-to-video`, `product-launch-video`, `slideshow`, `talking-head-recut`.
+## How OpenMontage uses them
+
+These are Layer 3 reference knowledge. Inside OpenMontage the pipeline decides the workflow
+(`AGENT_GUIDE.md`, Rule Zero and "Present Both Composition Runtimes"). The router's line that
+HyperFrames is "the default for any video request" does not override that here: an agent reads the
+workflow skills for technique inside a pipeline stage, it does not hand the run over to them.
+
+## Local additions (re-apply after every re-vendor)
+
+- `media-use/audio/references/tts.md`: the "Expressive narration contract" section (voice-performance
+  plan before TTS). Originally added to `hyperframes-media/references/tts.md` in `5e4943a`.
 
 ## Re-sync instructions
 
-To re-vendor from a newer upstream:
-
 ```bash
-cd C:/Users/ishan/Documents/hyperframes
-git pull --ff-only origin main
-# Then in OpenMontage:
-cd /c/Users/ishan/Documents/OpenMontage
-HF=C:/Users/ishan/Documents/hyperframes
-for d in hyperframes hyperframes-cli hyperframes-registry hyperframes-core \
-         hyperframes-creative hyperframes-media hyperframes-animation \
-         media-use motion-graphics remotion-to-hyperframes \
-         music-to-video website-to-video; do
-  rm -rf ".agents/skills/$d"
-  cp -r "$HF/skills/$d" ".agents/skills/$d"
-done
-# Then update vendor commit/tag/date at the top of this file.
+# Windows needs long paths: some music-to-video paths are over 120 chars.
+git clone --depth 1 --filter=blob:none --sparse -c core.longpaths=true https://github.com/Aarul5/hyperframes.git hf
+cd hf && git sparse-checkout set --no-cone skills/ && cd ..
+for d in hf/skills/*/; do n=$(basename "$d"); rm -rf ".agents/skills/$n"; cp -r "$d" ".agents/skills/$n"; done
+# Re-apply the local additions above, restore this file, then update the commit/date at the top.
 ```
-
-## Future automation
-
-Upstream 0.7 added `hyperframes skills` — a CLI that installs/updates HF skills with a freshness manifest and version check. Consider adopting it as the mechanical source of truth instead of hand-vendoring (would also auto-flag staleness across multi-agent setups). See `feat(cli): skills freshness — version check, manifest, global install + multi-agent mirror (#1753)` in HF history.
