@@ -9,17 +9,19 @@ For raw HyperFrames knowledge (authoring contract, `data-*` attributes, GSAP
 timeline rules, CLI flags, registry blocks, website-to-video), read the Layer 3
 skills:
 
-- `.agents/skills/hyperframes/` — router into the focused skills below (HF 0.7+ split the monolithic skill)
+- `.agents/skills/hyperframes/` — router into the focused skills below (HF 0.7+ split the monolithic skill). Inside OpenMontage the pipeline decides the workflow; the router's workflow skills are reference.
 - `.agents/skills/hyperframes-core/` — composition contract: `data-*` timing, tracks, sub-compositions, deterministic-render rules
 - `.agents/skills/hyperframes-creative/` — non-animation creative direction: palette, type, narration, beat planning
-- `.agents/skills/hyperframes-media/` — TTS/BGM/SFX/transcription/captions/background-removal
+- `.agents/skills/media-use/` — TTS, BGM, SFX, images, icons, captions, grades/LUTs, background removal (HF 0.8 moved `hyperframes-media` here)
+- `.agents/skills/hyperframes-audio/` — placed-track mixing: voiceover carve, ducking, automation, effect chains, submix bus
+- `.agents/skills/hyperframes-keyframes/` — keyframed camera and element motion over clips
 - `.agents/skills/hyperframes-animation/` — all motion knowledge (rules, blueprints, transitions, runtime adapters)
 - `.agents/skills/hyperframes-cli/` — init, add, lint, validate, inspect, snapshot, preview, render, benchmark, lambda, doctor (0.7+)
 - `.agents/skills/hyperframes-registry/` — `hyperframes add` + block wiring
-- `.agents/skills/website-to-video/` — capture-to-video workflow (renamed from website-to-video in 0.7)
+- `.agents/skills/website-to-video/` — capture-to-video workflow, kept from v0.7.17 (upstream folded it into `product-launch-video` in 0.8)
+- `.agents/skills/product-launch-video/`, `embedded-captions/`, `talking-head-recut/`, `general-video/`, `slideshow/`, `faceless-explainer/`, `pr-to-video/`, `figma/`, `hyperframes-studio/` — HF 0.8 workflow skills, reference only (see PROVENANCE)
 - `.agents/skills/music-to-video/` — beat-synced music-driven video using `hyperframes beats`
 - `.agents/skills/motion-graphics/` — short design-led motion graphic patterns
-- `.agents/skills/media-use/` — `resolve` verb for BGM/SFX/image/icon (any pipeline, any runtime)
 - `.agents/skills/remotion-to-hyperframes/` — migration ONLY when user explicitly asks to port a Remotion source
 
 This file teaches the bridge between the two.
