@@ -292,3 +292,10 @@ def test_doctor_writes_nothing(project):
     _doctor(project["spec"])
     after = sorted(p.name for p in (project["dir"] / "artifacts").iterdir())
     assert before == after
+
+
+def test_filter_path_survives_windows_drive_letters():
+    from tools.video.reel_builder import _filter_path
+
+    assert _filter_path("C:\\proj\\stab\\c01.trf") == "'C\\:/proj/stab/c01.trf'"
+    assert _filter_path("/tmp/stab/c01.trf") == "'/tmp/stab/c01.trf'"

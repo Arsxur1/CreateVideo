@@ -69,6 +69,16 @@ def _probe_duration(path: str) -> Optional[float]:
         return None
 
 
+def _filter_path(path: Path | str) -> str:
+    """A file path safe to embed as a filter option value.
+
+    Inside -vf, ':' separates options, so a Windows drive letter ("C:/...")
+    ends the value early and ffmpeg fails with "No option name near".
+    Quoting the value and escaping ':' works on every platform.
+    """
+    return "'" + str(path).replace("\\", "/").replace(":", "\\:") + "'"
+
+
 def _even(value: float) -> int:
     """Round to an even integer — libx264 rejects odd dimensions in yuv420p."""
     return int(round(value / 2) * 2)
@@ -214,12 +224,12 @@ def stage_picture(spec: ReelSpec, force: bool, log: list[str]) -> dict[str, Any]
 
         stab_f = ""
         if cid in spec.stabilize or c.get("stab"):
-            trf = str(spec.stab_dir / f"{cid}.trf").replace("\\", "/")
+            trf = spec.stab_dir / f"{cid}.trf"
             _run(["ffmpeg", "-v", "error", "-ss", str(c["in"]), "-t", str(src_len), "-i", str(src),
-                  "-vf", f"{crop_f}{mid_f}vidstabdetect=shakiness=7:accuracy=12:stepsize=6:result={trf}",
+                  "-vf", f"{crop_f}{mid_f}vidstabdetect=shakiness=7:accuracy=12:stepsize=6:result={_filter_path(trf)}",
                   "-f", "null", "-"], f"stab detect {cid}", log)
             if os.path.exists(trf):
-                stab_f = "vidstabtransform=input=" + trf + ":zoom=0:smoothing=26:optzoom=1:interpol=bilinear,"
+                stab_f = f"vidstabtransform=input={_filter_path(trf)}:zoom=0:smoothing=26:optzoom=1:interpol=bilinear,"
 
         grade = (spec.grade + ",") if spec.grade else ""
         vf = f"{crop_f}{mid_f}{stab_f}setpts=PTS/{speed},fps={spec.fps},{scale_f}{grade}format=yuv420p10le"
