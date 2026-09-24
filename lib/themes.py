@@ -92,7 +92,8 @@ def validate_theme(theme: dict[str, Any]) -> None:
     except jsonschema.ValidationError as exc:
         where = ".".join(str(p) for p in exc.absolute_path) or "(root)"
         raise ThemeError(f"Invalid theme at {where}: {exc.message}") from exc
-    for role, font in theme["fonts"].items():
+    for role in ("display", "text"):
+        font = theme["fonts"][role]
         if font not in TEMPLATE_FONTS:
             raise ThemeError(f"fonts.{role}={font!r} is not loadable by the template. Choose one of: {', '.join(TEMPLATE_FONTS)}")
 

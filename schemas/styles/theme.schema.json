@@ -36,7 +36,13 @@
       "required": ["display", "text"],
       "properties": {
         "display": { "type": "string" },
-        "text": { "type": "string" }
+        "text": { "type": "string" },
+        "scripts": {
+          "type": "array",
+          "description": "Non-Latin scripts shown on screen. Loads a fallback font so that text is not blank.",
+          "items": { "type": "string", "enum": ["tamil", "devanagari"] },
+          "uniqueItems": true
+        }
       },
       "additionalProperties": false
     },
@@ -106,6 +112,8 @@
         "provider": { "type": "string" },
         "model": { "type": "string" },
         "reference_id": { "type": "string" },
+        "voice": { "type": "string", "description": "Prebuilt voice name, for providers that use one (gemini_tts: Puck, Charon, Kore, ...)." },
+        "style": { "type": "string", "description": "Plain-language delivery direction, for providers that take one (gemini_tts)." },
         "temperature": { "type": "number", "minimum": 0, "maximum": 1.5 },
         "tempo": { "type": "number", "minimum": 0.8, "maximum": 1.3 },
         "gap_seconds": { "type": "number", "minimum": 0, "maximum": 1.5 },

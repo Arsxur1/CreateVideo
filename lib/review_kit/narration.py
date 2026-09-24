@@ -26,7 +26,8 @@ def synthesize_lines(lines: list[dict[str, Any]], voice: dict[str, Any], out_dir
         provider = voice.get("provider", "fish_audio")
         # allowed_providers pins the theme's voice: no silent fallback to another provider.
         params = {"preferred_provider": provider, "allowed_providers": [provider], "text": line["text"], "output_path": str(out)}
-        for key in ("model", "reference_id", "temperature"):
+        # model/reference_id/temperature for fish_audio; voice/style for gemini_tts.
+        for key in ("model", "reference_id", "temperature", "voice", "style"):
             if voice.get(key) not in (None, ""):
                 params[key] = voice[key]
         result = TTSSelector().execute(params)

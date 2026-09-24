@@ -134,6 +134,14 @@ The kit never writes checkpoints. The agent writes them at each gate, as the pip
 
 - Always render stills through the kit (`stills`). A raw `npx remotion still` uses the
   staged copy under `remotion-composer/projects/<slug>/`, which may be stale; the kit re-stages first.
+- Tamil or Hindi text on screen (captions or overlays): set the theme's `fonts.scripts` to
+  `["tamil"]` or `["devanagari"]`. Headless Chrome has no glyphs for them and the text renders blank
+  otherwise. Latin words keep the theme font.
+- Voice options on a free Google key: `gemini_tts` (30 voices, style direction such as "casual spoken
+  Tamil, not dramatic"). Set the theme's `voice.provider` to `gemini`, plus `voice.voice` (e.g. `Puck`) and
+  `voice.style`; sample first.
+- Shaky handheld clips: `reel_builder` (spec `stabilize`) runs ffmpeg vidstab. Stabilise the clip, then
+  point `prep.json` at the stabilised file.
 - Fonts a theme can use are listed in `lib/themes.py` (`TEMPLATE_FONTS`). Adding one needs a
   static import in `templates/review-reel/fonts.ts` too.
 - The first 0.3s decides the swipe. Open on motion or the product, not a title card. If first-frame

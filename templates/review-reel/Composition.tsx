@@ -13,7 +13,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from "remotion";
-import { loadThemeFont } from "./fonts";
+import { loadScriptFallbacks, loadThemeFont } from "./fonts";
 
 // Review-reel template: a data-driven vertical reel. The look comes from the
 // channel theme (props.theme), the edit comes from props.shots. Built by
@@ -26,7 +26,7 @@ const f = (seconds: number) => Math.round(seconds * FPS);
 
 export type Theme = {
   palette: { background: string; text: string; muted: string; accent: string };
-  fonts: { display: string; text: string };
+  fonts: { display: string; text: string; scripts?: string[] };
   captions: {
     size: number;
     weight: number;
@@ -1202,12 +1202,11 @@ const ThemeScope: React.FC<{ theme: Theme; children: React.ReactNode }> = ({
   theme,
   children,
 }) => {
-  const value = React.useMemo(
-    () => ({
-      theme,
-      display: loadThemeFont(theme.fonts.display),
-      text: loadThemeFont(theme.fonts.text),
-    }),
+  const value = React.useMemo(() => {
+    const fallbacks = loadScriptFallbacks(theme.fonts.scripts);
+    const chain = (name: string) => [loadThemeFont(name), ...fallbacks].join(", ");
+    return { theme, display: chain(theme.fonts.display), text: chain(theme.fonts.text) };
+  },
     [theme],
   );
   return (
