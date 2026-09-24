@@ -289,6 +289,49 @@ def test_runtime_check_fails_when_published_cli_crashes(monkeypatch):
     assert any("not executable" in reason for reason in rc["reasons"])
 
 
+def test_runtime_check_succeeds_when_npm_view_times_out_but_cli_doctor_passes(monkeypatch):
+    """Issue #590: slow registry or timeout must not mark runtime unavailable
+    if the CLI is cached/working and doctor passes."""
+    monkeypatch.setattr(
+        HyperFramesCompose, "_npm_resolve_cache", None, raising=False
+    )
+    monkeypatch.setattr(
+        HyperFramesCompose,
+        "_resolve_npm_package",
+        classmethod(lambda cls: {"error": "timeout (5s) — offline or slow registry"}),
+    )
+    monkeypatch.setattr(
+        HyperFramesCompose,
+        "_probe_cli",
+        classmethod(lambda cls: {"status": "ok"}),
+    )
+    rc = HyperFramesCompose()._runtime_check()
+    if rc["node_major"] is None or not rc["ffmpeg_available"] or not rc["npx_available"]:
+        pytest.skip("Local runtime floor not met on this machine")
+    assert rc["runtime_available"] is True
+    assert rc["reasons"] == []
+
+
+def test_resolve_npm_package_uses_local_cli_without_network_call(monkeypatch):
+    """Issue #590: _resolve_npm_package should probe local CLI first."""
+    monkeypatch.setattr(
+        HyperFramesCompose, "_npm_resolve_cache", None, raising=False
+    )
+    # Simulate a working local npx --no-install
+    def fake_run(cmd, **kwargs):
+        class Result:
+            returncode = 0
+            stdout = "0.8.26\n"
+            stderr = ""
+        if "--no-install" in cmd:
+            return Result()
+        raise AssertionError("Remote npm view should not be called when local probe succeeds")
+
+    monkeypatch.setattr("subprocess.run", fake_run)
+    res = HyperFramesCompose._resolve_npm_package()
+    assert res == {"version": "0.8.26"}
+
+
 def test_video_compose_render_engines_follow_hyperframes_runtime_check(monkeypatch):
     """Regression: `video_compose.get_info()['render_engines']['hyperframes']`
     must track the true availability, not just the local-binary floor.
