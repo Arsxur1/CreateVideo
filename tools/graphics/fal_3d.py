@@ -164,7 +164,12 @@ class Fal3D(BaseTool):
                 time.sleep(3)
             else:
                 raise TimeoutError("fal.ai request exceeded the poll timeout")
-            result_response = requests.get(response_url, headers=headers, timeout=45)
+            # The job is complete (and billed); ride out transient gateway errors.
+            for attempt in range(4):
+                result_response = requests.get(response_url, headers=headers, timeout=120)
+                if result_response.status_code < 500:
+                    break
+                time.sleep(5 * 2 ** attempt)
             result_response.raise_for_status()
             data = result_response.json()
 
@@ -186,6 +191,19 @@ class Fal3D(BaseTool):
             for index, file_info in enumerate(file_infos):
                 target = destination if index == 0 else destination.with_name(f"{destination.stem}-{index:02d}{destination.suffix}")
                 artifacts.append(str(_download_file(file_info, target)))
+            # OBJ results reference companion files by name (material.mtl ->
+            # texture_*.png); keep those names so the mesh stays textured.
+            companions = [data.get(key) for key in ("material_mtl", "texture", "thumbnail")]
+            companions += [info for key, info in (data.get("model_urls") or {}).items() if key in {"mtl", "texture"}]
+            seen: set[str] = set()
+            for info in companions:
+                if not isinstance(info, dict) or not info.get("url") or info["url"] in seen:
+                    continue
+                seen.add(info["url"])
+                name = info.get("file_name") or Path(info["url"]).name
+                if name == "preview.png":
+                    name = f"{destination.stem}_preview.png"
+                artifacts.append(str(_download_file(info, destination.with_name(name))))
             provenance = destination.with_suffix(".provenance.json")
             provenance.write_text(json.dumps({
                 "version": "1.0",
