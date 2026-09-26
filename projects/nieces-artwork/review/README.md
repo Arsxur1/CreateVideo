@@ -34,3 +34,11 @@ Sample (shot 4, KT mouse escape) frames:
 | ![](../assets/images/shots/monstroler_dog_scene.png) | ![](../assets/images/shots/finale_both.png) |
 
 Full shot list: [../artifacts/shot_list.md](../artifacts/shot_list.md)
+
+# Final movie: KT & Monstroler (by Elenora)
+
+- Phone copy: [../renders/kt_and_monstroler_phone.mp4](../renders/kt_and_monstroler_phone.mp4)
+- Master: [../renders/kt_and_monstroler.mp4](../renders/kt_and_monstroler.mp4)
+- Composition: `remotion-composer/public/demo-props/nieces-artwork.json`
+
+![](final_frames.jpg)

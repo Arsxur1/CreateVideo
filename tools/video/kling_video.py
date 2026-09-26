@@ -199,7 +199,7 @@ class KlingVideo(BaseTool):
             # The job is complete (and billed); ride out transient gateway errors.
             for attempt in range(4):
                 result_resp = requests.get(response_url, headers=headers, timeout=60)
-                if result_resp.status_code < 500:
+                if getattr(result_resp, "status_code", 200) < 500:
                     break
                 time.sleep(5 * 2 ** attempt)
             result_resp.raise_for_status()

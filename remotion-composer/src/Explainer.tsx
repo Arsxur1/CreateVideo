@@ -28,6 +28,8 @@ import type { CameraMotion } from "./components/AnimeScene";
 import { TerminalScene } from "./components/TerminalScene";
 import type { TerminalStep } from "./components/TerminalScene";
 import { ScreenshotScene } from "./components/ScreenshotScene";
+import { SpeechBubble } from "./components/SpeechBubble";
+import type { BubbleVariant, TailSide } from "./components/SpeechBubble";
 import type { ScreenshotStep } from "./components/ScreenshotScene";
 import { ProviderChip } from "./components/ProviderChip";
 import { resolveAsset } from "./lib/resolveAsset";
@@ -271,7 +273,7 @@ interface Cut {
 }
 
 interface Overlay {
-  type: "section_title" | "stat_reveal" | "hero_title" | "provider_chip";
+  type: "section_title" | "stat_reveal" | "hero_title" | "provider_chip" | "speech_bubble";
   in_seconds: number;
   out_seconds: number;
   text?: string;
@@ -282,6 +284,12 @@ interface Overlay {
   providers?: string[];
   cycleSeconds?: number;
   label?: string;
+  // speech_bubble (x/y are % of frame)
+  x?: number;
+  y?: number;
+  variant?: BubbleVariant;
+  tail?: TailSide;
+  fontSize?: number;
 }
 
 interface AudioLayer {
@@ -289,8 +297,14 @@ interface AudioLayer {
   volume?: number;
 }
 
+interface SfxCue extends AudioLayer {
+  /** Timeline position in seconds where the effect starts. */
+  at: number;
+}
+
 interface AudioConfig {
   narration?: AudioLayer;
+  sfx?: SfxCue[];
   music?: AudioLayer & {
     fadeInSeconds?: number;
     fadeOutSeconds?: number;
@@ -816,6 +830,18 @@ const OverlayRenderer: React.FC<{ overlay: Overlay; theme: ThemeConfig }> = ({
       />
     );
   }
+  if (overlay.type === "speech_bubble" && overlay.text) {
+    return (
+      <SpeechBubble
+        text={overlay.text}
+        x={overlay.x}
+        y={overlay.y}
+        variant={overlay.variant}
+        tail={overlay.tail}
+        fontSize={overlay.fontSize}
+      />
+    );
+  }
   if (overlay.type === "provider_chip" && overlay.providers) {
     return (
       <ProviderChip
@@ -888,6 +914,13 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       {audio?.narration?.src && (
         <Audio src={resolveAsset(audio.narration.src)} volume={audio.narration.volume ?? 1} />
       )}
+
+      {/* Layer 4: Audio — one-shot sound effects cued on the timeline */}
+      {audio?.sfx?.map((cue, i) => (
+        <Sequence key={`sfx-${i}`} from={Math.round(cue.at * fps)} layout="none">
+          <Audio src={resolveAsset(cue.src)} volume={cue.volume ?? 1} />
+        </Sequence>
+      ))}
 
       {/* Layer 4: Audio — music with offset, fade in/out, and optional loop */}
       {audio?.music?.src && (

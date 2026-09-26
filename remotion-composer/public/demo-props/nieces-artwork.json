@@ -1,0 +1,276 @@
+{
+ "cuts": [
+  {
+   "id": "kt-drawing",
+   "source": "",
+   "type": "anime_scene",
+   "in_seconds": 0,
+   "out_seconds": 4,
+   "images": [
+    "nieces-artwork/kt_drawing.jpg",
+    "nieces-artwork/kt_drawing.jpg",
+    "nieces-artwork/kt_cat_coloured_169.png"
+   ],
+   "animation": "zoom-in",
+   "particles": "sparkles",
+   "particleColor": "#FFD166",
+   "particleCount": 18,
+   "particleIntensity": 0.5,
+   "vignette": false,
+   "backgroundColor": "#F4EFE6"
+  },
+  {
+   "id": "kt-morph-3d",
+   "source": "nieces-artwork/02_kt_morph_3d.mp4",
+   "in_seconds": 4,
+   "out_seconds": 9,
+   "source_in_seconds": 0
+  },
+  {
+   "id": "kt-morph-film",
+   "source": "nieces-artwork/03_kt_morph_film.mp4",
+   "in_seconds": 9,
+   "out_seconds": 13.5,
+   "source_in_seconds": 0
+  },
+  {
+   "id": "kt-mouse-escape",
+   "source": "nieces-artwork/sample_kt_mouse_escape.mp4",
+   "in_seconds": 13.5,
+   "out_seconds": 15.9,
+   "source_in_seconds": 0
+  },
+  {
+   "id": "kt-jaw-drop",
+   "source": "nieces-artwork/sample_kt_mouse_escape.mp4",
+   "in_seconds": 15.9,
+   "out_seconds": 17.0,
+   "source_in_seconds": 3.9
+  },
+  {
+   "id": "kt-yum",
+   "source": "nieces-artwork/05_kt_yum.mp4",
+   "in_seconds": 17.0,
+   "out_seconds": 21.0,
+   "source_in_seconds": 0.5
+  },
+  {
+   "id": "mon-drawing",
+   "source": "",
+   "type": "anime_scene",
+   "in_seconds": 21,
+   "out_seconds": 24,
+   "images": [
+    "nieces-artwork/monstroler_drawing.jpg",
+    "nieces-artwork/monstroler_drawing.jpg",
+    "nieces-artwork/monstroler_coloured_169.png"
+   ],
+   "animation": "zoom-in",
+   "particles": "sparkles",
+   "particleColor": "#FFD166",
+   "particleCount": 18,
+   "particleIntensity": 0.5,
+   "vignette": false,
+   "backgroundColor": "#F4EFE6"
+  },
+  {
+   "id": "mon-morph-3d",
+   "source": "nieces-artwork/07_mon_morph_3d.mp4",
+   "in_seconds": 24,
+   "out_seconds": 29,
+   "source_in_seconds": 0
+  },
+  {
+   "id": "mon-morph-film",
+   "source": "nieces-artwork/08_mon_morph_film.mp4",
+   "in_seconds": 29,
+   "out_seconds": 33.5,
+   "source_in_seconds": 0
+  },
+  {
+   "id": "mon-switch-on",
+   "source": "nieces-artwork/09_mon_switch_on.mp4",
+   "in_seconds": 33.5,
+   "out_seconds": 35.5,
+   "source_in_seconds": 0
+  },
+  {
+   "id": "dog-parp",
+   "source": "nieces-artwork/10_dog_parp.mp4",
+   "in_seconds": 35.5,
+   "out_seconds": 39.5,
+   "source_in_seconds": 0
+  },
+  {
+   "id": "mon-protest",
+   "source": "nieces-artwork/11_mon_protest.mp4",
+   "in_seconds": 39.5,
+   "out_seconds": 43.0,
+   "source_in_seconds": 0
+  },
+  {
+   "id": "finale",
+   "source": "nieces-artwork/12_finale.mp4",
+   "in_seconds": 43.0,
+   "out_seconds": 46.5,
+   "source_in_seconds": 0
+  },
+  {
+   "id": "end-card",
+   "source": "nieces-artwork/end_card.jpg",
+   "in_seconds": 46.5,
+   "out_seconds": 52,
+   "animation": "static"
+  }
+ ],
+ "overlays": [
+  {
+   "type": "speech_bubble",
+   "in_seconds": 0.3,
+   "out_seconds": 2.6,
+   "text": "KT & Monstroler",
+   "x": 50,
+   "y": 16,
+   "tail": "none",
+   "fontSize": 96
+  },
+  {
+   "type": "speech_bubble",
+   "in_seconds": 13.6,
+   "out_seconds": 14.9,
+   "text": "help!",
+   "x": 62,
+   "y": 58,
+   "fontSize": 52,
+   "tail": "bottom-left"
+  },
+  {
+   "type": "speech_bubble",
+   "in_seconds": 17.3,
+   "out_seconds": 19.6,
+   "text": "these are better\nthen that sqeaky fish!",
+   "x": 28,
+   "y": 22,
+   "fontSize": 60,
+   "tail": "bottom-right"
+  },
+  {
+   "type": "speech_bubble",
+   "in_seconds": 19.6,
+   "out_seconds": 21.0,
+   "text": "yum!",
+   "x": 72,
+   "y": 20,
+   "variant": "thought",
+   "fontSize": 84,
+   "tail": "bottom-left"
+  },
+  {
+   "type": "speech_bubble",
+   "in_seconds": 36.3,
+   "out_seconds": 39.0,
+   "text": "parp",
+   "x": 80,
+   "y": 16,
+   "variant": "thought",
+   "fontSize": 90,
+   "tail": "bottom-left"
+  },
+  {
+   "type": "speech_bubble",
+   "in_seconds": 47.0,
+   "out_seconds": 52,
+   "text": "KT & Monstroler",
+   "x": 50,
+   "y": 16,
+   "tail": "none",
+   "fontSize": 100
+  },
+  {
+   "type": "speech_bubble",
+   "in_seconds": 47.8,
+   "out_seconds": 52,
+   "text": "by Elenora",
+   "x": 50,
+   "y": 31,
+   "variant": "thought",
+   "tail": "none",
+   "fontSize": 72
+  }
+ ],
+ "audio": {
+  "music": {
+   "src": "nieces-artwork/music.mp3",
+   "volume": 0.3,
+   "fadeInSeconds": 1,
+   "fadeOutSeconds": 3
+  },
+  "sfx": [
+   {
+    "at": 3.2,
+    "src": "nieces-artwork/sfx/magic_whoosh.mp3",
+    "volume": 0.52
+   },
+   {
+    "at": 9.0,
+    "src": "nieces-artwork/sfx/magic_whoosh.mp3",
+    "volume": 0.45
+   },
+   {
+    "at": 13.7,
+    "src": "nieces-artwork/sfx/squeak.mp3",
+    "volume": 0.75
+   },
+   {
+    "at": 14.6,
+    "src": "nieces-artwork/sfx/zoom.mp3",
+    "volume": 0.6
+   },
+   {
+    "at": 16.0,
+    "src": "nieces-artwork/sfx/toy_squeak.mp3",
+    "volume": 0.6
+   },
+   {
+    "at": 19.6,
+    "src": "nieces-artwork/sfx/pop.mp3",
+    "volume": 0.75
+   },
+   {
+    "at": 23.2,
+    "src": "nieces-artwork/sfx/magic_whoosh.mp3",
+    "volume": 0.52
+   },
+   {
+    "at": 29.0,
+    "src": "nieces-artwork/sfx/magic_whoosh.mp3",
+    "volume": 0.45
+   },
+   {
+    "at": 33.6,
+    "src": "nieces-artwork/sfx/switch_click.mp3",
+    "volume": 0.75
+   },
+   {
+    "at": 34.4,
+    "src": "nieces-artwork/sfx/robot_beeps.mp3",
+    "volume": 0.6
+   },
+   {
+    "at": 36.3,
+    "src": "nieces-artwork/sfx/parp.mp3",
+    "volume": 0.75
+   },
+   {
+    "at": 40.0,
+    "src": "nieces-artwork/sfx/robot_beeps.mp3",
+    "volume": 0.45
+   },
+   {
+    "at": 47.0,
+    "src": "nieces-artwork/sfx/pop.mp3",
+    "volume": 0.6
+   }
+  ]
+ }
+}
