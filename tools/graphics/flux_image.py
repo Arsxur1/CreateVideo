@@ -181,7 +181,8 @@ class FluxImage(BaseTool):
             output_path.write_bytes(image_response.content)
 
         except Exception as e:
-            return ToolResult(success=False, error=f"FLUX generation failed: {e}")
+            detail = getattr(getattr(e, "response", None), "text", "") or ""
+            return ToolResult(success=False, error=f"FLUX generation failed: {e} {detail[:300]}".strip())
 
         return ToolResult(
             success=True,

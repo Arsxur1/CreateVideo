@@ -48,6 +48,7 @@ class KlingVideo(BaseTool):
         "image_to_video": True,
         "native_audio": True,
         "cinematic_quality": True,
+        "end_frame": True,
     }
     best_for = [
         "cinematic B-roll with highest visual fidelity",
@@ -84,6 +85,10 @@ class KlingVideo(BaseTool):
                 "default": "16:9",
             },
             "image_url": {"type": "string", "description": "Reference image URL for image_to_video"},
+            "image_path": {"type": "string", "description": "Local start frame for image_to_video (auto-uploaded to fal storage)"},
+            "tail_image_url": {"type": "string", "description": "End frame URL (image_to_video, v2.1/pro)"},
+            "tail_image_path": {"type": "string", "description": "Local end frame (auto-uploaded to fal storage)"},
+            "negative_prompt": {"type": "string"},
             "output_path": {"type": "string"},
         },
     }
@@ -92,7 +97,7 @@ class KlingVideo(BaseTool):
         cpu_cores=1, ram_mb=512, vram_mb=0, disk_mb=500, network_required=True
     )
     retry_policy = RetryPolicy(max_retries=2, retryable_errors=["rate_limit", "timeout"])
-    idempotency_key_fields = ["prompt", "model_variant", "operation", "duration"]
+    idempotency_key_fields = ["prompt", "model_variant", "operation", "duration", "image_url", "image_path", "tail_image_url", "tail_image_path"]
     side_effects = ["writes video file to output_path", "calls fal.ai API"]
     user_visible_verification = ["Watch generated clip for motion coherence and visual quality"]
 
@@ -138,8 +143,25 @@ class KlingVideo(BaseTool):
             payload["duration"] = inputs["duration"]
         if inputs.get("aspect_ratio"):
             payload["aspect_ratio"] = inputs["aspect_ratio"]
-        if operation == "image_to_video" and inputs.get("image_url"):
-            payload["image_url"] = inputs["image_url"]
+        if inputs.get("negative_prompt"):
+            payload["negative_prompt"] = inputs["negative_prompt"]
+        if operation == "image_to_video":
+            from tools.video._shared import upload_image_fal
+
+            try:
+                image_url = inputs.get("image_url") or (
+                    upload_image_fal(inputs["image_path"]) if inputs.get("image_path") else None
+                )
+                tail_url = inputs.get("tail_image_url") or (
+                    upload_image_fal(inputs["tail_image_path"]) if inputs.get("tail_image_path") else None
+                )
+            except Exception as e:
+                return ToolResult(success=False, error=f"Kling image upload failed: {e}")
+            if image_url:
+                payload["image_url"] = image_url
+                payload.pop("aspect_ratio", None)  # i2v follows the start frame
+            if tail_url:
+                payload["tail_image_url"] = tail_url
 
         headers = {
             "Authorization": f"Key {api_key}",
@@ -174,7 +196,12 @@ class KlingVideo(BaseTool):
                     )
 
             # Fetch result
-            result_resp = requests.get(response_url, headers=headers, timeout=30)
+            # The job is complete (and billed); ride out transient gateway errors.
+            for attempt in range(4):
+                result_resp = requests.get(response_url, headers=headers, timeout=60)
+                if result_resp.status_code < 500:
+                    break
+                time.sleep(5 * 2 ** attempt)
             result_resp.raise_for_status()
             data = result_resp.json()
 

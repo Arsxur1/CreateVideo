@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "provider": "fal",
+  "model": "fal-ai/hunyuan-3d/v3.1/rapid/image-to-3d",
+  "request_id": "01a0dfc3-004d-7541-9fbc-f4509a81865f",
+  "operation": "image_to_3d",
+  "prompt": null,
+  "metadata": null,
+  "source_url": "https://fal.ai/models/fal-ai/hunyuan-3d/v3.1/rapid/image-to-3d",
+  "outputs": [
+    "/home/user/OpenMontage/projects/nieces-artwork/assets/3d/monstroler.obj"
+  ]
+}

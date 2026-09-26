@@ -20,3 +20,17 @@ FLUX.2 Pro edit via fal, 6 images, $0.36. Pick a style (A, B or C).
 - KT, all styles: "yum!" bubble became "help!"; "KT" tag moved off the collar.
 - KT clay: added 5 extra mice. Monstroler clay: OFF/ON switch pulled off the robot.
 - Fix for next round: stop listing the words in the prompt (it made the model re-place them); say "keep all writing where it is".
+
+# Movie gate: shot stills + sample clip
+
+Sample (shot 4, KT mouse escape) frames:
+
+![](sample_kt_mouse_escape_frames.jpg)
+
+| | |
+|---|---|
+| ![](../assets/images/shots/kt_mouse_start.png) | ![](../assets/images/shots/kt_hero.png) |
+| ![](../assets/images/shots/monstroler_hero.png) | ![](../assets/images/shots/dog_hero.png) |
+| ![](../assets/images/shots/monstroler_dog_scene.png) | ![](../assets/images/shots/finale_both.png) |
+
+Full shot list: [../artifacts/shot_list.md](../artifacts/shot_list.md)

@@ -1,0 +1,16 @@
+{
+  "version": "1.0",
+  "provider": "fal",
+  "model": "fal-ai/hunyuan-3d/v3.1/rapid/image-to-3d",
+  "request_id": "01a0dfc7-8156-7e21-a620-beda18643a57",
+  "operation": "image_to_3d",
+  "prompt": null,
+  "metadata": null,
+  "source_url": "https://fal.ai/models/fal-ai/hunyuan-3d/v3.1/rapid/image-to-3d",
+  "outputs": [
+    "/home/user/OpenMontage/projects/nieces-artwork/assets/3d/kt_cat/kt_cat.obj",
+    "/home/user/OpenMontage/projects/nieces-artwork/assets/3d/kt_cat/material.mtl",
+    "/home/user/OpenMontage/projects/nieces-artwork/assets/3d/kt_cat/texture_pbr_v128_roughness.png",
+    "/home/user/OpenMontage/projects/nieces-artwork/assets/3d/kt_cat/kt_cat_preview.png"
+  ]
+}
