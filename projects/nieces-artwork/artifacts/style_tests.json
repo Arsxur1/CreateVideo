@@ -1,0 +1,62 @@
+[
+  {
+    "prompt": "Colour in this child's pen drawing with bright felt-tip marker colours, as if the child coloured it herself. Keep the original black pen lines exactly, wobbles and all, on the same white paper. Flat, cheerful colours, slightly uneven marker strokes. Soft even daylight. Keep every character, object, pose, proportion and composition exactly as drawn by the child, including all handwritten words spelled exactly as written (\"Monstroler.co\", \"OFF\", \"ON\", \"parp\"). Do not add new characters or objects.",
+    "image_path": "projects/nieces-artwork/assets/source/monstroler.jpg",
+    "width": 1344,
+    "height": 1024,
+    "seed": 7,
+    "output_path": "projects/nieces-artwork/assets/images/style_tests/monstroler_a_coloured.jpg",
+    "success": true,
+    "cost_usd": 0.06
+  },
+  {
+    "prompt": "Redraw this child's drawing as a clean, vibrant 2D cartoon still from a modern children's TV show. Bold smooth outlines, flat bright colours with soft cel shading, simple colourful background that matches the scene. The characters keep the child's quirky shapes and proportions so they are clearly her designs. Keep every character, object, pose, proportion and composition exactly as drawn by the child, including all handwritten words spelled exactly as written (\"Monstroler.co\", \"OFF\", \"ON\", \"parp\"). Do not add new characters or objects.",
+    "image_path": "projects/nieces-artwork/assets/source/monstroler.jpg",
+    "width": 1344,
+    "height": 1024,
+    "seed": 7,
+    "output_path": "projects/nieces-artwork/assets/images/style_tests/monstroler_b_cartoon.jpg",
+    "success": true,
+    "cost_usd": 0.06
+  },
+  {
+    "prompt": "Turn this child's drawing into a handmade claymation scene photographed on a small set. Characters are soft plasticine models with visible fingerprints, keeping the child's exact quirky shapes and proportions. Warm soft studio lighting, shallow depth of field, bright playful colours. Keep every character, object, pose, proportion and composition exactly as drawn by the child, including all handwritten words spelled exactly as written (\"Monstroler.co\", \"OFF\", \"ON\", \"parp\"). Do not add new characters or objects.",
+    "image_path": "projects/nieces-artwork/assets/source/monstroler.jpg",
+    "width": 1344,
+    "height": 1024,
+    "seed": 7,
+    "output_path": "projects/nieces-artwork/assets/images/style_tests/monstroler_c_clay.jpg",
+    "success": true,
+    "cost_usd": 0.06
+  },
+  {
+    "prompt": "Colour in this child's pen drawing with bright felt-tip marker colours, as if the child coloured it herself. Keep the original black pen lines exactly, wobbles and all, on the same white paper. Flat, cheerful colours, slightly uneven marker strokes. Soft even daylight. Keep every character, object, pose, proportion and composition exactly as drawn by the child, including all handwritten words spelled exactly as written (\"these are better then that sqeaky fish!\", \"help\", \"yum!\", \"KT\"). Do not add new characters or objects.",
+    "image_path": "projects/nieces-artwork/assets/source/kt_cat.jpg",
+    "width": 1344,
+    "height": 992,
+    "seed": 7,
+    "output_path": "projects/nieces-artwork/assets/images/style_tests/kt_cat_a_coloured.jpg",
+    "success": true,
+    "cost_usd": 0.06
+  },
+  {
+    "prompt": "Redraw this child's drawing as a clean, vibrant 2D cartoon still from a modern children's TV show. Bold smooth outlines, flat bright colours with soft cel shading, simple colourful background that matches the scene. The characters keep the child's quirky shapes and proportions so they are clearly her designs. Keep every character, object, pose, proportion and composition exactly as drawn by the child, including all handwritten words spelled exactly as written (\"these are better then that sqeaky fish!\", \"help\", \"yum!\", \"KT\"). Do not add new characters or objects.",
+    "image_path": "projects/nieces-artwork/assets/source/kt_cat.jpg",
+    "width": 1344,
+    "height": 992,
+    "seed": 7,
+    "output_path": "projects/nieces-artwork/assets/images/style_tests/kt_cat_b_cartoon.jpg",
+    "success": true,
+    "cost_usd": 0.06
+  },
+  {
+    "prompt": "Turn this child's drawing into a handmade claymation scene photographed on a small set. Characters are soft plasticine models with visible fingerprints, keeping the child's exact quirky shapes and proportions. Warm soft studio lighting, shallow depth of field, bright playful colours. Keep every character, object, pose, proportion and composition exactly as drawn by the child, including all handwritten words spelled exactly as written (\"these are better then that sqeaky fish!\", \"help\", \"yum!\", \"KT\"). Do not add new characters or objects.",
+    "image_path": "projects/nieces-artwork/assets/source/kt_cat.jpg",
+    "width": 1344,
+    "height": 992,
+    "seed": 7,
+    "output_path": "projects/nieces-artwork/assets/images/style_tests/kt_cat_c_clay.jpg",
+    "success": true,
+    "cost_usd": 0.06
+  }
+]
