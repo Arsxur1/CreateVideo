@@ -2417,9 +2417,16 @@ class VideoCompose(BaseTool):
                     if frame_path.exists():
                         frame_paths.append(str(frame_path))
 
-                        # Check for black frames (file size heuristic:
-                        # a 1920x1080 PNG of pure black is ~5KB)
-                        if frame_path.stat().st_size < 2000:
+                        # Check for black frames by mean luminance. (A file
+                        # size test cannot work: a pure-black 1920x1080 PNG
+                        # extracted by ffmpeg weighs ~8.6 KB.)
+                        from PIL import Image
+
+                        with Image.open(frame_path) as frame_img:
+                            hist = frame_img.convert("L").histogram()
+                        total = sum(hist) or 1
+                        mean_luma = sum(i * n for i, n in enumerate(hist)) / total
+                        if mean_luma < 6.0:
                             visual_spotcheck["black_frames_detected"] = True
 
                 visual_spotcheck["frames_sampled"] = len(frame_paths)
