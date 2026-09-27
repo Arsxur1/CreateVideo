@@ -203,6 +203,40 @@ IMAGE_MODELS: dict[str, dict[str, Any]] = {
     },
 }
 
+# GPT Image 2.5's per-quality output-token estimates, ported from
+# ComfyUI-GPT-Image-Direct's EST_OUTPUT_TOKENS, at OpenAI's $30/1M image_out
+# rate. The 0.8 factor reconciles that raw token math with what Atlas
+# actually bills: on 2026-09-27, medium quality at 1024x1536 measured 343
+# completion_tokens (343 * $30/1M = $0.0103 naive) against Atlas's real
+# price of $0.0084 -- a ~0.8x ratio. cost_by_quality is a realistic estimate,
+# not a floor; cost_per_image (the "medium" tier) is the flat fallback.
+_GPT_25_EST_OUTPUT_TOKENS = {"auto": 620, "low": 196, "medium": 620, "high": 1756, "xhigh": 3000, "max": 7024}
+_GPT_25_IMAGE_OUT_RATE = 30.00  # USD / 1M output tokens
+_GPT_25_ATLAS_DISCOUNT = 0.8
+_GPT_25_COST_BY_QUALITY = {
+    quality: round(tokens * _GPT_25_IMAGE_OUT_RATE * _GPT_25_ATLAS_DISCOUNT / 1_000_000, 4)
+    for quality, tokens in _GPT_25_EST_OUTPUT_TOKENS.items()
+}
+
+# gpt-image-2.5-flare and -sunburst get their own `family` each (not shared
+# with each other, or with gpt-image-2) so operation_routes() below can't
+# fold one variant's edit route into the other's.
+for _variant in ("flare", "sunburst"):
+    _family = f"openai/gpt-image-2.5-{_variant}"
+    IMAGE_MODELS[f"{_family}/text-to-image"] = {
+        "family": _family, "operation": "generate",
+        "cost_per_image": _GPT_25_COST_BY_QUALITY["medium"], "size_style": "x", "media_style": "none",
+        "cost_by_quality": _GPT_25_COST_BY_QUALITY,
+        "optional_fields": ("quality", "background", "n"),
+    }
+    IMAGE_MODELS[f"{_family}/edit"] = {
+        "family": _family, "operation": "edit",
+        "cost_per_image": _GPT_25_COST_BY_QUALITY["medium"], "size_style": "x", "media_style": "images",
+        "max_images": 16,  # live schema: openai-gpt-image-2.5-{flare,sunburst}-edit.json, images.maxItems
+        "cost_by_quality": _GPT_25_COST_BY_QUALITY,
+        "optional_fields": ("quality", "background", "n"),
+    }
+
 
 def operation_routes(catalog: dict[str, dict[str, Any]]) -> dict[str, dict[str, str]]:
     """Return family -> operation -> exact live model id."""

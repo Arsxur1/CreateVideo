@@ -267,6 +267,34 @@ class TestAtlasImageExecute:
         AtlasImage().execute({"prompt": "p", "output_path": str(tmp_path / "i.png")})
         assert fake_requests.calls["post"][0]["headers"]["Authorization"] == "Bearer test-key"
 
+    def test_actual_atlas_price_overrides_the_catalog_estimate(self, fake_requests, tmp_path):
+        out = tmp_path / "img.png"
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [
+            completed("https://storage.atlascloud.ai/outputs/img.png", price="0.0084"),
+            FakeResponse(content=b"PNGDATA"),
+        ]
+        result = AtlasImage().execute({
+            "prompt": "p", "model": "openai/gpt-image-2.5-flare/text-to-image",
+            "quality": "medium", "width": 1024, "height": 1536, "output_path": str(out),
+        })
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(0.0084)
+        assert result.data["cost_source"] == "actual"
+
+    @pytest.mark.parametrize("price", [None, "garbage", "-5"])
+    def test_missing_or_bad_price_falls_back_to_the_estimate(self, fake_requests, tmp_path, price):
+        out = tmp_path / "img.png"
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [
+            completed("https://storage.atlascloud.ai/outputs/img.png", price=price),
+            FakeResponse(content=b"PNGDATA"),
+        ]
+        result = AtlasImage().execute({"prompt": "p", "width": 2048, "height": 1152, "output_path": str(out)})
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(0.045)
+        assert result.data["cost_source"] == "estimated"
+
 
 class TestUserAgentHeader:
     """Atlas is behind Cloudflare; a missing/generic UA gets a bare 403
