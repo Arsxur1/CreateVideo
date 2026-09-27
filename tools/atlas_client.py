@@ -34,6 +34,12 @@ UPLOAD_MEDIA_ENDPOINT = f"{BASE_URL}/model/uploadMedia"
 # download) avoids that wall.
 USER_AGENT = "OpenMontage/1.0 (+github.com/calesthio/OpenMontage)"
 
+# Atlas can flip a prediction to `completed` a moment before it attaches the
+# billed `price`. When the price is missing on completion, re-read the
+# prediction a few times so callers can record the real cost, not the estimate.
+PRICE_SETTLE_ATTEMPTS = 3
+PRICE_SETTLE_DELAY = 2.0
+
 # Atlas documents `created`/`processing` as in-flight and both `completed` and
 # `succeeded` as terminal success. Treat any unrecognised status as in-flight so a
 # newly introduced intermediate state can't be mistaken for a failure.
@@ -197,6 +203,8 @@ def poll(
                 raise AtlasError(
                     f"Prediction {prediction_id} reported '{last_status}' but returned no outputs."
                 )
+            if data.get("price") is None:
+                _settle_price(url, api_key, data, request_timeout)
             return data
         if last_status in TERMINAL_FAILURE:
             error = data.get("error") or "no error detail provided"
@@ -210,6 +218,28 @@ def poll(
         f"(last status: {last_status}). The job may still complete — "
         f"check {PREDICTION_ENDPOINT}/{prediction_id}"
     )
+
+
+def _settle_price(url: str, api_key: str, data: dict[str, Any], request_timeout: int) -> None:
+    """Best-effort: re-read a completed prediction until Atlas attaches `price`.
+
+    Mutates `data` in place when a price shows up. Never raises; a missing
+    price only means the caller falls back to its catalog estimate.
+    """
+    import requests
+
+    for _ in range(PRICE_SETTLE_ATTEMPTS):
+        time.sleep(PRICE_SETTLE_DELAY)
+        try:
+            response = requests.get(
+                url, headers=_headers(api_key, json_body=False), timeout=request_timeout
+            )
+            price = _payload_of(response).get("price")
+        except Exception:  # noqa: BLE001
+            continue
+        if price is not None:
+            data["price"] = price
+            return
 
 
 def upload_media(file_path: str | Path, api_key: str, timeout: int = 120) -> str:

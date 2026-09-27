@@ -57,6 +57,8 @@ def fake_requests(monkeypatch):
     monkeypatch.setenv("ATLASCLOUD_API_KEY", "test-key")
     # Keep polling instantaneous.
     monkeypatch.setattr(atlas_client.time, "sleep", lambda _s: None)
+    # Price settling adds extra GETs; tests that exercise it opt back in.
+    monkeypatch.setattr(atlas_client, "PRICE_SETTLE_ATTEMPTS", 0)
 
     return types.SimpleNamespace(calls=calls, queues=queues)
 
@@ -342,6 +344,51 @@ class TestUserAgentHeader:
         poll_call, download_call = fake_requests.calls["get"]
         assert poll_call["headers"]["User-Agent"] == atlas_client.USER_AGENT
         assert download_call["headers"]["User-Agent"] == atlas_client.USER_AGENT
+
+
+class TestPriceSettle:
+    """Atlas can flip a prediction to `completed` before it attaches `price`.
+    poll() re-reads the prediction a few times so the real price still lands,
+    and never fails the generation over a missing price."""
+
+    URL = "https://storage.atlascloud.ai/outputs/a.png"
+
+    def _run(self, fake_requests, tmp_path, monkeypatch, gets):
+        monkeypatch.setattr(atlas_client, "PRICE_SETTLE_ATTEMPTS", 3)
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = gets + [FakeResponse(content=b"PNG")]
+        return AtlasImage().execute({
+            "prompt": "p", "model": "openai/gpt-image-2.5-flare/text-to-image",
+            "quality": "low", "output_path": str(tmp_path / "a.png"),
+        })
+
+    def test_late_price_is_picked_up(self, fake_requests, tmp_path, monkeypatch):
+        result = self._run(fake_requests, tmp_path, monkeypatch, [
+            completed(self.URL), completed(self.URL), completed(self.URL, price="0.0046"),
+        ])
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(0.0046)
+        assert result.data["cost_source"] == "actual"
+        assert len(fake_requests.calls["get"]) == 4  # poll + 2 settle reads + download
+
+    def test_price_never_arrives_falls_back_without_failing(self, fake_requests, tmp_path, monkeypatch):
+        result = self._run(fake_requests, tmp_path, monkeypatch, [completed(self.URL)] * 4)
+        assert result.success is True, result.error
+        assert result.data["cost_source"] == "estimated"
+        assert len(fake_requests.calls["get"]) == 5  # poll + 3 settle reads + download
+
+    def test_settle_read_errors_are_swallowed(self, fake_requests, tmp_path, monkeypatch):
+        result = self._run(fake_requests, tmp_path, monkeypatch, [
+            completed(self.URL), FakeResponse(status_code=502, text="bad gateway"),
+            completed(self.URL, price="0.0046"),
+        ])
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(0.0046)
+
+    def test_price_present_on_completion_needs_no_extra_reads(self, fake_requests, tmp_path, monkeypatch):
+        result = self._run(fake_requests, tmp_path, monkeypatch, [completed(self.URL, price="0.0046")])
+        assert result.data["cost_source"] == "actual"
+        assert len(fake_requests.calls["get"]) == 2  # poll + download
 
 
 class TestActualPriceParsing:
