@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -95,8 +96,18 @@ class PiperTTS(BaseTool):
     side_effects = ["writes audio file to output_path"]
     user_visible_verification = ["Listen to generated audio for intelligibility"]
 
+    @staticmethod
+    def _piper_binary() -> str | None:
+        """piper on PATH, else next to the running interpreter (e.g. .venv/bin,
+        where `make setup` installs it, when the venv is not activated)."""
+        found = shutil.which("piper")
+        if found:
+            return found
+        candidate = Path(sys.executable).parent / "piper"
+        return str(candidate) if candidate.exists() else None
+
     def get_status(self) -> ToolStatus:
-        if shutil.which("piper"):
+        if self._piper_binary():
             return ToolStatus.AVAILABLE
         return ToolStatus.UNAVAILABLE
 
@@ -122,7 +133,7 @@ class PiperTTS(BaseTool):
 
         proc = subprocess.run(
             [
-                "piper",
+                self._piper_binary() or "piper",
                 "--model", inputs.get("model", "en_US-lessac-medium"),
                 "--speaker", str(inputs.get("speaker_id", 0)),
                 "--length-scale", str(inputs.get("length_scale", 1.0)),
