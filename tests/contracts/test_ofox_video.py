@@ -290,6 +290,89 @@ class TestTaskActions:
         assert "model overloaded" in result.error
 
 
+class TestResultUrlFallback:
+    def test_mirror_preferred_over_unsigned(self):
+        url = OfoxVideo._result_url(
+            {
+                "mirror_urls": ["https://cdn.ofox.ai/v/out.mp4?sig=x"],
+                "unsigned_urls": ["https://upstream.example/out.mp4"],
+            }
+        )
+        assert url == "https://cdn.ofox.ai/v/out.mp4?sig=x"
+
+    def test_falls_back_to_unsigned_when_no_mirror(self):
+        # The live gateway returns unsigned_urls with no mirror_urls; the tool
+        # must still resolve a download URL from the upstream address.
+        url = OfoxVideo._result_url(
+            {"unsigned_urls": ["https://upstream.example/out.mp4"]}
+        )
+        assert url == "https://upstream.example/out.mp4"
+
+    def test_empty_mirror_list_falls_back_to_unsigned(self):
+        url = OfoxVideo._result_url(
+            {
+                "mirror_urls": [],
+                "unsigned_urls": ["https://upstream.example/out.mp4"],
+            }
+        )
+        assert url == "https://upstream.example/out.mp4"
+
+    def test_nested_output_url_fallback(self):
+        url = OfoxVideo._result_url({"output": {"url": "https://x.example/o.mp4"}})
+        assert url == "https://x.example/o.mp4"
+
+    def test_no_url_returns_none(self):
+        assert OfoxVideo._result_url({"mirror_urls": [], "unsigned_urls": []}) is None
+        assert OfoxVideo._result_url({}) is None
+
+    def test_generate_downloads_from_unsigned_when_mirror_absent(
+        self, monkeypatch, tmp_path
+    ):
+        # End-to-end mirror of the live gateway response shape: a completed task
+        # with only unsigned_urls still polls, resolves, and downloads.
+        monkeypatch.setenv("OFOX_API_KEY", "fake-ofox-key")
+        downloaded_from = {}
+
+        monkeypatch.setattr(
+            "requests.post",
+            lambda *a, **k: _FakeResponse({"id": "vgen_mirrorless", "status": "pending"}),
+        )
+
+        def fake_get(url, *, headers=None, timeout):
+            if url.endswith("/vgen_mirrorless"):
+                return _FakeResponse(
+                    {
+                        "id": "vgen_mirrorless",
+                        "model": "bytedance/seedance-2.0-mini",
+                        "status": "completed",
+                        "unsigned_urls": ["https://upstream.example/out.mp4"],
+                        "usage": {"video_seconds": 5, "video_cost": "0.1"},
+                    }
+                )
+            downloaded_from["url"] = url
+            downloaded_from["headers"] = headers
+            return _FakeResponse(content=b"fake-mp4")
+
+        monkeypatch.setattr("requests.get", fake_get)
+        monkeypatch.setattr("time.sleep", lambda *_: None)
+        monkeypatch.setattr(
+            "tools.video._shared.probe_output",
+            lambda *_: {"duration_seconds": 5.0},
+        )
+
+        output = tmp_path / "ofox.mp4"
+        result = OfoxVideo().execute(
+            {"prompt": "x", "output_path": str(output)}
+        )
+        assert result.success is True
+        assert output.read_bytes() == b"fake-mp4"
+        assert result.data["video_url"] == "https://upstream.example/out.mp4"
+        assert downloaded_from["url"] == "https://upstream.example/out.mp4"
+        # Bearer token must NOT be sent to a non-ofox upstream/CDN host.
+        assert not downloaded_from["headers"]
+        assert result.cost_usd == pytest.approx(0.1)
+
+
 class TestInputSafety:
     @pytest.mark.parametrize(
         "inputs, message",
