@@ -96,7 +96,10 @@ export const HeroTitle: React.FC<HeroTitleProps> = ({
                   transform: `translateY(${interpolate(unitSpring, [0, 1], [30, 0])}px)`,
                   color: isAccent ? accentColor : textColor, // Accent first word
                   whiteSpace: isSpace ? "pre" : undefined,
-                  minWidth: isSpace ? "0.3em" : undefined,
+                  // Light word-spacing for Arabic display type — improves
+                  // legibility/rhythm without letter-spacing, which would
+                  // break Arabic letter joining.
+                  minWidth: isSpace ? (isRTL ? "0.55em" : "0.3em") : undefined,
                 }}
               >
                 {unit}

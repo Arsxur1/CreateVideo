@@ -43,6 +43,7 @@ export const TextCard: React.FC<TextCardProps> = ({
           fontSize,
           color,
           fontFamily: isRTL ? arabicFontFamily : "Inter, system-ui, sans-serif",
+          wordSpacing: isRTL ? "0.25em" : "normal",
           fontWeight: 700,
           textAlign: "center",
           maxWidth: "80%",

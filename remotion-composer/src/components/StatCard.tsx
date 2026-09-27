@@ -24,6 +24,7 @@ export const StatCard: React.FC<StatCardProps> = ({
   const { fps } = useVideoConfig();
   const isRTL = isRTLText(stat) || isRTLText(subtitle);
   const fontFamily = isRTL ? arabicFontFamily : "Inter, system-ui, sans-serif";
+  const wordSpacing = isRTL ? "0.25em" : "normal";
 
   const scale = spring({
     frame,
@@ -54,6 +55,7 @@ export const StatCard: React.FC<StatCardProps> = ({
             fontSize: statFontSize,
             color: accentColor,
             fontFamily,
+            wordSpacing,
             fontWeight: 800,
             lineHeight: 1.1,
           }}
@@ -67,6 +69,7 @@ export const StatCard: React.FC<StatCardProps> = ({
               fontSize: subtitleFontSize,
               color,
               fontFamily,
+              wordSpacing,
               fontWeight: 400,
               marginTop: 16,
             }}
