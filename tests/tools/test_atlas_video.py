@@ -64,8 +64,11 @@ def fake_requests(monkeypatch):
 SUBMITTED = FakeResponse({"code": 200, "data": {"id": "pred_abc123", "status": "processing"}})
 
 
-def completed(url: str) -> FakeResponse:
-    return FakeResponse({"code": 200, "data": {"id": "pred_abc123", "status": "completed", "outputs": [url]}})
+def completed(url: str, price: str | float | None = None) -> FakeResponse:
+    data = {"id": "pred_abc123", "status": "completed", "outputs": [url]}
+    if price is not None:
+        data["price"] = price
+    return FakeResponse({"code": 200, "data": data})
 
 
 # ------------------------------------------------------------------
@@ -263,6 +266,48 @@ class TestAtlasImageExecute:
         fake_requests.queues["get"] = [completed("https://x/i.png"), FakeResponse(content=b"P")]
         AtlasImage().execute({"prompt": "p", "output_path": str(tmp_path / "i.png")})
         assert fake_requests.calls["post"][0]["headers"]["Authorization"] == "Bearer test-key"
+
+
+class TestUserAgentHeader:
+    """Atlas is behind Cloudflare; a missing/generic UA gets a bare 403
+    ('error code: 1010') with no other detail. Every Atlas call -- submit,
+    poll, and the plain output download -- must carry an identifiable UA."""
+
+    def test_submit_poll_and_download_send_user_agent(self, fake_requests, tmp_path):
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [
+            completed("https://storage.atlascloud.ai/outputs/img.png"),
+            FakeResponse(content=b"PNGDATA"),
+        ]
+        result = AtlasImage().execute({"prompt": "p", "output_path": str(tmp_path / "img.png")})
+        assert result.success is True, result.error
+
+        submit_call = fake_requests.calls["post"][0]
+        assert submit_call["headers"]["User-Agent"] == atlas_client.USER_AGENT
+
+        poll_call, download_call = fake_requests.calls["get"]
+        assert poll_call["headers"]["User-Agent"] == atlas_client.USER_AGENT
+        assert download_call["headers"]["User-Agent"] == atlas_client.USER_AGENT
+
+
+class TestActualPriceParsing:
+    """`data["price"]` is Atlas's real per-job price; catalog costs are only a
+    floor estimate. Negative controls prove the parser fails closed."""
+
+    @pytest.mark.parametrize("price,expected", [("0.0084", 0.0084), ("0", 0.0), (0.05, 0.05)])
+    def test_valid_price_is_parsed(self, price, expected):
+        assert atlas_client.actual_price_usd({"price": price}) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("data", [
+        {},
+        {"price": None},
+        {"price": "not-a-number"},
+        {"price": "-0.01"},
+        {"price": -0.01},
+        "not-a-dict",
+    ])
+    def test_missing_garbage_or_negative_price_returns_none(self, data):
+        assert atlas_client.actual_price_usd(data) is None
 
 
 # ------------------------------------------------------------------
