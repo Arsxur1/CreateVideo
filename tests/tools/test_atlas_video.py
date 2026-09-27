@@ -115,6 +115,32 @@ class TestAtlasVideoExecute:
         result = AtlasVideo().execute({"prompt": "p", "output_path": str(tmp_path / "c.mp4")})
         assert result.success is True, result.error
 
+    def test_actual_atlas_price_overrides_the_catalog_estimate(self, fake_requests, tmp_path):
+        out = tmp_path / "clip.mp4"
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [
+            completed("https://storage.atlascloud.ai/outputs/clip.mp4", price="1.90"),
+            FakeResponse(content=b"MP4DATA"),
+        ]
+        result = AtlasVideo().execute({"prompt": "p", "duration": 5, "output_path": str(out)})
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(1.90)  # real price, not the 0.67 catalog estimate
+        assert result.data["cost_source"] == "actual"
+        assert result.data["estimated_cost_usd"] == pytest.approx(0.67)
+
+    @pytest.mark.parametrize("price", [None, "not-a-number", "-1.0"])
+    def test_missing_or_bad_price_falls_back_to_the_estimate(self, fake_requests, tmp_path, price):
+        out = tmp_path / "clip.mp4"
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [
+            completed("https://storage.atlascloud.ai/outputs/clip.mp4", price=price),
+            FakeResponse(content=b"MP4DATA"),
+        ]
+        result = AtlasVideo().execute({"prompt": "p", "duration": 5, "output_path": str(out)})
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(0.67)
+        assert result.data["cost_source"] == "estimated"
+
     def test_image_to_video_uploads_local_file(self, fake_requests, tmp_path):
         source = tmp_path / "frame.png"
         source.write_bytes(b"PNGDATA")

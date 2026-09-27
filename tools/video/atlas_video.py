@@ -383,6 +383,14 @@ class AtlasVideo(BaseTool):
 
         probed = probe_output(output_path)
         cost_inputs = {**inputs, "model": model, "operation": operation}
+        # Atlas's catalog cost_per_second is a floor estimate; the completed
+        # prediction carries the real billed price. Prefer that, and record
+        # which one won so the estimate-vs-real gap stays visible.
+        estimated_cost = self.estimate_cost(cost_inputs)
+        actual_cost = atlas_client.actual_price_usd(data)
+        cost_usd = actual_cost if actual_cost is not None else estimated_cost
+        cost_source = "actual" if actual_cost is not None else "estimated"
+
         return ToolResult(
             success=True,
             data={
@@ -390,7 +398,8 @@ class AtlasVideo(BaseTool):
                 "operation": operation, "output": str(output_path), "output_path": str(output_path),
                 "prediction_id": prediction_id, "source_url": data["outputs"][0],
                 "format": output_path.suffix.lstrip("."), "request_params": payload, **probed,
+                "cost_source": cost_source, "estimated_cost_usd": estimated_cost,
             },
-            artifacts=[str(output_path)], cost_usd=self.estimate_cost(cost_inputs),
+            artifacts=[str(output_path)], cost_usd=cost_usd,
             duration_seconds=round(time.time() - started, 2), model=model,
         )
