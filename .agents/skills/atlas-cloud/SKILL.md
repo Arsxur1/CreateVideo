@@ -60,10 +60,30 @@ before billing with the supported choices in the error.
 | Seedream 5.0 Pro | generate, edit, decompose | `bytedance/seedream-v5.0-pro/text-to-image`, `/edit`, `/layer-decomposition`; edit accepts up to 10 images; sizes use `WIDTH*HEIGHT` |
 | Seedream 5.0 Lite | edit | `bytedance/seedream-v5.0-lite/edit`; no live Lite text-to-image sibling is assumed; accepts up to 14 images |
 | GPT Image 2 | generate, edit | `openai/gpt-image-2/text-to-image`, `/edit`; sizes use `WIDTHxHEIGHT`; edit accepts up to 10 images |
+| GPT Image 2.5 Flare | generate, edit | `openai/gpt-image-2.5-flare/text-to-image`, `/edit`; own family, separate from Sunburst and from gpt-image-2 |
+| GPT Image 2.5 Sunburst | generate, edit | `openai/gpt-image-2.5-sunburst/text-to-image`, `/edit`; slower, more precise (text, layouts, heavy edits) than Flare at the same per-token price |
 | Nano Banana 2 | generate, edit | `google/nano-banana-2/text-to-image`, `/edit`; uses aspect ratio plus 1k/2k/4k resolution; edit accepts up to 14 images |
 
 Set `generation_mode` to `generate`, `edit`, or `decompose`. Source images can
 be supplied as `image_path`, `image_paths`, `image_url`, or `image_urls`.
+
+### GPT Image 2.5 (Flare / Sunburst)
+
+- `quality`: `auto`, `low`, `medium`, `high`, `xhigh`, `max` -- the biggest cost
+  lever. `xhigh`/`max` exist only on the 2.5 line, not on `gpt-image-2`.
+- `size`: `WIDTHxHEIGHT`, or the literal `"auto"` to let the model choose.
+  A custom `WIDTHxHEIGHT` must satisfy OpenAI's documented envelope: both
+  edges multiples of 16, each edge 480-3840px, total pixels
+  655,360-8,294,400, aspect ratio no steeper than 3:1. Out-of-envelope sizes
+  fail before billing with the violated rule in the error.
+  `atlas_image.py::_validate_gpt25_size` enforces this; `get_info()`'s
+  `model_catalog` lists each model's `cost_by_quality` for pre-flight
+  estimates.
+- `n`: 1-10; each image is billed separately, so `estimate_cost` and the
+  eventual real cost both scale with `n`.
+- `background` (`auto`/`opaque`/`transparent`) and `output_format`
+  (`png`/`jpeg`/`webp`) both pass straight through.
+- Edit accepts up to 16 source images (Atlas's live edit schema).
 
 ```python
 tool.execute({
@@ -80,10 +100,32 @@ tool.execute({
 
 Both tools submit to Atlas, poll the returned prediction id, download every
 output, and return `ToolResult` provenance containing the provider, exact model,
-prediction id, submitted parameters, source URL, artifact paths, and estimated
-cost. A missing key, unsupported route, invalid enum, missing media input, failed
+prediction id, submitted parameters, source URL, artifact paths, and cost. A
+missing key, unsupported route, invalid enum, missing media input, failed
 prediction, timeout, or download failure must return a failed result without
 switching providers.
 
 Confirm current pricing and schemas from the machine-readable model page
 (`Accept: text/markdown`) immediately before quoting or spending on a batch.
+
+## Catalogue prices are floors -- real cost comes from the job itself
+
+`atlas_models.py`'s `cost_per_image`/`cost_per_second`/`cost_by_quality`
+values are estimates, and on gpt-image-2/2.5 in particular they can sit well
+under what Atlas actually bills. Every completed prediction's `data` carries
+the real per-job price as a string (e.g. `{"price": "0.0084"}`). Both
+`atlas_image` and `atlas_video` record that as `cost_usd` whenever it's
+present, and set `cost_source` to `"actual"`; only when Atlas omits or
+mangles `price` do they fall back to the catalogue estimate with
+`cost_source: "estimated"`. `estimated_cost_usd` is always included too, so
+the estimate-vs-real gap stays visible. Trust `cost_usd`/`cost_source` over
+a pre-flight `estimate_cost()` call once a job has actually run.
+
+## User-Agent
+
+Atlas sits behind Cloudflare. A generic or missing User-Agent (e.g. urllib's
+default) gets a bare `403 error code: 1010` with no further detail --
+`curl`-style UAs pass. `atlas_client.py` sends an explicit
+`OpenMontage/<version>` UA on every request (submit, poll, upload, and the
+output download); if a call to Atlas ever 403s with `error code: 1010`
+again, suspect the UA before anything else.
