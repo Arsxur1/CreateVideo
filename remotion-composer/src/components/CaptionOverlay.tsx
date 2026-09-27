@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import {
   AbsoluteFill,
   Sequence,
@@ -110,23 +111,32 @@ const PageRenderer: React.FC<{
             const isActive = w.startMs <= currentMs && w.endMs > currentMs;
             const isPast = w.endMs <= currentMs;
             return (
-              <span
-                key={`${w.startMs}-${i}`}
-                style={{
-                  // Keep each word unbroken so lines wrap only at word
-                  // boundaries. For space-delimited text this matches the
-                  // previous behavior; for CJK it prevents mid-word breaks.
-                  display: "inline-block",
-                  whiteSpace: "nowrap",
-                  color: isActive ? highlightColor : isPast ? color : `${color}99`,
-                  transition: "none", // CSS transitions forbidden in Remotion
-                  textShadow: isActive
-                    ? `0 0 20px ${highlightColor}66, 0 2px 4px rgba(0,0,0,0.5)`
-                    : "0 2px 4px rgba(0,0,0,0.5)",
-                }}
-              >
-                {w.word}{i < page.words.length - 1 ? wordSeparator : ""}
-              </span>
+              <Fragment key={`${w.startMs}-${i}`}>
+                <span
+                  style={{
+                    // Keep each word unbroken so lines wrap only at word
+                    // boundaries. For space-delimited text this matches the
+                    // previous behavior; for CJK it prevents mid-word breaks.
+                    display: "inline-block",
+                    whiteSpace: "nowrap",
+                    color: isActive ? highlightColor : isPast ? color : `${color}99`,
+                    transition: "none", // CSS transitions forbidden in Remotion
+                    textShadow: isActive
+                      ? `0 0 20px ${highlightColor}66, 0 2px 4px rgba(0,0,0,0.5)`
+                      : "0 2px 4px rgba(0,0,0,0.5)",
+                  }}
+                >
+                  {w.word}
+                </span>
+                {i < page.words.length - 1 && wordSeparator ? (
+                  // A separate sibling with white-space: "pre" so the
+                  // separator can never be trimmed at an inline-block edge —
+                  // trailing whitespace INSIDE the previous span's own text
+                  // node gets silently collapsed by Chromium even under
+                  // nowrap, which made every caption word run together.
+                  <span style={{ whiteSpace: "pre" }}>{wordSeparator}</span>
+                ) : null}
+              </Fragment>
             );
           })}
         </span>
