@@ -57,6 +57,8 @@ def fake_requests(monkeypatch):
     monkeypatch.setenv("ATLASCLOUD_API_KEY", "test-key")
     # Keep polling instantaneous.
     monkeypatch.setattr(atlas_client.time, "sleep", lambda _s: None)
+    # Price settling adds extra GETs; tests that exercise it opt back in.
+    monkeypatch.setattr(atlas_client, "PRICE_SETTLE_ATTEMPTS", 0)
 
     return types.SimpleNamespace(calls=calls, queues=queues)
 
@@ -64,8 +66,11 @@ def fake_requests(monkeypatch):
 SUBMITTED = FakeResponse({"code": 200, "data": {"id": "pred_abc123", "status": "processing"}})
 
 
-def completed(url: str) -> FakeResponse:
-    return FakeResponse({"code": 200, "data": {"id": "pred_abc123", "status": "completed", "outputs": [url]}})
+def completed(url: str, price: str | float | None = None) -> FakeResponse:
+    data = {"id": "pred_abc123", "status": "completed", "outputs": [url]}
+    if price is not None:
+        data["price"] = price
+    return FakeResponse({"code": 200, "data": data})
 
 
 # ------------------------------------------------------------------
@@ -111,6 +116,32 @@ class TestAtlasVideoExecute:
         ]
         result = AtlasVideo().execute({"prompt": "p", "output_path": str(tmp_path / "c.mp4")})
         assert result.success is True, result.error
+
+    def test_actual_atlas_price_overrides_the_catalog_estimate(self, fake_requests, tmp_path):
+        out = tmp_path / "clip.mp4"
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [
+            completed("https://storage.atlascloud.ai/outputs/clip.mp4", price="1.90"),
+            FakeResponse(content=b"MP4DATA"),
+        ]
+        result = AtlasVideo().execute({"prompt": "p", "duration": 5, "output_path": str(out)})
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(1.90)  # real price, not the 0.67 catalog estimate
+        assert result.data["cost_source"] == "actual"
+        assert result.data["estimated_cost_usd"] == pytest.approx(0.67)
+
+    @pytest.mark.parametrize("price", [None, "not-a-number", "-1.0"])
+    def test_missing_or_bad_price_falls_back_to_the_estimate(self, fake_requests, tmp_path, price):
+        out = tmp_path / "clip.mp4"
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [
+            completed("https://storage.atlascloud.ai/outputs/clip.mp4", price=price),
+            FakeResponse(content=b"MP4DATA"),
+        ]
+        result = AtlasVideo().execute({"prompt": "p", "duration": 5, "output_path": str(out)})
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(0.67)
+        assert result.data["cost_source"] == "estimated"
 
     def test_image_to_video_uploads_local_file(self, fake_requests, tmp_path):
         source = tmp_path / "frame.png"
@@ -263,6 +294,121 @@ class TestAtlasImageExecute:
         fake_requests.queues["get"] = [completed("https://x/i.png"), FakeResponse(content=b"P")]
         AtlasImage().execute({"prompt": "p", "output_path": str(tmp_path / "i.png")})
         assert fake_requests.calls["post"][0]["headers"]["Authorization"] == "Bearer test-key"
+
+    def test_actual_atlas_price_overrides_the_catalog_estimate(self, fake_requests, tmp_path):
+        out = tmp_path / "img.png"
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [
+            completed("https://storage.atlascloud.ai/outputs/img.png", price="0.0084"),
+            FakeResponse(content=b"PNGDATA"),
+        ]
+        result = AtlasImage().execute({
+            "prompt": "p", "model": "openai/gpt-image-2.5-flare/text-to-image",
+            "quality": "medium", "width": 1024, "height": 1536, "output_path": str(out),
+        })
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(0.0084)
+        assert result.data["cost_source"] == "actual"
+
+    @pytest.mark.parametrize("price", [None, "garbage", "-5"])
+    def test_missing_or_bad_price_falls_back_to_the_estimate(self, fake_requests, tmp_path, price):
+        out = tmp_path / "img.png"
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [
+            completed("https://storage.atlascloud.ai/outputs/img.png", price=price),
+            FakeResponse(content=b"PNGDATA"),
+        ]
+        result = AtlasImage().execute({"prompt": "p", "width": 2048, "height": 1152, "output_path": str(out)})
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(0.045)
+        assert result.data["cost_source"] == "estimated"
+
+
+class TestUserAgentHeader:
+    """Atlas is behind Cloudflare; a missing/generic UA gets a bare 403
+    ('error code: 1010') with no other detail. Every Atlas call -- submit,
+    poll, and the plain output download -- must carry an identifiable UA."""
+
+    def test_submit_poll_and_download_send_user_agent(self, fake_requests, tmp_path):
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = [
+            completed("https://storage.atlascloud.ai/outputs/img.png"),
+            FakeResponse(content=b"PNGDATA"),
+        ]
+        result = AtlasImage().execute({"prompt": "p", "output_path": str(tmp_path / "img.png")})
+        assert result.success is True, result.error
+
+        submit_call = fake_requests.calls["post"][0]
+        assert submit_call["headers"]["User-Agent"] == atlas_client.USER_AGENT
+
+        poll_call, download_call = fake_requests.calls["get"]
+        assert poll_call["headers"]["User-Agent"] == atlas_client.USER_AGENT
+        assert download_call["headers"]["User-Agent"] == atlas_client.USER_AGENT
+
+
+class TestPriceSettle:
+    """Atlas can flip a prediction to `completed` before it attaches `price`.
+    poll() re-reads the prediction a few times so the real price still lands,
+    and never fails the generation over a missing price."""
+
+    URL = "https://storage.atlascloud.ai/outputs/a.png"
+
+    def _run(self, fake_requests, tmp_path, monkeypatch, gets):
+        monkeypatch.setattr(atlas_client, "PRICE_SETTLE_ATTEMPTS", 3)
+        fake_requests.queues["post"] = [SUBMITTED]
+        fake_requests.queues["get"] = gets + [FakeResponse(content=b"PNG")]
+        return AtlasImage().execute({
+            "prompt": "p", "model": "openai/gpt-image-2.5-flare/text-to-image",
+            "quality": "low", "output_path": str(tmp_path / "a.png"),
+        })
+
+    def test_late_price_is_picked_up(self, fake_requests, tmp_path, monkeypatch):
+        result = self._run(fake_requests, tmp_path, monkeypatch, [
+            completed(self.URL), completed(self.URL), completed(self.URL, price="0.0046"),
+        ])
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(0.0046)
+        assert result.data["cost_source"] == "actual"
+        assert len(fake_requests.calls["get"]) == 4  # poll + 2 settle reads + download
+
+    def test_price_never_arrives_falls_back_without_failing(self, fake_requests, tmp_path, monkeypatch):
+        result = self._run(fake_requests, tmp_path, monkeypatch, [completed(self.URL)] * 4)
+        assert result.success is True, result.error
+        assert result.data["cost_source"] == "estimated"
+        assert len(fake_requests.calls["get"]) == 5  # poll + 3 settle reads + download
+
+    def test_settle_read_errors_are_swallowed(self, fake_requests, tmp_path, monkeypatch):
+        result = self._run(fake_requests, tmp_path, monkeypatch, [
+            completed(self.URL), FakeResponse(status_code=502, text="bad gateway"),
+            completed(self.URL, price="0.0046"),
+        ])
+        assert result.success is True, result.error
+        assert result.cost_usd == pytest.approx(0.0046)
+
+    def test_price_present_on_completion_needs_no_extra_reads(self, fake_requests, tmp_path, monkeypatch):
+        result = self._run(fake_requests, tmp_path, monkeypatch, [completed(self.URL, price="0.0046")])
+        assert result.data["cost_source"] == "actual"
+        assert len(fake_requests.calls["get"]) == 2  # poll + download
+
+
+class TestActualPriceParsing:
+    """`data["price"]` is Atlas's real per-job price; catalog costs are only a
+    floor estimate. Negative controls prove the parser fails closed."""
+
+    @pytest.mark.parametrize("price,expected", [("0.0084", 0.0084), ("0", 0.0), (0.05, 0.05)])
+    def test_valid_price_is_parsed(self, price, expected):
+        assert atlas_client.actual_price_usd({"price": price}) == pytest.approx(expected)
+
+    @pytest.mark.parametrize("data", [
+        {},
+        {"price": None},
+        {"price": "not-a-number"},
+        {"price": "-0.01"},
+        {"price": -0.01},
+        "not-a-dict",
+    ])
+    def test_missing_garbage_or_negative_price_returns_none(self, data):
+        assert atlas_client.actual_price_usd(data) is None
 
 
 # ------------------------------------------------------------------

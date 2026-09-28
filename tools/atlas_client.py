@@ -28,6 +28,18 @@ GENERATE_VIDEO_ENDPOINT = f"{BASE_URL}/model/generateVideo"
 PREDICTION_ENDPOINT = f"{BASE_URL}/model/prediction"
 UPLOAD_MEDIA_ENDPOINT = f"{BASE_URL}/model/uploadMedia"
 
+# Atlas sits behind Cloudflare, which fingerprints request headers: urllib's
+# default UA gets a bare 403 "error code: 1010" with no other detail. Sending
+# an explicit, identifiable UA on every request (including the plain output
+# download) avoids that wall.
+USER_AGENT = "OpenMontage/1.0 (+github.com/calesthio/OpenMontage)"
+
+# Atlas can flip a prediction to `completed` a moment before it attaches the
+# billed `price`. When the price is missing on completion, re-read the
+# prediction a few times so callers can record the real cost, not the estimate.
+PRICE_SETTLE_ATTEMPTS = 3
+PRICE_SETTLE_DELAY = 2.0
+
 # Atlas documents `created`/`processing` as in-flight and both `completed` and
 # `succeeded` as terminal success. Treat any unrecognised status as in-flight so a
 # newly introduced intermediate state can't be mistaken for a failure.
@@ -60,10 +72,32 @@ def get_api_key() -> str | None:
 
 
 def _headers(api_key: str, json_body: bool = True) -> dict[str, str]:
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {"Authorization": f"Bearer {api_key}", "User-Agent": USER_AGENT}
     if json_body:
         headers["Content-Type"] = "application/json"
     return headers
+
+
+def actual_price_usd(data: dict[str, Any]) -> float | None:
+    """Parse Atlas's real billed price off a terminal prediction's `data`.
+
+    Atlas's catalog costs (what `atlas_models.py` ships) are floors — the
+    completed prediction itself carries the actual per-job price as a string,
+    e.g. {"price": "0.0084"}. Returns None when it's missing, unparsable, or
+    negative so callers can fall back to the catalog estimate.
+    """
+    if not isinstance(data, dict):
+        return None
+    price = data.get("price")
+    if price is None:
+        return None
+    try:
+        value = float(price)
+    except (TypeError, ValueError):
+        return None
+    if value < 0:
+        return None
+    return value
 
 
 def _payload_of(response: Any) -> dict[str, Any]:
@@ -169,6 +203,8 @@ def poll(
                 raise AtlasError(
                     f"Prediction {prediction_id} reported '{last_status}' but returned no outputs."
                 )
+            if data.get("price") is None:
+                _settle_price(url, api_key, data, request_timeout)
             return data
         if last_status in TERMINAL_FAILURE:
             error = data.get("error") or "no error detail provided"
@@ -182,6 +218,28 @@ def poll(
         f"(last status: {last_status}). The job may still complete — "
         f"check {PREDICTION_ENDPOINT}/{prediction_id}"
     )
+
+
+def _settle_price(url: str, api_key: str, data: dict[str, Any], request_timeout: int) -> None:
+    """Best-effort: re-read a completed prediction until Atlas attaches `price`.
+
+    Mutates `data` in place when a price shows up. Never raises; a missing
+    price only means the caller falls back to its catalog estimate.
+    """
+    import requests
+
+    for _ in range(PRICE_SETTLE_ATTEMPTS):
+        time.sleep(PRICE_SETTLE_DELAY)
+        try:
+            response = requests.get(
+                url, headers=_headers(api_key, json_body=False), timeout=request_timeout
+            )
+            price = _payload_of(response).get("price")
+        except Exception:  # noqa: BLE001
+            continue
+        if price is not None:
+            data["price"] = price
+            return
 
 
 def upload_media(file_path: str | Path, api_key: str, timeout: int = 120) -> str:
@@ -222,7 +280,7 @@ def download(url: str, output_path: str | Path, timeout: int = 300) -> Path:
     import requests
 
     try:
-        response = requests.get(url, timeout=timeout)
+        response = requests.get(url, headers={"User-Agent": USER_AGENT}, timeout=timeout)
     except Exception as exc:  # noqa: BLE001
         raise AtlasError(f"Downloading Atlas Cloud output failed: {exc}") from exc
 

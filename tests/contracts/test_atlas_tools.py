@@ -211,6 +211,8 @@ class TestImageRoutes:
             "bytedance/seedream-v5.0-pro/layer-decomposition", "bytedance/seedream-v5.0-lite/edit",
             "openai/gpt-image-2/text-to-image", "openai/gpt-image-2/edit",
             "google/nano-banana-2/text-to-image", "google/nano-banana-2/edit",
+            "openai/gpt-image-2.5-flare/text-to-image", "openai/gpt-image-2.5-flare/edit",
+            "openai/gpt-image-2.5-sunburst/text-to-image", "openai/gpt-image-2.5-sunburst/edit",
         }
 
     def test_seedream_uses_star_size_and_images(self):
@@ -248,3 +250,88 @@ class TestImageRoutes:
     )
     def test_verified_costs(self, model, expected):
         assert AtlasImage().estimate_cost({"model": model}) == pytest.approx(expected)
+
+
+class TestGptImage25Routes:
+    """gpt-image-2.5-flare and gpt-image-2.5-sunburst are separate `family`
+    values on purpose: operation_routes() keys routes by family, so sharing a
+    family would let one variant's edit route silently overwrite the other's
+    (the pitfall documented in atlas_models.py around L207-220)."""
+
+    @pytest.mark.parametrize("variant", ["flare", "sunburst"])
+    def test_generate_and_edit_routes_are_both_discoverable_and_distinct(self, variant):
+        family = f"openai/gpt-image-2.5-{variant}"
+        routes = AtlasImage.provider_matrix[family]
+        assert routes["generate"] == f"{family}/text-to-image"
+        assert routes["edit"] == f"{family}/edit"
+
+    def test_flare_and_sunburst_routes_do_not_collide(self):
+        flare_routes = AtlasImage.provider_matrix["openai/gpt-image-2.5-flare"]
+        sunburst_routes = AtlasImage.provider_matrix["openai/gpt-image-2.5-sunburst"]
+        assert flare_routes["generate"] != sunburst_routes["generate"]
+        assert flare_routes["edit"] != sunburst_routes["edit"]
+
+    def test_edit_accepts_up_to_16_images(self):
+        assert IMAGE_MODELS["openai/gpt-image-2.5-flare/edit"]["max_images"] == 16
+        assert IMAGE_MODELS["openai/gpt-image-2.5-sunburst/edit"]["max_images"] == 16
+
+    def test_x_size_accepts_the_literal_auto(self):
+        payload = AtlasImage()._build_payload(
+            {"prompt": "p", "size": "auto"}, "openai/gpt-image-2.5-flare/text-to-image"
+        )
+        assert payload["size"] == "auto"
+
+    @pytest.mark.parametrize(
+        "width,height,match",
+        [
+            (1000, 1000, "multiples of 16"),          # not a multiple of 16
+            (256, 1024, "edges must be within"),        # below the 480 min edge
+            (4096, 1024, "edges must be within"),        # above the 3840 max edge
+            (3840, 1024, "aspect ratio"),                # ratio > 3:1
+            (496, 496, "total pixels"),                  # below the 655,360px floor
+        ],
+    )
+    def test_custom_size_rules_reject_out_of_envelope_sizes(self, width, height, match):
+        with pytest.raises(ValueError, match=match):
+            AtlasImage()._build_payload(
+                {"prompt": "p", "width": width, "height": height},
+                "openai/gpt-image-2.5-flare/text-to-image",
+            )
+
+    def test_custom_size_within_envelope_is_accepted(self):
+        payload = AtlasImage()._build_payload(
+            {"prompt": "p", "width": 1024, "height": 1536}, "openai/gpt-image-2.5-flare/text-to-image"
+        )
+        assert payload["size"] == "1024x1536"
+
+    def test_estimate_cost_uses_cost_by_quality_over_the_flat_price(self):
+        tool = AtlasImage()
+        low = tool.estimate_cost({"model": "openai/gpt-image-2.5-flare/text-to-image", "quality": "low"})
+        high = tool.estimate_cost({"model": "openai/gpt-image-2.5-flare/text-to-image", "quality": "high"})
+        assert low < high
+        assert low == pytest.approx(IMAGE_MODELS["openai/gpt-image-2.5-flare/text-to-image"]["cost_by_quality"]["low"])
+
+    def test_estimate_cost_scales_with_n(self):
+        tool = AtlasImage()
+        one = tool.estimate_cost({"model": "openai/gpt-image-2.5-flare/text-to-image", "quality": "medium", "n": 1})
+        three = tool.estimate_cost({"model": "openai/gpt-image-2.5-flare/text-to-image", "quality": "medium", "n": 3})
+        assert three == pytest.approx(one * 3)
+
+    def test_unknown_quality_falls_back_to_flat_cost_per_image(self):
+        tool = AtlasImage()
+        cost = tool.estimate_cost({"model": "openai/gpt-image-2.5-flare/text-to-image", "quality": "bogus"})
+        assert cost == pytest.approx(IMAGE_MODELS["openai/gpt-image-2.5-flare/text-to-image"]["cost_per_image"])
+
+    def test_output_format_default_sentinel_is_not_sent_literally(self):
+        # "default" in the enum means "omit the field, let Atlas choose" --
+        # it must never be forwarded as a literal output_format value.
+        payload = AtlasImage()._build_payload(
+            {"prompt": "p", "output_format": "default"}, "openai/gpt-image-2.5-flare/text-to-image"
+        )
+        assert "output_format" not in payload
+
+    def test_output_format_webp_is_forwarded(self):
+        payload = AtlasImage()._build_payload(
+            {"prompt": "p", "output_format": "webp"}, "openai/gpt-image-2.5-flare/text-to-image"
+        )
+        assert payload["output_format"] == "webp"

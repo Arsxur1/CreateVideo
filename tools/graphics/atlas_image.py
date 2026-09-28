@@ -25,6 +25,33 @@ _DEFAULT_MODEL = "bytedance/seedream-v5.0-pro/text-to-image"
 _DEFAULT_COST = 0.04
 _COMMON_RATIOS = ["1:1", "3:2", "2:3", "3:4", "4:3", "4:5", "5:4", "9:16", "16:9", "21:9"]
 
+_GPT_25_FAMILIES = {"openai/gpt-image-2.5-flare", "openai/gpt-image-2.5-sunburst"}
+
+# Ported from ComfyUI-GPT-Image-Direct's _validate_custom_size: the envelope
+# OpenAI documents for gpt-image-2.5 arbitrary WxH requests.
+_CUSTOM_SIZE_MIN_EDGE = 480
+_CUSTOM_SIZE_MAX_EDGE = 3840
+_CUSTOM_SIZE_MIN_PIXELS = 655_360
+_CUSTOM_SIZE_MAX_PIXELS = 8_294_400
+_CUSTOM_SIZE_MAX_RATIO = 3.0
+
+
+def _validate_gpt25_size(width: int, height: int) -> None:
+    if width % 16 or height % 16:
+        raise ValueError(f"gpt-image-2.5 size must be multiples of 16, got {width}x{height}")
+    if not (_CUSTOM_SIZE_MIN_EDGE <= width <= _CUSTOM_SIZE_MAX_EDGE and _CUSTOM_SIZE_MIN_EDGE <= height <= _CUSTOM_SIZE_MAX_EDGE):
+        raise ValueError(
+            f"gpt-image-2.5 edges must be within {_CUSTOM_SIZE_MIN_EDGE}-{_CUSTOM_SIZE_MAX_EDGE} px, got {width}x{height}"
+        )
+    ratio = max(width, height) / float(min(width, height))
+    if ratio > _CUSTOM_SIZE_MAX_RATIO:
+        raise ValueError(f"gpt-image-2.5 aspect ratio must be <= 3:1, got {width}x{height}")
+    pixels = width * height
+    if not (_CUSTOM_SIZE_MIN_PIXELS <= pixels <= _CUSTOM_SIZE_MAX_PIXELS):
+        raise ValueError(
+            f"gpt-image-2.5 total pixels must be {_CUSTOM_SIZE_MIN_PIXELS:,}-{_CUSTOM_SIZE_MAX_PIXELS:,}, got {pixels:,}"
+        )
+
 
 def _is_remote(entry: str) -> bool:
     return str(entry).strip().lower().startswith(("http://", "https://", "data:", "asset://"))
@@ -73,9 +100,12 @@ class AtlasImage(BaseTool):
             "generation_mode": {"type": "string", "enum": ["generate", "edit", "decompose"], "default": "generate"},
             "width": {"type": "integer", "default": 2048},
             "height": {"type": "integer", "default": 2048},
+            "size": {"type": "string", "description": "'auto' lets an x-size-style model (gpt-image-2, gpt-image-2.5-*) pick its own size instead of width/height."},
             "aspect_ratio": {"type": "string"},
             "resolution": {"type": "string"},
-            "quality": {"type": "string", "enum": ["low", "medium", "high"]},
+            "quality": {"type": "string", "enum": ["low", "medium", "high", "xhigh", "max"]},
+            "background": {"type": "string", "enum": ["auto", "opaque", "transparent"]},
+            "n": {"type": "integer", "minimum": 1, "maximum": 10},
             "thinking": {"type": "string", "enum": ["enabled", "disabled"]},
             "prompt_optimization_mode": {"type": "string", "enum": ["standard", "fast"]},
             "thinking_level": {"type": "string", "enum": ["default", "high", "minimal"]},
@@ -86,7 +116,7 @@ class AtlasImage(BaseTool):
             "image_path": {"type": "string"},
             "image_urls": {"type": "array", "items": {"type": "string"}},
             "image_paths": {"type": "array", "items": {"type": "string"}},
-            "output_format": {"type": "string", "enum": ["default", "jpeg", "png"], "default": "png"},
+            "output_format": {"type": "string", "enum": ["default", "jpeg", "png", "webp"], "default": "png"},
             "extra_params": {"type": "object"},
             "poll_interval": {"type": "number", "default": 2.0},
             "poll_timeout": {"type": "number", "default": 600.0},
@@ -110,6 +140,7 @@ class AtlasImage(BaseTool):
                 "family": spec["family"], "operation": spec["operation"],
                 "cost_per_image": spec["cost_per_image"], "size_style": spec["size_style"],
                 "media_style": spec["media_style"], "max_images": spec.get("max_images"),
+                "cost_by_quality": spec.get("cost_by_quality"),
             }
             for model_id, spec in IMAGE_MODELS.items()
         }
@@ -123,7 +154,13 @@ class AtlasImage(BaseTool):
             )
         except ValueError:
             return _DEFAULT_COST
-        return float(IMAGE_MODELS[model]["cost_per_image"])
+        spec = IMAGE_MODELS[model]
+        n = int(inputs.get("n") or 1)
+        cost_by_quality = spec.get("cost_by_quality")
+        quality = inputs.get("quality")
+        if cost_by_quality and quality in cost_by_quality:
+            return float(cost_by_quality[quality]) * n
+        return float(spec["cost_per_image"]) * n
 
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         return 30.0
@@ -149,7 +186,12 @@ class AtlasImage(BaseTool):
         if style == "star":
             payload["size"] = f"{width}*{height}"
         elif style == "x":
-            payload["size"] = f"{width}x{height}"
+            if inputs.get("size") == "auto":
+                payload["size"] = "auto"
+            else:
+                if spec["family"] in _GPT_25_FAMILIES:
+                    _validate_gpt25_size(width, height)
+                payload["size"] = f"{width}x{height}"
         elif style == "ratio":
             payload["aspect_ratio"] = inputs.get("aspect_ratio") or atlas_client.aspect_ratio_from_size(
                 width, height, _COMMON_RATIOS
@@ -229,6 +271,14 @@ class AtlasImage(BaseTool):
         except Exception as exc:  # noqa: BLE001
             return ToolResult(success=False, error=f"Atlas Cloud image generation failed: {exc}")
 
+        # Atlas's catalog cost is a floor estimate; the completed prediction
+        # carries the real billed price. Prefer that, and record which one won
+        # so the estimate-vs-real gap stays visible in the decision trail.
+        estimated_cost = self.estimate_cost({**inputs, "model": model})
+        actual_cost = atlas_client.actual_price_usd(data)
+        cost_usd = actual_cost if actual_cost is not None else estimated_cost
+        cost_source = "actual" if actual_cost is not None else "estimated"
+
         return ToolResult(
             success=True,
             data={
@@ -236,8 +286,8 @@ class AtlasImage(BaseTool):
                 "generation_mode": operation, "output": str(output_paths[0]),
                 "output_path": str(output_paths[0]), "outputs": [str(path) for path in output_paths],
                 "prediction_id": prediction_id, "source_url": outputs[0], "source_urls": outputs,
-                "request_params": payload,
+                "request_params": payload, "cost_source": cost_source, "estimated_cost_usd": estimated_cost,
             },
-            artifacts=[str(path) for path in output_paths], cost_usd=self.estimate_cost({**inputs, "model": model}),
+            artifacts=[str(path) for path in output_paths], cost_usd=cost_usd,
             duration_seconds=round(time.time() - started, 2), model=model,
         )

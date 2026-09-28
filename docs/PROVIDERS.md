@@ -422,11 +422,21 @@ suffixes or parameter names as interchangeable.
 | MiniMax H3 | text/image/reference to video | $0.100/sec |
 | Seedream 5.0 Pro | text to image; edit; layer decomposition | $0.022–0.045/image |
 | GPT Image 2 | text to image; edit | $0.009–0.010/image |
+| GPT Image 2.5 Flare | text to image; edit (up to 16 refs) | ~$0.005–0.17/image by quality |
+| GPT Image 2.5 Sunburst | text to image; edit (up to 16 refs) | ~$0.005–0.17/image by quality |
 | Nano Banana 2 | text to image; edit | $0.080/image |
 
 Inspect `get_info()["model_catalog"]` for exact IDs, operations, media shapes,
 durations, and resolutions. Prices are estimates sourced from each model's
 machine-readable Atlas page and should be reconfirmed before a paid batch.
+
+`atlas_image`/`atlas_video` record Atlas's real per-job price (`data.price`
+on the completed prediction) as `cost_usd` whenever Atlas returns one —
+catalogue numbers above are floors, not what a given call actually bills.
+`cost_source` on the result says `"actual"` or `"estimated"`; see the
+`atlas-cloud` skill for detail. GPT Image 2.5's `cost_by_quality` (also in
+`get_info()["model_catalog"]`) gives a materially more realistic pre-flight
+number than a single flat `cost_per_image`.
 
 ---
 
@@ -856,6 +866,14 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 **Tools unlocked:** `openai_tts`, `openai_image`
 **Env var:** `OPENAI_API_KEY`
 
+`openai_image` also supports `gpt-image-2.5-flare` and `gpt-image-2.5-sunburst`
+(text-to-image only on this direct route; use `atlas_image` for 2.5 edits).
+`quality` adds `xhigh`/`max`, 2.5-only — the tool rejects them for
+`gpt-image-2` before making the API call. `size` adds the 2.5 presets
+(`2048x2048`, `1536x2048`, `2048x1536`, `3840x2160`, `2160x3840`). Once the
+API returns a real `usage` block, the tool bills from it exactly instead of
+the flat estimate below.
+
 #### Setup
 
 1. Go to [platform.openai.com/signup](https://platform.openai.com/signup) and create an account
@@ -882,6 +900,11 @@ Google TTS offers 700+ voices across 50+ languages. Voice names follow the patte
 | GPT Image 2 | 1024x1536 / 1536x1024 | low | $0.005 |
 | GPT Image 2 | 1024x1536 / 1536x1024 | medium | $0.041 |
 | GPT Image 2 | 1024x1536 / 1536x1024 | high | $0.165 |
+| GPT Image 2.5 Flare/Sunburst | any | low | ~$0.006 (estimate; billed from real `usage`) |
+| GPT Image 2.5 Flare/Sunburst | any | medium | ~$0.053 (estimate; billed from real `usage`) |
+| GPT Image 2.5 Flare/Sunburst | any | high | ~$0.211 (estimate; billed from real `usage`) |
+| GPT Image 2.5 Flare/Sunburst | any | xhigh | ~$0.36 (rough extrapolation; billed from real `usage`) |
+| GPT Image 2.5 Flare/Sunburst | any | max | ~$0.84 (rough extrapolation; billed from real `usage`) |
 
 > **Note:** DALL-E 2/3 were shut down by OpenAI on 2026-05-12, and the `gpt-image-1` family (`gpt-image-1-mini`, `gpt-image-1.5`) retires 2026-12-01 — `gpt-image-2` is OpenAI's recommended replacement ([deprecations](https://developers.openai.com/api/docs/deprecations)).
 
