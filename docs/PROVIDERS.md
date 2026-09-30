@@ -1120,6 +1120,7 @@ Gen-3 Alpha Turbo and Gen-4 Aleph were removed from the Runway API on
 
 - Video only, publish now: one render to any mix of the platforms above, one `publish_log` entry per platform (URL or post id, visibility, error)
 - Idempotent: the request id is a hash of the video, cover and caption being published. Re-running the same publish resumes it instead of posting again; a changed cover or caption is a different publish, and the tool refuses to post it while another version of the same render is live or in flight unless `allow_additional_post` is set
+- Ambiguous failures never re-send: only definitive rejections (400/401/403/422, …) allow a retry. A 5xx, a dropped connection or an empty response is looked up by request id; if Upload-Post has no record, the publish is marked `ambiguous` and stays blocked until the user confirms nothing went out (`confirm_not_published`)
 - Safe defaults: YouTube `private`, TikTok the account's own privacy; `visibility: "private"` is rejected for platforms with no private mode
 - Not covered by this tool: scheduling, photo/text posts, comments. Keep using `export_bundle` for offline hand-off
 

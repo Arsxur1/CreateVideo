@@ -137,6 +137,11 @@ of this render — another cover or caption — is already live or in flight), s
 it to the user; only pass `allow_additional_post: true` if they confirm a
 second post. To retry a failed publish, pass `attempt: 2`.
 
+If it reports `ambiguous` (a 5xx, dropped connection or crash meant the upload
+may or may not have been accepted), it will not send it again on its own. Ask
+the user to check the target accounts; only if nothing went out, re-run with
+`confirm_not_published: true`.
+
 Defaults: YouTube `private`, TikTok the account's own privacy, other platforms
 public. `visibility: "private"` is rejected for platforms that have no private
 mode rather than silently posting publicly.

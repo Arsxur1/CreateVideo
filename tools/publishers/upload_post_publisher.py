@@ -84,6 +84,13 @@ TIKTOK_PRIVACY_LEVELS = (
 )
 
 FINAL_STATES = {"completed", "failed"}
+# Only these statuses prove Upload-Post rejected the upload before accepting it, so
+# re-sending is safe. Anything else (5xx, 408/409, transport errors, timeouts, a 2xx
+# without a JSON body) is ambiguous: the upload may have been accepted.
+DEFINITIVE_REJECTIONS = {400, 401, 402, 403, 404, 413, 422, 429}
+# Ledger states in which the same request id must not be uploaded again without a
+# status check proving it never arrived, or explicit user confirmation.
+UNRESOLVED_STATES = {"submitting", "submitted", "ambiguous", "in_flight"}
 POLL_INTERVAL_SECONDS = 10
 # After a dropped connection, how long an unknown request id may stay unknown before
 # we conclude the upload never arrived (nothing was published).
@@ -199,6 +206,13 @@ class UploadPostPublisher(BaseTool):
             "profile": {
                 "type": "string",
                 "description": f"Upload-Post profile to post from. Defaults to ${PROFILE_ENV}.",
+            },
+            "confirm_not_published": {
+                "type": "boolean",
+                "description": (
+                    "Only after an 'ambiguous' result: the user checked the platforms and nothing went out, "
+                    "so the same publish may be sent again."
+                ),
             },
             "attempt": {
                 "type": "integer",
@@ -500,7 +514,7 @@ class UploadPostPublisher(BaseTool):
                 remote = self._get_status(api_key, sub["request_id"])
                 if remote is None:
                     # Never reached Upload-Post: only a risk while the ledger says it may be in flight.
-                    if state in ("not_received", "failed"):
+                    if state == "failed":
                         continue
                     state = "unknown"
                 else:
@@ -644,10 +658,61 @@ class UploadPostPublisher(BaseTool):
             "connected_platforms": connected,
             "missing_platforms": missing,
             "already_submitted": existing is not None,
+            "ledger_state": self._ledger_state(plan),
             "conflicts": conflicts,
             "would_execute": not conflicts or bool(inputs.get("allow_additional_post")),
         })
         return result
+
+    # ---- Ambiguity handling ----
+
+    def _ledger_state(self, plan: dict[str, Any]) -> Optional[str]:
+        for sub in self._read_ledger(plan["ledger"]):
+            if sub.get("request_id") == plan["request_id"]:
+                return sub.get("state")
+        return None
+
+    def _submit_classified(self, api_key: str, plan: dict[str, Any]) -> Any:
+        """Send the upload once. Returns the ledger state to record ("submitted" or
+        "ambiguous"), or a ToolResult for a definitive rejection (safe to re-send)."""
+        import requests
+
+        try:
+            body = self._submit(api_key, plan["request_id"], plan["form"], plan["video"], plan["thumbnail"])
+        except UploadPostError as exc:
+            if exc.status in DEFINITIVE_REJECTIONS:
+                self._record(plan, "failed")
+                return ToolResult(
+                    success=False, error=f"Upload-Post rejected the upload: {exc}",
+                    data={"request_id": plan["request_id"]},
+                )
+            return "ambiguous"  # 5xx and friends: it may have been accepted — poll, never re-send
+        except requests.exceptions.ConnectTimeout:
+            self._record(plan, "failed")  # never connected, so nothing was sent
+            return ToolResult(
+                success=False, error="Could not connect to Upload-Post; nothing was sent. Re-running is safe.",
+                data={"request_id": plan["request_id"]},
+            )
+        except requests.RequestException:
+            return "ambiguous"  # dropped mid-request: it may have arrived — poll, never re-send
+        if not body:
+            return "ambiguous"  # 2xx without a JSON body: can't confirm acceptance
+        return "submitted"
+
+    def _ambiguous_result(self, plan: dict[str, Any], previous_state: Optional[str]) -> ToolResult:
+        detail = (
+            f"A previous run of this exact publish ended in state {previous_state!r}"
+            if previous_state else "The upload was sent but its outcome could not be confirmed"
+        )
+        return ToolResult(
+            success=False,
+            error=(
+                f"{detail} and Upload-Post has no record of request {plan['request_id']} yet. It may still have "
+                "been accepted, so it was NOT sent again. Check the target accounts: if it went live, you're done; "
+                "if nothing went out, re-run with confirm_not_published=true."
+            ),
+            data={"request_id": plan["request_id"], "ambiguous": True, "ledger_path": str(plan["ledger"])},
+        )
 
     # ---- Execution ----
 
@@ -683,19 +748,18 @@ class UploadPostPublisher(BaseTool):
                         ),
                         data={"conflicts": conflicts, "request_id": plan["request_id"]},
                     )
+                # Same request id seen before but unknown to Upload-Post: a previous run may have
+                # been accepted without us learning it (5xx, dropped connection, crash). Never
+                # upload it again on our own.
+                previous = self._ledger_state(plan)
+                if previous in UNRESOLVED_STATES and not inputs.get("confirm_not_published"):
+                    return self._ambiguous_result(plan, previous_state=previous)
                 # Recorded before the upload so an interruption mid-request is still visible next run.
                 self._record(plan, "submitting")
-                import requests
-
-                try:
-                    self._submit(api_key, plan["request_id"], plan["form"], plan["video"], plan["thumbnail"])
-                except UploadPostError:
-                    self._record(plan, "failed")
-                    raise
-                except requests.RequestException:
-                    # Connection dropped: the upload may have arrived. Never re-send — poll the same id.
-                    pass
-                self._record(plan, "submitted")
+                outcome = self._submit_classified(api_key, plan)
+                if isinstance(outcome, ToolResult):
+                    return outcome
+                self._record(plan, outcome)
 
             status = self._wait(api_key, plan["request_id"], int(inputs.get("wait_seconds", DEFAULT_WAIT_SECONDS)))
         except UploadPostError as exc:
@@ -716,15 +780,10 @@ class UploadPostPublisher(BaseTool):
 
         final = status.get("status")
         if final == "not_found":
-            self._record(plan, "not_received")
-            return ToolResult(
-                success=False,
-                error=(
-                    "The upload never reached Upload-Post (the connection dropped before it was received). "
-                    "Nothing was published; re-running the same publish is safe."
-                ),
-                data={"request_id": plan["request_id"], "resumed": resumed},
-            )
+            # Sent (or possibly sent) but not visible on the status endpoint: we can't prove
+            # either way, so block re-sending until the user checks.
+            self._record(plan, "ambiguous")
+            return self._ambiguous_result(plan, previous_state=None)
         self._record(plan, final if final in FINAL_STATES else "in_flight")
         publish_log = self._publish_log(plan, status, resumed)
 

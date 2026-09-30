@@ -44,6 +44,10 @@ class FakeUploadPost:
         self.drop_connection = False  # raise after "receiving" the upload
         self.lose_upload = False  # raise without receiving it
         self.result_for = {}  # platform -> per-platform result override
+        self.reply_status = None  # answer POST with this HTTP status (e.g. 503)
+        self.reply_body = None  # override the POST body (e.g. "" for an empty 2xx)
+        self.accept = True  # whether the fake records the upload before replying
+        self.connect_timeout = False
 
     def get(self, url, headers=None, params=None, timeout=None):
         if url.endswith("/api/uploadposts/status"):
@@ -60,6 +64,8 @@ class FakeUploadPost:
         assert url.endswith("/api/upload")
         form = list(data)
         self.posts.append((headers, form))
+        if self.connect_timeout:
+            raise requests.exceptions.ConnectTimeout("could not connect")
         if self.lose_upload:
             raise requests.ConnectionError("connection reset before the body was sent")
         request_id = dict(form)["request_id"]
@@ -76,11 +82,24 @@ class FakeUploadPost:
                     "post_url": f"https://{p}.example/post/{p}-id" if p != "youtube" else
                     "Post uploaded as Private. No public URL available.",
                 })
-        self.requests[request_id] = {"status": "completed", "completed": len(results), "total": len(results),
-                                     "results": results}
+        if self.accept:
+            self.requests[request_id] = {"status": "completed", "completed": len(results), "total": len(results),
+                                         "results": results}
         if self.drop_connection:
             raise requests.ConnectionError("connection reset after the upload was received")
+        if self.reply_status is not None:
+            return FakeResponse(self.reply_status, {"message": "Service Unavailable"})
+        if self.reply_body is not None:
+            return EmptyResponse()
         return FakeResponse(200, {"success": True, "request_id": request_id})
+
+
+class EmptyResponse:
+    status_code = 200
+    text = ""
+
+    def json(self):
+        raise ValueError("no JSON body")
 
 
 @pytest.fixture
@@ -239,14 +258,77 @@ def test_rerun_after_interruption_resumes_without_uploading(api, render):
     assert len(api.posts) == 1  # the re-run never uploaded again
 
 
-def test_upload_that_never_arrived_is_reported_and_safe_to_rerun(api, render):
+def test_dropped_upload_with_no_record_is_ambiguous_not_resent(api, render):
     api.lose_upload = True
     result = UploadPostPublisher().execute(_inputs(render[0], wait_seconds=0))
-    assert result.success is False and "Nothing was published" in result.error
+    assert result.success is False and result.data["ambiguous"] is True
+    assert "NOT sent again" in result.error
     api.lose_upload = False
     again = UploadPostPublisher().execute(_inputs(render[0]))
-    assert again.success and len(api.posts) == 2
+    assert again.success is False and again.data["ambiguous"] is True
+    assert len(api.posts) == 1
+    confirmed = UploadPostPublisher().execute(_inputs(render[0], confirm_not_published=True))
+    assert confirmed.success and len(api.posts) == 2
     assert api.posts[0][1] == api.posts[1][1]  # same request, same id
+
+
+@pytest.mark.parametrize("mode", ["http_503", "empty_2xx"])
+def test_ambiguous_submit_is_never_resent(api, render, mode):
+    """A 5xx or an empty 2xx doesn't prove the upload was rejected. With no record on
+    Upload-Post, a re-run — even from a fresh process reading the ledger — must not upload again."""
+    api.accept = False
+    if mode == "http_503":
+        api.reply_status = 503
+    else:
+        api.reply_body = ""
+    first = UploadPostPublisher().execute(_inputs(render[0], wait_seconds=0))
+    assert first.success is False and first.data["ambiguous"] is True
+    ledger = json.loads(Path(first.data["ledger_path"]).read_text())
+    assert ledger["submissions"][0]["state"] == "ambiguous"
+
+    api.reply_status = api.reply_body = None
+    api.accept = True
+    rerun = UploadPostPublisher().execute(_inputs(render[0]))  # new instance: state comes from disk
+    assert rerun.success is False and rerun.data["ambiguous"] is True
+    assert len(api.posts) == 1
+
+
+def test_503_after_acceptance_is_tracked_not_failed(api, render):
+    api.reply_status = 503  # accepted server-side, then the proxy answered 503
+    result = UploadPostPublisher().execute(_inputs(render[0]))
+    assert result.success, result.error
+    again = UploadPostPublisher().execute(_inputs(render[0]))
+    assert again.data["resumed"] is True and len(api.posts) == 1
+
+
+def test_crash_mid_upload_blocks_rerun_after_restart(api, render):
+    """The process died between recording 'submitting' and learning the outcome."""
+    tool = UploadPostPublisher()
+    plan = tool._plan(_inputs(render[0]))
+    tool._record(plan, "submitting")
+    result = UploadPostPublisher().execute(_inputs(render[0]))
+    assert result.success is False and result.data["ambiguous"] is True
+    assert api.posts == []
+
+
+@pytest.mark.parametrize("status", [400, 401, 403, 422])
+def test_definitive_rejection_allows_resend(api, render, status):
+    api.accept = False
+    api.reply_status = status
+    first = UploadPostPublisher().execute(_inputs(render[0]))
+    assert first.success is False and "rejected" in first.error
+    api.reply_status = None
+    api.accept = True
+    again = UploadPostPublisher().execute(_inputs(render[0]))
+    assert again.success and len(api.posts) == 2
+
+
+def test_connect_timeout_allows_resend(api, render):
+    api.connect_timeout = True
+    first = UploadPostPublisher().execute(_inputs(render[0]))
+    assert first.success is False and "nothing was sent" in first.error
+    api.connect_timeout = False
+    assert UploadPostPublisher().execute(_inputs(render[0])).success and len(api.posts) == 2
 
 
 def test_corrected_cover_after_interrupted_create_is_blocked(api, render, tmp_path):
