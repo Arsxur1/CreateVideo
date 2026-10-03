@@ -52,8 +52,11 @@ def _probe_video(path: Path, tool_registry: Any) -> dict[str, Any]:
     except Exception as e:
         logger.warning("audio_probe failed for %s: %s", path, e)
 
-    # If audio_probe didn't work, try ffprobe directly
-    if not result["technical_probe"]:
+    # audio_probe intentionally reports audio-oriented metadata and may omit
+    # the video stream. A source review needs a normalized video probe, so
+    # fall back to ffprobe whenever resolution is absent as well as when the
+    # tool failed outright.
+    if not result["technical_probe"] or not result["technical_probe"].get("resolution"):
         try:
             import subprocess
             cmd = [
@@ -90,11 +93,16 @@ def _probe_video(path: Path, tool_registry: Any) -> dict[str, Any]:
             timestamps = _sample_timestamps(duration, count=4)
             sample_result = frame_sampler.execute({
                 "input_path": str(path),
+                "strategy": "timestamps",
                 "timestamps": timestamps,
-                "output_dir": str(path.parent / ".source_review_frames"),
+                "output_dir": str(path.parent / ".source_review_frames" / path.stem),
             })
             if sample_result.success:
-                result["representative_frames"] = sample_result.data.get("frame_paths", [])
+                frames = sample_result.data.get("frames", [])
+                result["representative_frames"] = [
+                    frame["path"] if isinstance(frame, dict) else str(frame)
+                    for frame in frames
+                ]
     except Exception as e:
         logger.warning("frame_sampler failed for %s: %s", path, e)
 
