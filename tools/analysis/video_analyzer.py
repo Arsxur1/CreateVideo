@@ -323,14 +323,17 @@ class VideoAnalyzer(BaseTool):
             except Exception as e:
                 steps_failed.append(f"download_for_whisper: {e}")
 
-        # Fallback: Whisper transcription on audio
-        if transcript_data is None and audio_path:
+        # Fallback: Whisper transcription. Local files (and downloads whose
+        # separate audio extraction failed) only have video_path; the
+        # transcriber decodes the audio track straight from the video.
+        transcribe_source = audio_path or video_path
+        if transcript_data is None and transcribe_source:
             try:
                 from tools.analysis.transcriber import Transcriber
                 transcriber = Transcriber()
                 # Let Whisper auto-detect language instead of assuming English
                 tr_inputs = {
-                    "input_path": audio_path,
+                    "input_path": transcribe_source,
                     "model_size": "base",
                     "output_dir": str(output_dir),
                 }
@@ -359,6 +362,8 @@ class VideoAnalyzer(BaseTool):
                     }
                     transcript_data = brief["narration_transcript"]
                     steps_completed.append("transcript_whisper")
+                else:
+                    steps_failed.append(f"transcript_whisper: {tr_result.error}")
             except Exception as e:
                 steps_failed.append(f"transcript_whisper: {e}")
 

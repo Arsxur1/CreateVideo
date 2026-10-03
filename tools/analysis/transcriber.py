@@ -8,6 +8,8 @@ are not available.
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 import time
 from pathlib import Path
 from typing import Any, Optional
@@ -95,6 +97,9 @@ class Transcriber(BaseTool):
         "Verify word timestamps align with speech",
     ]
 
+    # Whisper's feature extractor runs at 16 kHz for every checkpoint size.
+    _SAMPLE_RATE = 16000
+
     def get_status(self) -> ToolStatus:
         try:
             import faster_whisper  # noqa: F401
@@ -112,6 +117,51 @@ class Transcriber(BaseTool):
     def estimate_runtime(self, inputs: dict[str, Any]) -> float:
         """Rough estimate: ~0.5x real-time on CPU for 'base' model."""
         return 60.0  # conservative default
+
+    def _load_audio(self, input_path: Path) -> tuple[Any, str, Optional[str]]:
+        """Decode ``input_path`` to the 16 kHz mono float32 array Whisper consumes.
+
+        Returns ``(samples, decoder, fallback_reason)``. faster-whisper's own
+        decoder goes first, but it opens media through PyAV with
+        ``av.open(..., metadata_errors="ignore")`` — a keyword newer PyAV
+        releases removed, so on those installs it raises TypeError before
+        reading a frame. The ffmpeg CLI fallback reads any container ffmpeg
+        can and does not depend on the PyAV API.
+        """
+        try:
+            from faster_whisper.audio import decode_audio
+
+            samples = decode_audio(str(input_path), sampling_rate=self._SAMPLE_RATE)
+            return samples, "faster_whisper", None
+        except Exception as exc:
+            decoder_error = f"{type(exc).__name__}: {exc}"
+
+        import numpy as np
+
+        ffmpeg = shutil.which("ffmpeg")
+        if not ffmpeg:
+            raise RuntimeError(
+                f"Could not decode audio from {input_path}: faster-whisper "
+                f"decoder failed ({decoder_error}) and ffmpeg is not on PATH"
+            )
+        proc = subprocess.run(
+            [
+                ffmpeg, "-nostdin", "-hide_banner", "-loglevel", "error",
+                "-i", str(input_path),
+                "-map", "0:a:0",
+                "-ac", "1", "-ar", str(self._SAMPLE_RATE),
+                "-f", "f32le", "-",
+            ],
+            capture_output=True,
+        )
+        if proc.returncode != 0:
+            detail = proc.stderr.decode("utf-8", "replace").strip()
+            raise RuntimeError(
+                f"Could not decode audio from {input_path}. "
+                f"faster-whisper decoder: {decoder_error}; "
+                f"ffmpeg: {detail or f'exit code {proc.returncode}'}"
+            )
+        return np.frombuffer(proc.stdout, dtype="<f4"), "ffmpeg", decoder_error
 
     def execute(self, inputs: dict[str, Any]) -> ToolResult:
         input_path = Path(inputs["input_path"])
@@ -134,6 +184,14 @@ class Transcriber(BaseTool):
             )
 
         start = time.time()
+
+        # Decode once, up front: a decode failure is reported as such instead
+        # of being mistaken for a CUDA failure, and the CPU retry below reuses
+        # the samples rather than decoding the file a second time.
+        try:
+            audio, audio_decoder, audio_decoder_fallback_reason = self._load_audio(input_path)
+        except Exception as exc:
+            return ToolResult(success=False, error=str(exc))
 
         # faster-whisper executes through CTranslate2, so that runtime—not
         # PyTorch—is authoritative for CUDA availability and compute types.
@@ -160,7 +218,7 @@ class Transcriber(BaseTool):
                 compute_type=selected_compute_type,
             )
             segments_iter, transcription_info = model.transcribe(
-                str(input_path),
+                audio,
                 language=language,
                 word_timestamps=True,
                 vad_filter=True,
@@ -226,6 +284,8 @@ class Transcriber(BaseTool):
             "device": device,
             "compute_type": compute_type,
             "gpu_fallback_reason": gpu_fallback_reason,
+            "audio_decoder": audio_decoder,
+            "audio_decoder_fallback_reason": audio_decoder_fallback_reason,
         }
 
         # Write transcript JSON

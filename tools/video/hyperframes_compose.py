@@ -257,7 +257,12 @@ class HyperFramesCompose(BaseTool):
             return None
         try:
             out = subprocess.run(
-                [node, "--version"], capture_output=True, text=True, timeout=5
+                [node, "--version"],
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=5,
             )
             if out.returncode != 0:
                 return None
@@ -295,6 +300,8 @@ class HyperFramesCompose(BaseTool):
                 [npm, "view", cls._NPM_PACKAGE, "version"],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=5,
             )
         except subprocess.TimeoutExpired:
@@ -341,10 +348,16 @@ class HyperFramesCompose(BaseTool):
             return cls._cli_probe_cache
 
         try:
+            # The CLI emits UTF-8 (doctor details contain "—" and "·"). Without
+            # an explicit encoding, text mode decodes with the OS locale (e.g.
+            # GBK on Chinese Windows), the pipe reader thread dies with
+            # UnicodeDecodeError, and the output comes back as None.
             proc = subprocess.run(
                 [npx, "--yes", cls._NPM_PACKAGE, "doctor", "--json"],
                 capture_output=True,
                 text=True,
+                encoding="utf-8",
+                errors="replace",
                 timeout=20,
             )
         except subprocess.TimeoutExpired:
@@ -1372,18 +1385,27 @@ class HyperFramesCompose(BaseTool):
                 cmd,
                 capture_output=True,
                 text=True,
+                # The CLI writes UTF-8; never decode it with the OS locale.
+                encoding="utf-8",
+                errors="replace",
                 timeout=timeout,
                 cwd=str(cwd) if cwd else None,
                 check=False,
             )
         except subprocess.TimeoutExpired as e:
             # Surface timeouts as a failed CompletedProcess so callers get a
-            # uniform shape. The stderr tail will say timeout.
+            # uniform shape. The stderr tail will say timeout. TimeoutExpired
+            # carries raw bytes on POSIX even in text mode, so decode here.
+            def _as_text(value: Any) -> str:
+                if isinstance(value, bytes):
+                    return value.decode("utf-8", "replace")
+                return value or ""
+
             return subprocess.CompletedProcess(
                 args=cmd,
                 returncode=124,
-                stdout=e.stdout or "",
-                stderr=(e.stderr or "") + f"\n[timeout after {timeout}s]",
+                stdout=_as_text(e.stdout),
+                stderr=_as_text(e.stderr) + f"\n[timeout after {timeout}s]",
             )
 
     @staticmethod

@@ -1,12 +1,25 @@
 import sys
 from types import SimpleNamespace
 
+import numpy as np
+
 from tools.analysis.transcriber import Transcriber
 
 
 class _Info:
     language = "en"
     duration = 1.0
+
+
+def _stub_decoder(monkeypatch) -> None:
+    """The fixture file is fake bytes; hand the tool one second of silence."""
+    monkeypatch.setitem(
+        sys.modules,
+        "faster_whisper.audio",
+        SimpleNamespace(
+            decode_audio=lambda path, sampling_rate: np.zeros(sampling_rate, np.float32)
+        ),
+    )
 
 
 def test_transcriber_uses_ctranslate2_cuda_without_torch(monkeypatch, tmp_path) -> None:
@@ -32,6 +45,7 @@ def test_transcriber_uses_ctranslate2_cuda_without_torch(monkeypatch, tmp_path) 
             get_supported_compute_types=lambda device: {"float16", "float32"},
         ),
     )
+    _stub_decoder(monkeypatch)
     input_path = tmp_path / "audio.wav"
     input_path.write_bytes(b"fake")
 
@@ -72,6 +86,7 @@ def test_transcriber_falls_back_when_cuda_fails_during_iteration(monkeypatch, tm
             get_supported_compute_types=lambda device: {"float16"},
         ),
     )
+    _stub_decoder(monkeypatch)
     input_path = tmp_path / "audio.wav"
     input_path.write_bytes(b"fake")
 

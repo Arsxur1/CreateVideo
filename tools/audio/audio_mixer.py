@@ -7,6 +7,10 @@ not installed.
 
 from __future__ import annotations
 
+import functools
+import json
+import math
+import subprocess
 import time
 from pathlib import Path
 from typing import Any
@@ -21,6 +25,19 @@ from tools.base_tool import (
     ToolStatus,
     ToolTier,
 )
+
+
+@functools.lru_cache(maxsize=None)
+def _alimiter_supports_latency() -> bool:
+    """True when this ffmpeg's alimiter has the ``latency`` option (FFmpeg 5.0+)."""
+    try:
+        proc = subprocess.run(
+            ["ffmpeg", "-hide_banner", "-h", "filter=alimiter"],
+            capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=15,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return "latency" in f"{proc.stdout}{proc.stderr}"
 
 
 class AudioMixer(BaseTool):
@@ -202,13 +219,31 @@ class AudioMixer(BaseTool):
         "Listen to mixed output and verify speech clarity and music ducking",
     ]
 
-    @staticmethod
-    def _loudnorm_filter(inputs: dict[str, Any], in_label: str, out_label: str) -> str:
-        """Build a loudnorm filter graph edge honoring the per-call LUFS target.
+    # full_mix renders at one fixed rate. Otherwise the filtergraph negotiates
+    # the first input's rate — usually 22.05/24 kHz TTS — and band-limits the
+    # music bed before it is mixed. 48 kHz also lets the true-peak limiter
+    # oversample by exactly 4x.
+    _FULL_MIX_SAMPLE_RATE = 48000
+    _TRUE_PEAK_CEILING_DBTP = -1.5
+    # alimiter holds its limit exactly at the oversampled rate, but resampling
+    # back down overshoots by up to ~0.5 dB on broadband material it limited
+    # hard. Limiting this far below the ceiling keeps the delivered true peak
+    # at or under it.
+    _LIMITER_MARGIN_DB = 0.5
+    # Limiting lowers loudness by an amount the pre-limiter measurement can't
+    # predict, so full_mix measures what it rendered and re-renders with a
+    # corrected gain until it lands within this tolerance (EBU R128 allows
+    # +/-0.5 LU), up to a fixed number of renders.
+    _LOUDNESS_TOLERANCE_LU = 0.5
+    _MAX_LOUDNESS_RENDERS = 3
 
-        The integrated loudness target (``I=``) was historically hard-coded to
-        -16 (podcast/Apple). sound-design.md targets -14 for YouTube/TikTok/IG,
-        and edit_decisions.metadata.loudnorm_target is the declarative form.
+    @staticmethod
+    def _loudnorm_target(inputs: dict[str, Any]) -> float:
+        """Resolve the per-call integrated loudness target in LUFS.
+
+        The target was historically hard-coded to -16 (podcast/Apple).
+        sound-design.md targets -14 for YouTube/TikTok/IG, and
+        edit_decisions.metadata.loudnorm_target is the declarative form.
         Forward that value (or pass loudnorm_target directly) so the executed
         loudness matches the target platform instead of silently defaulting.
         """
@@ -218,8 +253,61 @@ class AudioMixer(BaseTool):
         except (TypeError, ValueError):
             target = -16.0
         # Clamp to a sane loudness range to avoid malformed ffmpeg args.
-        target = max(-40.0, min(0.0, target))
+        return max(-40.0, min(0.0, target))
+
+    @staticmethod
+    def _loudnorm_filter(inputs: dict[str, Any], in_label: str, out_label: str) -> str:
+        """Build a single-pass loudnorm filter graph edge honoring the LUFS target."""
+        target = AudioMixer._loudnorm_target(inputs)
         return f"[{in_label}]loudnorm=I={target}:LRA=11:TP=-1.5[{out_label}]"
+
+    def _measure_loudness(
+        self, input_args: list[str], filter_parts: list[str], label: str
+    ) -> tuple[float, float]:
+        """Return the integrated loudness (LUFS) and true peak (dBTP) of ``[label]``.
+
+        Renders the graph to a null sink through loudnorm in analysis mode
+        and reads its JSON report. Silence measures as ``-inf``.
+        """
+        graph = ";".join([*filter_parts, f"[{label}]loudnorm=print_format=json[measured]"])
+        proc = self.run_command([
+            "ffmpeg", "-hide_banner", "-nostats",
+            *input_args,
+            "-filter_complex", graph,
+            "-map", "[measured]",
+            "-f", "null", "-",
+        ])
+        report = proc.stderr or ""
+        start, end = report.rfind("{"), report.rfind("}")
+        try:
+            stats = json.loads(report[start:end + 1]) if 0 <= start < end else {}
+            return float(stats["input_i"]), float(stats["input_tp"])
+        except (ValueError, KeyError, TypeError) as exc:
+            raise RuntimeError(
+                f"Could not read the loudness measurement from ffmpeg: {exc}"
+            ) from exc
+
+    def _true_peak_limit_filter(
+        self, in_label: str, gain_db: float, limit_dbfs: float, out_label: str
+    ) -> str:
+        """Apply a static gain, then hold peaks at ``limit_dbfs``.
+
+        alimiter only sees sample peaks, so it runs at 4x the mix rate where
+        sample peaks track true (inter-sample) peaks. ``level=0`` disables its
+        auto-level stage, which would otherwise push the output back up to
+        0 dBFS. ``latency=1`` removes the 5 ms lookahead delay; FFmpeg 4.x
+        lacks the option, and the shift it leaves is harmless to A/V sync.
+        """
+        rate = self._FULL_MIX_SAMPLE_RATE
+        limit = 10 ** (limit_dbfs / 20)
+        latency = ":latency=1" if _alimiter_supports_latency() else ""
+        chain = [f"volume={gain_db:.2f}dB"] if gain_db else []
+        chain += [
+            f"aresample={rate * 4}",
+            f"alimiter=limit={limit:.6f}:attack=5:release=50:level=0{latency}",
+            f"aresample={rate}",
+        ]
+        return f"[{in_label}]{','.join(chain)}[{out_label}]"
 
     def _track_filters(self, track: dict[str, Any]) -> list[str]:
         """Build per-track filters on the source timeline before scheduling it.
@@ -480,7 +568,12 @@ class AudioMixer(BaseTool):
         """One-call mix: layer narration tracks, add music with ducking, normalize.
 
         This is the preferred operation for the compose-director skill.
-        It combines mix + duck + normalize in a single FFmpeg filter graph.
+        It combines mix + duck + normalize in one FFmpeg filter graph. Tracks
+        are summed at unity gain and the output is 48 kHz. To normalize, it
+        measures the premix, renders with one static gain and a true-peak
+        limiter (<= -1.5 dBTP), then measures the render and re-renders with a
+        corrected gain if limiting cost more than 0.5 LU (at most 3 renders).
+        The measurements are returned in ``data["loudness"]``.
 
         Input format:
             {
@@ -537,13 +630,16 @@ class AudioMixer(BaseTool):
 
         for i, track in enumerate(all_tracks):
             input_args.extend(["-i", track["path"]])
-            filters = self._track_filters(track)
+            filters = [f"aresample={self._FULL_MIX_SAMPLE_RATE}", *self._track_filters(track)]
+            filter_parts.append(f"[{i}:a]{','.join(filters)}[a{i}]")
 
-            if filters:
-                filter_chain = ",".join(filters)
-                filter_parts.append(f"[{i}:a]{filter_chain}[a{i}]")
-            else:
-                filter_parts.append(f"[{i}:a]acopy[a{i}]")
+        # Every amix below uses normalize=0. amix's default normalize=1 scales
+        # each input by 1/(inputs still running), and a track placed with
+        # adelay counts as running from t=0: with 15 narration lines the
+        # first line came out ~23.5 dB down and the last at full level, and
+        # the attenuated copy fed to the sidechain key stopped the early lines
+        # ducking at all. Tracks are already gain-staged by their volume
+        # fields, so they sum at unity and the loudness stage sets the level.
 
         # If ducking is enabled and we have both speech and music, apply sidechain
         duck_enabled = ducking.get("enabled", True) if isinstance(ducking, dict) else bool(ducking)
@@ -560,7 +656,8 @@ class AudioMixer(BaseTool):
 
             if len(speech_tracks) > 1:
                 filter_parts.append(
-                    f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest[speech_all]"
+                    f"{speech_labels}amix=inputs={len(speech_tracks)}:duration=longest:"
+                    "normalize=0[speech_all]"
                 )
             else:
                 filter_parts.append(f"[a{speech_indices[0]}]acopy[speech_all]")
@@ -580,7 +677,8 @@ class AudioMixer(BaseTool):
 
             if len(music_tracks) > 1:
                 filter_parts.append(
-                    f"{music_labels}amix=inputs={len(music_tracks)}:duration=longest[music_mix]"
+                    f"{music_labels}amix=inputs={len(music_tracks)}:duration=longest:"
+                    "normalize=0[music_mix]"
                 )
                 music_in = "[music_mix]"
             else:
@@ -600,7 +698,9 @@ class AudioMixer(BaseTool):
             )
 
             # Final mix: the other speech branch + ducked music
-            mix_label = "[speech_out][music_out]amix=inputs=2:duration=longest[premix]"
+            mix_label = (
+                "[speech_out][music_out]amix=inputs=2:duration=longest:normalize=0[premix]"
+            )
 
             # Add SFX if present
             sfx_start = len(speech_tracks) + len(music_tracks)
@@ -608,7 +708,8 @@ class AudioMixer(BaseTool):
                 sfx_labels = "".join(f"[a{i}]" for i in range(sfx_start, sfx_start + len(sfx_tracks)))
                 filter_parts.append(mix_label.replace("[premix]", "[pressfx]"))
                 filter_parts.append(
-                    f"[pressfx]{sfx_labels}amix=inputs={1 + len(sfx_tracks)}:duration=longest[premix]"
+                    f"[pressfx]{sfx_labels}amix=inputs={1 + len(sfx_tracks)}:duration=longest:"
+                    "normalize=0[premix]"
                 )
             else:
                 filter_parts.append(mix_label)
@@ -617,7 +718,7 @@ class AudioMixer(BaseTool):
             # No ducking: simple amix of all tracks
             all_labels = "".join(f"[a{i}]" for i in range(len(all_tracks)))
             filter_parts.append(
-                f"{all_labels}amix=inputs={len(all_tracks)}:duration=longest:dropout_transition=2[premix]"
+                f"{all_labels}amix=inputs={len(all_tracks)}:duration=longest:normalize=0[premix]"
             )
 
         # A ducked music stream is gated by the speech sidechain, so its tail
@@ -632,24 +733,96 @@ class AudioMixer(BaseTool):
             )
             premix_label = "premix_duration"
 
-        # Normalize
+        # Loudness: measure, then apply ONE static gain. Single-pass loudnorm
+        # runs in dynamic mode and rides its gain up in every music-only gap,
+        # undoing the sidechain ducking; its two-pass linear=true mode silently
+        # reverts to dynamic whenever the gain would push peaks over TP or the
+        # measured LRA exceeds the target, both routine for ducked narration.
+        # A constant gain keeps the mixed speech/music balance and the limiter
+        # catches the peaks it pushes past the ceiling. The limiter also runs
+        # with normalize=false: unity-gain amix can sum past full scale.
+        #
+        # Limiting costs loudness the premix measurement can't foresee, so each
+        # normalized render is measured and re-rendered with the shortfall
+        # added to the gain. The true peak isn't chased that way: the limiter
+        # holds it on PCM, and a lossy encoder's overshoot moves unpredictably
+        # with the limit, so an over-ceiling encoded peak is reported instead.
+        def finite_or_none(value: float) -> float | None:
+            return value if math.isfinite(value) else None
+
+        ceiling = self._TRUE_PEAK_CEILING_DBTP
+        limit_dbfs = ceiling - self._LIMITER_MARGIN_DB
+        gain_db = 0.0
+        target_lufs: float | None = None
+        loudness: dict[str, Any] = {"true_peak_ceiling_dbtp": ceiling}
         if normalize:
-            filter_parts.append(self._loudnorm_filter(inputs, premix_label, "out"))
-            out_label = "[out]"
-        else:
-            out_label = f"[{premix_label}]"
+            measured_lufs, measured_tp = self._measure_loudness(
+                input_args, filter_parts, premix_label
+            )
+            loudness.update({
+                "target_lufs": self._loudnorm_target(inputs),
+                "measured_lufs": finite_or_none(measured_lufs),
+                "measured_true_peak_dbtp": finite_or_none(measured_tp),
+            })
+            # Below the BS.1770 absolute gate (-70 LUFS) the mix is effectively
+            # silent; boosting it would only raise the noise floor.
+            if math.isfinite(measured_lufs) and measured_lufs > -70:
+                target_lufs = loudness["target_lufs"]
+                gain_db = target_lufs - measured_lufs
 
-        filter_complex = ";".join(p for p in filter_parts if p)
+        renders = 0
+        while True:
+            renders += 1
+            graph = ";".join(p for p in [
+                *filter_parts,
+                self._true_peak_limit_filter(premix_label, gain_db, limit_dbfs, "out"),
+            ] if p)
+            cmd = ["ffmpeg", "-y", *input_args, "-filter_complex", graph, "-map", "[out]"]
+            if target is not None:
+                cmd.extend(["-t", str(target)])
+            cmd.append(str(output_path))
+            self.run_command(cmd)
+            if not normalize:
+                break
 
-        cmd = ["ffmpeg", "-y"]
-        cmd.extend(input_args)
-        cmd.extend(["-filter_complex", filter_complex])
-        cmd.extend(["-map", out_label])
-        if target is not None:
-            cmd.extend(["-t", str(target)])
-        cmd.append(str(output_path))
+            output_lufs, output_tp = self._measure_loudness(
+                ["-i", str(output_path)], [], "0:a"
+            )
+            loudness.update({
+                "output_lufs": finite_or_none(output_lufs),
+                "output_true_peak_dbtp": finite_or_none(output_tp),
+            })
+            miss_lu = (
+                target_lufs - output_lufs
+                if target_lufs is not None and math.isfinite(output_lufs)
+                else 0.0
+            )
+            if (
+                abs(miss_lu) <= self._LOUDNESS_TOLERANCE_LU
+                or renders >= self._MAX_LOUDNESS_RENDERS
+            ):
+                break
+            gain_db += miss_lu
 
-        self.run_command(cmd)
+        loudness["gain_db"] = round(gain_db, 2)
+        if normalize:
+            loudness["renders"] = renders
+            warnings = []
+            if abs(miss_lu) > self._LOUDNESS_TOLERANCE_LU:
+                warnings.append(
+                    f"Output measures {output_lufs:.1f} LUFS against the "
+                    f"{target_lufs} LUFS target after {renders} renders; closing "
+                    "the gap needs heavier peak limiting. Lower loudnorm_target or "
+                    "the volume of the loudest tracks."
+                )
+            if math.isfinite(output_tp) and output_tp > ceiling:
+                warnings.append(
+                    f"True peak {output_tp:.2f} dBTP is over the {ceiling} dBTP "
+                    "ceiling: lossy encoders overshoot the limited PCM. Write a "
+                    ".wav to deliver within the ceiling."
+                )
+            if warnings:
+                loudness["warning"] = " ".join(warnings)
 
         return ToolResult(
             success=True,
@@ -661,6 +834,8 @@ class AudioMixer(BaseTool):
                 "ducking_enabled": duck_enabled,
                 "normalized": normalize,
                 "target_duration": target_duration,
+                "sample_rate": self._FULL_MIX_SAMPLE_RATE,
+                "loudness": loudness,
                 "output": str(output_path),
             },
             artifacts=[str(output_path)],
