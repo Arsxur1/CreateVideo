@@ -58,6 +58,8 @@ export interface CinematicCaptionConfig {
 export interface CinematicRendererProps {
   [key: string]: unknown;
   scenes: CinematicScene[];
+  /** Output frame rate. Match it to the source footage to avoid duplicated frames (judder). Defaults to 30. */
+  fps?: number;
   titleFontSize?: number;
   titleWidth?: number;
   signalLineCount?: number;
