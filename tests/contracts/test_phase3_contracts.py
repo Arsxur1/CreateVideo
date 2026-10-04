@@ -703,6 +703,8 @@ class TestCapabilityMetadata:
             "google_tts",
             "inworld",
             "kling_official",
+            "microsoft_edge",
+            "omnivoice",
             "openai",
             "piper",
         }
