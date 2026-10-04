@@ -80,6 +80,16 @@ class TestPayload:
         assert payload["parameters"]["ratio"] == "16:9"
         assert payload["parameters"]["duration"] == 5
 
+    def test_prime_model_passes_through(self):
+        payload, error = DashscopeVideo()._build_payload({"prompt": "x", "model": "wan3.0-video-prime"})
+        assert error is None
+        assert payload["model"] == "wan3.0-video-prime"
+
+    def test_unknown_model_rejected(self):
+        payload, error = DashscopeVideo()._build_payload({"prompt": "x", "model": "wan3.0-t2v"})
+        assert payload is None
+        assert "Unsupported" in error
+
     def test_selector_string_duration_and_aspect_ratio(self):
         payload, error = DashscopeVideo()._build_payload(
             {"prompt": "x", "duration": "10", "aspect_ratio": "9:16"}
@@ -173,12 +183,17 @@ class TestCost:
 
     def test_scales_with_resolution_and_duration(self):
         tool = DashscopeVideo()
-        assert tool.estimate_cost({"resolution": "480P", "duration": 10}) == 0.5
-        assert tool.estimate_cost({"resolution": "720P", "duration": 5}) == 0.5
-        assert tool.estimate_cost({"resolution": "1080P", "duration": 5}) == 1.0
+        assert tool.estimate_cost({"resolution": "480P", "duration": 10}) == 0.52
+        assert tool.estimate_cost({"resolution": "720P", "duration": 5}) == 0.52
+        assert tool.estimate_cost({"resolution": "1080P", "duration": 5}) == 1.04
+
+    def test_prime_costs_more(self):
+        tool = DashscopeVideo()
+        assert tool.estimate_cost({"model": "wan3.0-video-prime", "resolution": "720P", "duration": 5}) == 0.7
+        assert tool.estimate_cost({"model": "wan3.0-video-prime", "resolution": "1080P", "duration": 10}) == 2.8
 
     def test_model_chosen_duration_budgets_maximum(self):
-        assert DashscopeVideo().estimate_cost({"duration": -1}) == 3.0
+        assert DashscopeVideo().estimate_cost({"duration": -1}) == 3.12
 
 
 class TestExecute:
@@ -208,7 +223,7 @@ class TestExecute:
         assert result.success, result.error
         assert out.read_bytes() == b"mp4-bytes"
         assert result.data["task_id"] == "task-1"
-        assert result.cost_usd == 0.8  # 8s x $0.10 at 720P, not the 30s budget
+        assert result.cost_usd == 0.83  # 8s x $0.104 at 720P, not the 30s budget
         submit = calls["post"][0]
         assert submit["url"].endswith("/api/v1/services/aigc/video-generation/video-synthesis")
         assert submit["headers"]["X-DashScope-Async"] == "enable"

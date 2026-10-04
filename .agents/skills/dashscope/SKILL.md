@@ -1,6 +1,6 @@
 ---
 name: dashscope
-description: DashScope (Alibaba Cloud Bailian / 阿里云百炼) integration — image generation (qwen-image-2.0-pro), video generation (wan3.0-video), text-to-speech (qwen3-tts-flash), and ASR with word-level timestamps (qwen3-asr-flash-filetrans). Use when generating images via Qwen-Image, video via Wan 3.0, narrating via Qwen-TTS, or transcribing with word-level timestamps via Qwen-ASR.
+description: DashScope (Alibaba Cloud Bailian / 阿里云百炼) integration — image generation (qwen-image-2.0-pro), video generation (wan3.0-video, wan3.0-video-prime), text-to-speech (qwen3-tts-flash), and ASR with word-level timestamps (qwen3-asr-flash-filetrans). Use when generating images via Qwen-Image, video via Wan 3.0, narrating via Qwen-TTS, or transcribing with word-level timestamps via Qwen-ASR.
 ---
 
 # DashScope
@@ -31,7 +31,7 @@ POST https://dashscope.aliyuncs.com/api/v1/services/aigc/video-generation/video-
 Header: X-DashScope-Async: enable
 ```
 
-- Model: `wan3.0-video` — one model for text-to-video, first/last-frame, and reference-to-video. The `/compatible-mode/v1/models` listing does **not** show video models; a key can call them anyway.
+- Model: `wan3.0-video` (default) or `wan3.0-video-prime` (faster, ~1.3-1.5x the price) — each covers text-to-video, first/last-frame, and reference-to-video with the same request shape. The `/compatible-mode/v1/models` listing does **not** show video models; a key can call them anyway.
 - Body: `{model, input: {prompt, media: [{type, url}]}, parameters: {resolution, ratio, duration, audio, seed, prompt_extend, watermark}}`
 - `media[].type`: `first_frame`, `last_frame`, `reference_image` (≤10), `reference_video` (≤5, total ≤15s), `reference_audio` (≤5, total ≤15s). Frame types and `reference_*` types are mutually exclusive. `url` accepts public URLs or `data:{mime};base64,...`.
 - Returns `task_id` → poll `GET /api/v1/tasks/{task_id}` until `SUCCEEDED` → download `output.video_url` (valid 24h). Task IDs expire after 24h.
@@ -145,7 +145,8 @@ result = DashscopeAsr().execute({
 - `last_image_url` / `last_image_path`: final frame for `first_last_frame_to_video`
 - `reference_image_urls|paths`, `reference_video_url(s)|path(s)`, `reference_audio_urls|paths`: references for `reference_to_video`
 - `duration`: default `5`; 2-30 seconds, or `-1` to let the model choose (cost is budgeted at 30s until the real length is known)
-- `resolution`: default `"720P"`; `"480P"` / `"1080P"` — roughly $0.05 / $0.10 / $0.20 per second
+- `model`: default `"wan3.0-video"`; `"wan3.0-video-prime"` for faster turnaround
+- `resolution`: default `"720P"`; `"480P"` / `"1080P"` — per second up to $0.052 / $0.104 / $0.208 (standard) or $0.068 / $0.14 / $0.28 (prime)
 - `ratio` (alias `aspect_ratio`): default `"16:9"` for text-to-video, `"adaptive"` otherwise
 - `audio`: default `true`; `seed`; `prompt_extend`: default `true`; `watermark`: default `false`
 - `poll_interval_seconds`: default `15`; `timeout_seconds`: default `1800`
@@ -172,7 +173,7 @@ result = DashscopeAsr().execute({
 - **ASR "file not accessible":** `audio_url` must be publicly reachable. DashScope servers fetch the file; local paths and auth-gated URLs don't work.
 - **ASR poll timeout:** Increase `timeout_seconds` (default 300). Long audio files take longer to transcribe.
 - **ASR no word timestamps:** Ensure `enable_words: true` and model is `qwen3-asr-flash-filetrans` (not the sync `qwen3-asr-flash`).
-- **Video "Model not exist":** The model name is wrong for the region. Mainland China uses `wan3.0-video` (not `wan3.0-t2v`).
+- **Video "Model not exist":** The model name is wrong for the region. Mainland China uses `wan3.0-video` / `wan3.0-video-prime` (not `wan3.0-t2v`).
 - **Video 401 with an international key:** Set `DASHSCOPE_REGION=intl`.
 - **Video timed out:** The error includes `task_id`; query `GET /api/v1/tasks/{task_id}` within 24 hours to recover the clip.
 - **Auth error (401):** Verify `DASHSCOPE_API_KEY` is set. Use `Authorization: Bearer $KEY` header.

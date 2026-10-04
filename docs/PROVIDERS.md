@@ -296,7 +296,7 @@ Official references: [Seedance model list](https://www.volcengine.com/docs/82379
 #### What it's best for
 
 - Chinese-language image generation with strong prompt understanding (Qwen-Image)
-- Text, image, first/last-frame, and reference video with native audio, up to 30s (Wan 3.0, `wan3.0-video`)
+- Text, image, first/last-frame, and reference video with native audio, up to 30s (Wan 3.0: `wan3.0-video`, or the faster `wan3.0-video-prime`)
 - Natural Mandarin narration (Qwen-TTS, Cherry voice)
 - Word-level timestamp transcription for subtitle alignment (Qwen-ASR filetrans)
 - Replacing the broken `whisperx` slot for ASR
@@ -305,7 +305,7 @@ Official references: [Seedance model list](https://www.volcengine.com/docs/82379
 
 DashScope's `/compatible-mode/v1/` only supports `/chat/completions` and `/embeddings`. Image gen, video gen, TTS, and ASR all use DashScope-native endpoints with nested `{model, input, parameters}` request shape — not OpenAI-compatible paths.
 
-The video tool (`wan3.0-video`) submits an async task and polls it; the clip URL expires after 24 hours, so the tool downloads it immediately. The API defaults to 1080P; `dashscope_video` defaults to 720P to halve the per-second cost. Local images, videos, and audio are inlined as base64, so no upload host is needed.
+The video tool (`wan3.0-video` / `wan3.0-video-prime`) submits an async task and polls it; the clip URL expires after 24 hours, so the tool downloads it immediately. The API defaults to 1080P; `dashscope_video` defaults to 720P to roughly halve the per-second cost. Local images, videos, and audio are inlined as base64, so no upload host is needed.
 
 The ASR tool (`qwen3-asr-flash-filetrans`) uses an async submit-poll pattern. Audio must be at a publicly accessible URL (local files are not supported). Word timestamps are in milliseconds, normalized to seconds by the tool.
 
@@ -314,7 +314,8 @@ The ASR tool (`qwen3-asr-flash-filetrans`) uses an async submit-poll pattern. Au
 | Model | Price |
 |------|-------|
 | `qwen-image-2.0-pro` | ~$0.02 per image (check console for current rates) |
-| `wan3.0-video` | Per output second: 480P ~$0.05, 720P ~$0.10, 1080P ~$0.20 (mainland China: ¥0.30 / ¥0.60 / ¥1.20) |
+| `wan3.0-video` | Per output second, 480P / 720P / 1080P: Beijing ¥0.30 / ¥0.60 / ¥1.20; Singapore ¥0.375 / ¥0.749 / ¥1.499 (~$0.052 / $0.104 / $0.208) |
+| `wan3.0-video-prime` | Per output second, 480P / 720P / 1080P: Beijing ¥0.45 / ¥0.90 / ¥1.80; Singapore $0.068 / $0.14 / $0.28 |
 | `qwen3-tts-flash` | ~$0.000015 per character |
 | `qwen3-asr-flash-filetrans` | Per-minute billing (check console) |
 

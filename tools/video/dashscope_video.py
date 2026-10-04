@@ -1,7 +1,8 @@
 """DashScope (Alibaba Cloud Bailian) video generation via Wan 3.0 (万相 3.0).
 
-``wan3.0-video`` is a single model that covers text-to-video, first/last-frame
-image-to-video, and reference-conditioned video (images, videos, audio). The
+``wan3.0-video`` (standard) and ``wan3.0-video-prime`` (faster, pricier) share
+one request shape covering text-to-video, first/last-frame image-to-video, and
+reference-conditioned video (images, videos, audio). The
 API is asynchronous: submit a task with ``X-DashScope-Async: enable``, poll
 ``/api/v1/tasks/{task_id}``, then download ``video_url`` (valid ~24h).
 
@@ -36,7 +37,7 @@ INTL_BASE_URL = "https://dashscope-intl.aliyuncs.com"
 SUBMIT_PATH = "/api/v1/services/aigc/video-generation/video-synthesis"
 TASK_PATH = "/api/v1/tasks/{task_id}"
 
-MODELS = ["wan3.0-video"]
+MODELS = ["wan3.0-video", "wan3.0-video-prime"]
 DEFAULT_MODEL = "wan3.0-video"
 
 OPERATIONS = [
@@ -53,10 +54,15 @@ RATIOS = ["adaptive", "21:9", "16:9", "4:3", "1:1", "3:4", "9:16"]
 DEFAULT_DURATION = 5
 MAX_DURATION = 30
 
-# International list price in USD per output second. Mainland China bills in
-# CNY at a slightly lower rate (0.30 / 0.60 / 1.20 CNY), so this is a
-# conservative upper bound for both regions.
-USD_PER_SECOND = {"480P": 0.05, "720P": 0.10, "1080P": 0.20}
+# USD per output second at the Singapore list price, the most expensive region
+# for both models, so the estimate is an upper bound everywhere. Singapore
+# lists wan3.0-video in CNY (0.37471 / 0.74942 / 1.49884), converted at 7.2;
+# Beijing bills 0.30 / 0.60 / 1.20 CNY (standard) and 0.45 / 0.90 / 1.80 CNY
+# (prime).
+USD_PER_SECOND = {
+    "wan3.0-video": {"480P": 0.052, "720P": 0.104, "1080P": 0.208},
+    "wan3.0-video-prime": {"480P": 0.068, "720P": 0.14, "1080P": 0.28},
+}
 
 MAX_REFERENCE_IMAGES = 10
 MAX_REFERENCE_VIDEOS = 5
@@ -103,6 +109,7 @@ class DashscopeVideo(BaseTool):
     }
     best_for = [
         "text, image, first/last-frame, and reference video with Wan 3.0",
+        "faster turnaround with wan3.0-video-prime",
         "Chinese-language prompts and Mandarin dialogue with native audio",
         "clips up to 30 seconds at 480P/720P/1080P",
     ]
@@ -126,6 +133,10 @@ class DashscopeVideo(BaseTool):
                 "type": "string",
                 "enum": MODELS,
                 "default": DEFAULT_MODEL,
+                "description": (
+                    "wan3.0-video is the standard model; wan3.0-video-prime is "
+                    "the faster variant at ~1.3-1.5x the per-second price."
+                ),
             },
             "reference_image_url": {
                 "type": "string",
@@ -196,7 +207,7 @@ class DashscopeVideo(BaseTool):
                 "type": "string",
                 "enum": RESOLUTIONS,
                 "default": DEFAULT_RESOLUTION,
-                "description": "Billed per second; 1080P costs 2x 720P and 4x 480P.",
+                "description": "Billed per second; 1080P costs ~2x 720P and ~4x 480P.",
             },
             "ratio": {
                 "type": "string",
@@ -306,8 +317,10 @@ class DashscopeVideo(BaseTool):
         return duration
 
     def estimate_cost(self, inputs: dict[str, Any]) -> float:
+        model = inputs.get("model", DEFAULT_MODEL)
+        rates = USD_PER_SECOND.get(model, USD_PER_SECOND["wan3.0-video-prime"])
         resolution = inputs.get("resolution", DEFAULT_RESOLUTION)
-        rate = USD_PER_SECOND.get(resolution, USD_PER_SECOND["1080P"])
+        rate = rates.get(resolution, rates["1080P"])
         duration = self._duration(inputs)
         if isinstance(duration, bool) or not isinstance(duration, int) or duration < 1:
             # -1 lets the model pick a length; budget for the maximum.
