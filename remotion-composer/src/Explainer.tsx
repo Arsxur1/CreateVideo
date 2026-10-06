@@ -282,6 +282,9 @@ interface Cut {
   phase?: SkinPhase;
   crossLabels?: SkinCrossSectionLabels;
   introFade?: boolean;
+  focusX?: number;
+  centerY?: number;
+  fitFrac?: number;
   // Size guide (type: "size_guide")
   sizeItems?: SizeGuideItem[];
   // End card (type: "end_card")
@@ -695,7 +698,16 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
     return <SkinCrossSection phase={cut.phase} labels={cut.crossLabels} introFade={cut.introFade} />;
   }
   if (cut.type === "skin_cross_section_3d") {
-    return <SkinCrossSection3D phase={cut.phase} labels={cut.crossLabels} introFade={cut.introFade} />;
+    return (
+      <SkinCrossSection3D
+        phase={cut.phase}
+        labels={cut.crossLabels}
+        introFade={cut.introFade}
+        focusX={cut.focusX}
+        centerY={cut.centerY}
+        fitFrac={cut.fitFrac}
+      />
+    );
   }
   if (cut.type === "size_guide") {
     return <SizeGuide items={cut.sizeItems} />;
@@ -902,10 +914,23 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
     );
   };
 
+  // In split layout, 3D scenes use the full 16:9 frame (left of the text panel)
+  // instead of the narrow vertical panel.
+  const isBleed = (cut: Cut) => layout === "split" && cut.type === "skin_cross_section_3d";
+  const renderCut = (cut: Cut) => {
+    const from = Math.round(cut.in_seconds * fps);
+    const duration = Math.round((cut.out_seconds - cut.in_seconds) * fps);
+    return (
+      <Sequence key={cut.id} from={from} durationInFrames={duration}>
+        <SceneRenderer cut={cut} theme={theme} />
+      </Sequence>
+    );
+  };
+
   const scenes = (
     <>
       {/* Layer 1: Visual scenes */}
-      {cuts.map((cut) => {
+      {cuts.filter((cut) => !isBleed(cut)).map((cut) => {
         const from = Math.round(cut.in_seconds * fps);
         const duration = Math.round((cut.out_seconds - cut.in_seconds) * fps);
 
@@ -934,6 +959,9 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
 
       {layout === "split" ? (
         <>
+          {cuts
+            .filter(isBleed)
+            .map((cut) => renderCut({ ...cut, focusX: (textLeft * 0.5) / width, fitFrac: (textLeft * 0.9) / width, centerY: 0.5 }))}
           <div style={{ position: "absolute", left: panelLeft, top: 0, width: panelW, height, overflow: "hidden" }}>
             <div style={{ position: "relative", width: 1080, height: 1920, transform: `scale(${panelScale})`, transformOrigin: "0 0" }}>
               <CanvasContext.Provider value={{ width: 1080, height: 1920 }}>{scenes}</CanvasContext.Provider>

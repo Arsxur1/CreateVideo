@@ -1720,7 +1720,8 @@ class VideoCompose(BaseTool):
             # local remotion binary via node_modules/.bin. Without this,
             # Windows npx cannot locate the CLI and returns "could not
             # determine executable to run".
-            self.run_command(cmd, timeout=600, cwd=composer_dir)
+            # 1800s: Three.js (WebGL) scenes render on CPU in headless Chrome.
+            self.run_command(cmd, timeout=1800, cwd=composer_dir)
         except Exception as e:
             return ToolResult(success=False, error=f"Remotion render failed: {e}")
         finally:
