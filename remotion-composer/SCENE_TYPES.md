@@ -25,6 +25,7 @@ When you add a new component, append it here and in `src/components/index.ts`.
 | `anime_scene` | `AnimeScene` | `images` (list) | `particles`, `lightingFrom`, `lightingTo`, `vignette` | Still-image anime scene with particles + camera motion |
 | **`terminal_scene`** | **`TerminalScene`** | **`steps`** (list of cmd/out/pause/pill) | **`terminalTitle`, `prompt`, `accentColor`** | **Synthetic terminal animation — NO real capture needed. See [`.agents/skills/synthetic-screen-recording/SKILL.md`](../.agents/skills/synthetic-screen-recording/SKILL.md)** |
 | **`screenshot_scene`** | **`ScreenshotScene`** | **`backgroundImage`** (path in `public/`), **`screenshotSteps`** (list of overlays) | **`screenshotSize` (natural px w/h), `cursorStartAt`, `accentColor`** | **Approach-1 synthetic UI — drop any screenshot, animate scripted overlays on top (cursor, click_pulse, type_into, bubble_append, typing_dots, highlight_box, callout_balloon). Viewer-indistinguishable from a real recording for 15–30s focused demos. Coordinates are normalized (0–1) against the contain-fit rect. See [`.agents/skills/synthetic-ui-recording/SKILL.md`](../.agents/skills/synthetic-ui-recording/SKILL.md) (planned).** || **`skin_cross_section`** | **`SkinCrossSection`** | — | **`phase` (scar / sealed / healed), `crossLabels` {epidermis, dermis, collagen, moisture, signal}, `introFade`** | **Animated skin cut: chaotic orange collagen → sheet lowers → moisture film → fibroblast pulses slow → fibres align. Leaves the bottom ~35% free for a `thesis` overlay** |
+| **`skin_cross_section_3d`** | **`SkinCrossSection3D`** | — | **`phase`, `crossLabels`, `introFade`** | **Same story in Three.js: lit skin block cutaway, tube collagen, translucent sheet that drapes over the scar, water droplets, slow camera move. Needs WebGL (`REMOTION_GL=angle` headless); ~50 s CPU render per second of video** |
 | **`size_guide`** | **`SizeGuide`** | — | **`sizeItems` [{cm: [w,h], zone: face/arm/abdomen/burn, label}]** | **Four sheets drop onto body-zone silhouettes with sizes (Yafho topic 06)** |
 | **`end_card`** | **`EndCard`** | — | **`logoSrc`, `brand`, `tagline`, `handle`, `qr` (0/1 matrix), `qrCaption`** | **Navy brand end card: logo or wordmark, QR, @handle** |
 
@@ -56,6 +57,7 @@ Any overlay may set `layouts: ["full"]` or `["split"]` to render only in that la
 ## Render environment switches (`remotion.config.ts`)
 
 - `REMOTION_BROWSER_EXECUTABLE=/path/to/headless_shell` — use an existing Chrome instead of downloading one.
+- `REMOTION_GL=angle` — OpenGL backend for Three.js scenes in headless Chrome.
 - `REMOTION_OFFLINE_GOOGLE_FONTS=1` — stub every `@remotion/google-fonts/*` import (no fonts.gstatic.com requests; system fallbacks).
 
 ---

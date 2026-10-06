@@ -22,7 +22,7 @@
       "source": "",
       "in_seconds": 5,
       "out_seconds": 14,
-      "type": "skin_cross_section",
+      "type": "skin_cross_section_3d",
       "phase": "scar"
     },
     {
@@ -30,7 +30,7 @@
       "source": "",
       "in_seconds": 14,
       "out_seconds": 22,
-      "type": "skin_cross_section",
+      "type": "skin_cross_section_3d",
       "phase": "sealed",
       "introFade": false
     },
@@ -1099,6 +1099,7 @@
       "H07",
       "H08"
     ],
-    "music": null
+    "music": null,
+    "cross_section": "3d"
   }
 }

@@ -15,6 +15,7 @@ export { ScreenshotScene } from "./ScreenshotScene";
 export { ProviderChip } from "./ProviderChip";
 export { ThesisTitle } from "./ThesisTitle";
 export { SkinCrossSection } from "./SkinCrossSection";
+export { SkinCrossSection3D } from "./SkinCrossSection3D";
 export { MarginOverlay } from "./MarginOverlay";
 export { TimeCounter } from "./TimeCounter";
 export { SizeGuide } from "./SizeGuide";

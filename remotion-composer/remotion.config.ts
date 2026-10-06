@@ -8,6 +8,11 @@ if (process.env.REMOTION_BROWSER_EXECUTABLE) {
   Config.setBrowserExecutable(process.env.REMOTION_BROWSER_EXECUTABLE);
 }
 
+// Opt-in OpenGL backend for WebGL / Three.js scenes, e.g. REMOTION_GL=angle.
+if (process.env.REMOTION_GL) {
+  Config.setChromiumOpenGlRenderer(process.env.REMOTION_GL as "angle" | "swangle" | "egl" | "swiftshader" | "vulkan" | "angle-egl");
+}
+
 // Opt-in: render without fonts.gstatic.com. Every @remotion/google-fonts/<Font>
 // import becomes a no-op stub, so locked-down networks fall back to system fonts
 // instead of failing the render. Fonts shipped in public/ (e.g. fonts/yafho) are unaffected.

@@ -18,6 +18,7 @@ cd remotion-composer && npm ci && cd ..
 pip install qrcode
 python projects/yafho/build_hero.py              # все форматы
 python projects/yafho/build_hero.py --only 9x16  # один формат
+python projects/yafho/build_hero.py --cross-section 2d  # плоская схема вместо 3D (быстрее)
 ```
 В закрытых сетях (нет доступа к fonts.gstatic.com / remotion.media):
 `REMOTION_OFFLINE_GOOGLE_FONTS=1 REMOTION_BROWSER_EXECUTABLE=/path/to/headless_shell python projects/yafho/build_hero.py`.

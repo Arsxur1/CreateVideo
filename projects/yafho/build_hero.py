@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -70,7 +71,8 @@ def first_file(folder: Path, exts: tuple[str, ...]) -> Path | None:
     return files[0] if files else None
 
 
-def build_decisions() -> dict:
+def build_decisions(cross_section: str = "3d") -> dict:
+    section_type = "skin_cross_section_3d" if cross_section == "3d" else "skin_cross_section"
     cuts: list[dict] = []
     overlays: list[dict] = []
     missing: list[str] = []
@@ -86,9 +88,9 @@ def build_decisions() -> dict:
                 cut.update(type="text_card", text=f"нужен {sid}", fontSize=48,
                            color="#0F2440", backgroundColor="#ECE6DD")
         elif sid == "H02":
-            cut.update(type="skin_cross_section", phase="scar")
+            cut.update(type=section_type, phase="scar")
         elif sid == "H03":
-            cut.update(type="skin_cross_section", phase="sealed", introFade=False)
+            cut.update(type=section_type, phase="sealed", introFade=False)
         elif sid == "H09":
             logo = ASSETS / "logo.png"
             cut.update(type="end_card", brand="Yafho SiliSkin", handle="@sil.icare",
@@ -130,6 +132,7 @@ def build_decisions() -> dict:
             "source_of_truth": "projects/yafho/TZ.md §2",
             "missing_kling_clips": missing,
             "music": str(track.name) if track else None,
+            "cross_section": cross_section,
         },
     }
 
@@ -173,9 +176,13 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--only", choices=sorted(FORMATS), action="append")
     ap.add_argument("--decisions-only", action="store_true")
+    ap.add_argument("--cross-section", choices=["3d", "2d"], default="3d",
+                    help="H02/H03: Three.js 3D cutaway (default) or the flat 2D diagram")
     args = ap.parse_args()
+    # Three.js needs a WebGL backend in headless Chrome.
+    os.environ.setdefault("REMOTION_GL", "angle")
 
-    decisions = build_decisions()
+    decisions = build_decisions(args.cross_section)
     DECISIONS.parent.mkdir(parents=True, exist_ok=True)
     DECISIONS.write_text(json.dumps(decisions, ensure_ascii=False, indent=2), encoding="utf-8")
     missing = decisions["metadata"]["missing_kling_clips"]

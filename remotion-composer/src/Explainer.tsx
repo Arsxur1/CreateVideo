@@ -48,6 +48,7 @@ import type { ScreenshotStep } from "./components/ScreenshotScene";
 import { ProviderChip } from "./components/ProviderChip";
 import { ThesisTitle } from "./components/ThesisTitle";
 import { SkinCrossSection } from "./components/SkinCrossSection";
+import { SkinCrossSection3D } from "./components/SkinCrossSection3D";
 import type { SkinPhase, SkinCrossSectionLabels } from "./components/SkinCrossSection";
 import { MarginOverlay } from "./components/MarginOverlay";
 import { TimeCounter } from "./components/TimeCounter";
@@ -692,6 +693,9 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   // --- Yafho SiliSkin components ---
   if (cut.type === "skin_cross_section") {
     return <SkinCrossSection phase={cut.phase} labels={cut.crossLabels} introFade={cut.introFade} />;
+  }
+  if (cut.type === "skin_cross_section_3d") {
+    return <SkinCrossSection3D phase={cut.phase} labels={cut.crossLabels} introFade={cut.introFade} />;
   }
   if (cut.type === "size_guide") {
     return <SizeGuide items={cut.sizeItems} />;
