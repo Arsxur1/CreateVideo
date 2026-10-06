@@ -46,6 +46,15 @@ import type { TerminalStep } from "./components/TerminalScene";
 import { ScreenshotScene } from "./components/ScreenshotScene";
 import type { ScreenshotStep } from "./components/ScreenshotScene";
 import { ProviderChip } from "./components/ProviderChip";
+import { ThesisTitle } from "./components/ThesisTitle";
+import { SkinCrossSection } from "./components/SkinCrossSection";
+import type { SkinPhase, SkinCrossSectionLabels } from "./components/SkinCrossSection";
+import { MarginOverlay } from "./components/MarginOverlay";
+import { TimeCounter } from "./components/TimeCounter";
+import { SizeGuide } from "./components/SizeGuide";
+import type { SizeGuideItem } from "./components/SizeGuide";
+import { EndCard } from "./components/EndCard";
+import { CanvasContext } from "./components/yafho/tokens";
 import type { ParticleType } from "./components/ParticleOverlay";
 import { resolveTheme, type ThemeConfig, DEFAULT_THEME } from "./Root";
 
@@ -268,10 +277,30 @@ interface Cut {
   screenshotSteps?: ScreenshotStep[];
   screenshotSize?: { width: number; height: number };
   cursorStartAt?: [number, number];
+  // Skin cross-section (type: "skin_cross_section")
+  phase?: SkinPhase;
+  crossLabels?: SkinCrossSectionLabels;
+  introFade?: boolean;
+  // Size guide (type: "size_guide")
+  sizeItems?: SizeGuideItem[];
+  // End card (type: "end_card")
+  logoSrc?: string;
+  brand?: string;
+  tagline?: string;
+  handle?: string;
+  qr?: number[][];
+  qrCaption?: string;
 }
 
 interface Overlay {
-  type: "section_title" | "stat_reveal" | "hero_title" | "provider_chip";
+  type:
+    | "section_title"
+    | "stat_reveal"
+    | "hero_title"
+    | "provider_chip"
+    | "thesis"
+    | "margin_overlay"
+    | "time_counter";
   in_seconds: number;
   out_seconds: number;
   text?: string;
@@ -282,6 +311,16 @@ interface Overlay {
   providers?: string[];
   cycleSeconds?: number;
   label?: string;
+  // thesis
+  variant?: "dark" | "light";
+  fontSize?: number;
+  // margin_overlay
+  scarBox?: { x: number; y: number; w: number; h: number };
+  marginPx?: number;
+  // time_counter
+  labels?: string[];
+  /** Only render in these layouts (default: all). */
+  layouts?: ("full" | "split")[];
 }
 
 interface AudioLayer {
@@ -304,6 +343,17 @@ interface AudioConfig {
 
 export interface ExplainerProps {
   [key: string]: unknown;
+  /**
+   * "full"  — scenes fill the frame (default).
+   * "split" — 16:9 frame: scenes play in a 9:16 panel on the left (or centre),
+   *           thesis overlays move to a text panel on the right.
+   */
+  layout?: "full" | "split";
+  splitPanel?: "left" | "center";
+  /** Exact composition length; otherwise last cut end + 1s. */
+  durationSeconds?: number;
+  width?: number;
+  height?: number;
   cuts: Cut[];
   overlays?: Overlay[];
   captions?: WordCaption[];
@@ -417,12 +467,31 @@ const ImageScene: React.FC<{ src: string; animation?: string }> = ({
 // Enhanced Video Scene
 // ---------------------------------------------------------------------------
 
-const VideoScene: React.FC<{ src: string; startFrom?: number }> = ({
+const VideoScene: React.FC<{ src: string; startFrom?: number; flat?: boolean }> = ({
   src,
   startFrom = 0,
+  flat = false,
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+
+  if (flat) {
+    // Brand-flat treatment: 0.4s linear fade-in, no vignette, no dimming tail.
+    const fade = interpolate(frame, [0, 0.4 * fps], [0, 1], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    });
+    return (
+      <AbsoluteFill style={{ background: "transparent" }}>
+        <OffthreadVideo
+          src={resolveAsset(src)}
+          startFrom={Math.round(startFrom * fps)}
+          style={{ width: "100%", height: "100%", objectFit: "cover", opacity: fade }}
+          muted
+        />
+      </AbsoluteFill>
+    );
+  }
 
   const fadeIn = spring({ frame, fps, config: { damping: 20 } });
   const fadeOutStart = durationInFrames - 8;
@@ -620,6 +689,26 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
     );
   }
 
+  // --- Yafho SiliSkin components ---
+  if (cut.type === "skin_cross_section") {
+    return <SkinCrossSection phase={cut.phase} labels={cut.crossLabels} introFade={cut.introFade} />;
+  }
+  if (cut.type === "size_guide") {
+    return <SizeGuide items={cut.sizeItems} />;
+  }
+  if (cut.type === "end_card") {
+    return (
+      <EndCard
+        logoSrc={cut.logoSrc ? resolveAsset(cut.logoSrc) : undefined}
+        brand={cut.brand}
+        tagline={cut.tagline}
+        handle={cut.handle}
+        qr={cut.qr}
+        qrCaption={cut.qrCaption}
+      />
+    );
+  }
+
   // --- Chart types — use theme.chartColors as default palette ---
   if (cut.type === "bar_chart" && cut.chartData) {
     return maybeWrapWithBg(
@@ -713,7 +802,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   }
 
   if (cut.source && isVideo(cut.source)) {
-    return maybeWrapWithBg(<VideoScene src={cut.source} startFrom={cut.source_in_seconds ?? 0} />);
+    return maybeWrapWithBg(<VideoScene src={cut.source} startFrom={cut.source_in_seconds ?? 0} flat={theme.flat} />);
   }
 
   // Final fallback — try as image if source exists, otherwise show text_card
@@ -729,7 +818,23 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
 // Overlay renderer
 // ---------------------------------------------------------------------------
 
-const OverlayRenderer: React.FC<{ overlay: Overlay }> = ({ overlay }) => {
+const OverlayRenderer: React.FC<{ overlay: Overlay; inPanel?: boolean }> = ({ overlay, inPanel }) => {
+  if (overlay.type === "thesis" && overlay.text) {
+    return (
+      <ThesisTitle
+        text={overlay.text}
+        variant={overlay.variant}
+        placement={inPanel ? "panel" : ((overlay.position as any) || "bottom")}
+        fontSize={inPanel ? undefined : overlay.fontSize}
+      />
+    );
+  }
+  if (overlay.type === "margin_overlay") {
+    return <MarginOverlay scarBox={overlay.scarBox} marginPx={overlay.marginPx} label={overlay.label} />;
+  }
+  if (overlay.type === "time_counter") {
+    return <TimeCounter labels={overlay.labels} placement={(overlay.position as any) || "top"} />;
+  }
   if (overlay.type === "section_title") {
     return (
       <SectionTitle
@@ -773,16 +878,28 @@ const OverlayRenderer: React.FC<{ overlay: Overlay }> = ({ overlay }) => {
 
 export const Explainer: React.FC<ExplainerProps> = (props) => {
   const { cuts, overlays, captions, audio } = props;
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps, durationInFrames, width, height } = useVideoConfig();
 
   // Resolve theme from props — playbook name, theme name, or custom themeConfig
   const theme = resolveTheme(props as Record<string, unknown>);
+  const layout = props.layout === "split" ? "split" : "full";
+  const visibleOverlays = (overlays ?? []).filter((o) => !o.layouts || o.layouts.includes(layout));
+  // In split layout thesis titles leave the video panel for the side panel.
+  const panelOverlays = layout === "split" && props.splitPanel !== "center" ? visibleOverlays.filter((o) => o.type === "thesis") : [];
+  const canvasOverlays = visibleOverlays.filter((o) => !panelOverlays.includes(o));
 
-  return (
-    <AbsoluteFill style={{ background: theme.backgroundColor, fontFamily: theme.headingFont || fontFamily }}>
-      {/* Layer 0: Animated gradient background — driven by theme */}
-      <AnimatedBackground theme={theme} />
+  const renderOverlay = (overlay: Overlay, i: number, inPanel = false) => {
+    const from = Math.round(overlay.in_seconds * fps);
+    const duration = Math.round((overlay.out_seconds - overlay.in_seconds) * fps);
+    return (
+      <Sequence key={`overlay-${i}`} from={from} durationInFrames={duration}>
+        <OverlayRenderer overlay={overlay} inPanel={inPanel} />
+      </Sequence>
+    );
+  };
 
+  const scenes = (
+    <>
       {/* Layer 1: Visual scenes */}
       {cuts.map((cut) => {
         const from = Math.round(cut.in_seconds * fps);
@@ -796,18 +913,37 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
       })}
 
       {/* Layer 2: Overlays (section titles, stat reveals, hero titles) */}
-      {overlays?.map((overlay, i) => {
-        const from = Math.round(overlay.in_seconds * fps);
-        const duration = Math.round(
-          (overlay.out_seconds - overlay.in_seconds) * fps
-        );
+      {canvasOverlays.map((overlay, i) => renderOverlay(overlay, i))}
+    </>
+  );
 
-        return (
-          <Sequence key={`overlay-${i}`} from={from} durationInFrames={duration}>
-            <OverlayRenderer overlay={overlay} />
-          </Sequence>
-        );
-      })}
+  // 16:9 split: a 1080x1920 design canvas scaled into a vertical panel.
+  const panelScale = height / 1920;
+  const panelW = 1080 * panelScale;
+  const panelLeft = props.splitPanel === "center" ? (width - panelW) / 2 : Math.round(width * 0.08);
+  const textLeft = panelLeft + panelW + Math.round(width * 0.06);
+
+  return (
+    <AbsoluteFill style={{ background: theme.backgroundColor, fontFamily: theme.headingFont || fontFamily }}>
+      {/* Layer 0: Animated gradient background — driven by theme (flat themes skip it) */}
+      {!theme.flat && <AnimatedBackground theme={theme} />}
+
+      {layout === "split" ? (
+        <>
+          <div style={{ position: "absolute", left: panelLeft, top: 0, width: panelW, height, overflow: "hidden" }}>
+            <div style={{ position: "relative", width: 1080, height: 1920, transform: `scale(${panelScale})`, transformOrigin: "0 0" }}>
+              <CanvasContext.Provider value={{ width: 1080, height: 1920 }}>{scenes}</CanvasContext.Provider>
+            </div>
+          </div>
+          {panelOverlays.length > 0 && (
+            <div style={{ position: "absolute", left: textLeft, right: Math.round(width * 0.06), top: 0, bottom: 0 }}>
+              {panelOverlays.map((overlay, i) => renderOverlay(overlay, i, true))}
+            </div>
+          )}
+        </>
+      ) : (
+        scenes
+      )}
 
       {/* Layer 3: Captions (word-by-word highlight) */}
       {captions && captions.length > 0 && (

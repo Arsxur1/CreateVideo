@@ -1,0 +1,105 @@
+# Yafho SiliSkin — clinical brand style (pilot).
+# Source of truth for facts and copy: projects/yafho/TZ.md
+
+identity:
+  name: "Yafho Clinical"
+  category: custom
+  mood: calm, clinical, trustworthy, warm
+  pace: deliberate
+  best_for: "Medical product explainers (silicone scar sheets), patient + doctor audience, music + large thesis titles, no voice"
+
+visual_language:
+  color_palette:
+    primary: ["#0F2440"]
+    accent: ["#D4560F", "#0D9488"]
+    background: "#FBFAF7"
+    text: "#0F2440"
+    muted: "#5B6472"
+  composition: "vertical 9:16 first, subject in the central third so 16:9 and 4:5 crops lose nothing; generous whitespace"
+  texture: "flat, no gradients, no neon, no grain"
+
+typography:
+  headings:
+    font: "Onest"
+    weight: 800
+    tracking: "-0.01em"
+  body:
+    font: "Onest"
+    weight: 500
+    line_height: 1.35
+  code:
+    font: "JetBrains Mono"
+    weight: 600
+  stat_card:
+    font: "JetBrains Mono"
+    weight: 700
+    size_multiplier: 2.5
+  scale_system: "major_third"
+  weight_matrix:
+    title: 800
+    heading: 800
+    body: 500
+    caption: 500
+
+motion:
+  transitions: [fade, slide-up]
+  animation_style: "ease-in-out, fade/slide 0.4s, no bounce, no spring overshoot"
+  pacing_rules:
+    min_scene_hold_seconds: 2.5
+    max_scene_hold_seconds: 10
+    text_card_hold_seconds: 2.5
+    stat_card_hold_seconds: 3.0
+    transition_duration_seconds: 0.4
+  entrance: "fade + 24px slide-up over 0.4s"
+  exit: "fade-out 0.4s"
+
+audio:
+  voice_style: "none — music and large thesis titles only"
+  music_mood: "calm ambient, 80–95 BPM, free license (Pixabay Music / YouTube Audio Library)"
+  music_volume: 0.1
+  sfx_style: "none"
+
+asset_generation:
+  image_prompt_prefix: "clean clinical aesthetic, soft natural window light, warm off-white background, accents of deep navy and burnt orange, calm trustworthy medical mood, photorealistic, high detail, shallow depth of field, hands and skin only, no faces, no text"
+  image_negative_prompt: "face, text, letters, logo, watermark, blood, open wound, fresh stitches, gore, pus, distorted hands, extra fingers, plastic skin, oversaturated, neon, cartoon, harsh shadows, cluttered background, needles"
+  diagram_style: "flat cross-section, rounded layers, navy outlines, orange collagen fibres, teal moisture film"
+  consistency_anchors:
+    - "One hand model in every shot: Central Asian woman's hands, light olive skin, short natural nails, no jewelry"
+    - "Scars are healed only — no wounds, crusts, blood or faces"
+    - "Box is plain white without print; logo and all text come from code (Remotion), never from Kling"
+    - "Main subject in the central third of a 9:16 frame"
+    - "Navy #0F2440, burnt orange #D4560F, teal #0D9488 on off-white #FBFAF7 / beige #ECE6DD"
+
+overlays:
+  stat_card:
+    bg: "#FFFFFF"
+    border: "#D4560F"
+    radius: 24
+    shadow: "none"
+  key_term:
+    bg: "#ECE6DD"
+    text: "#0F2440"
+    radius: 12
+  code_block:
+    bg: "#0F2440"
+    text: "#FBFAF7"
+    highlight: "#D4560F"
+
+quality_rules:
+  - "Text contrast at least 4.5:1"
+  - "Thesis titles at most 6 words, at least 64px at 1080x1920, held at least 2.5s"
+  - "Every study figure carries a small source line (TZ.md 0.1)"
+  - "Never claim 'removes the scar', '100%', 'forever' — only 'softer, lighter, flatter', 'reduces the risk'"
+  - "No faces, wounds or blood"
+  - "No gradients and no neon"
+
+chart_palette:
+  - "#D4560F"
+  - "#0F2440"
+  - "#0D9488"
+  - "#8A8F98"
+
+color_rules:
+  harmony_type: "complementary"
+  contrast_validation: true
+  colorblind_safe: true

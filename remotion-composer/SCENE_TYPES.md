@@ -24,7 +24,11 @@ When you add a new component, append it here and in `src/components/index.ts`.
 | `progress_bar` | `ProgressBar` | `progress` | `progressLabel`, `progressColor`, `progressSegments` | Animated progress |
 | `anime_scene` | `AnimeScene` | `images` (list) | `particles`, `lightingFrom`, `lightingTo`, `vignette` | Still-image anime scene with particles + camera motion |
 | **`terminal_scene`** | **`TerminalScene`** | **`steps`** (list of cmd/out/pause/pill) | **`terminalTitle`, `prompt`, `accentColor`** | **Synthetic terminal animation — NO real capture needed. See [`.agents/skills/synthetic-screen-recording/SKILL.md`](../.agents/skills/synthetic-screen-recording/SKILL.md)** |
-| **`screenshot_scene`** | **`ScreenshotScene`** | **`backgroundImage`** (path in `public/`), **`screenshotSteps`** (list of overlays) | **`screenshotSize` (natural px w/h), `cursorStartAt`, `accentColor`** | **Approach-1 synthetic UI — drop any screenshot, animate scripted overlays on top (cursor, click_pulse, type_into, bubble_append, typing_dots, highlight_box, callout_balloon). Viewer-indistinguishable from a real recording for 15–30s focused demos. Coordinates are normalized (0–1) against the contain-fit rect. See [`.agents/skills/synthetic-ui-recording/SKILL.md`](../.agents/skills/synthetic-ui-recording/SKILL.md) (planned).** |
+| **`screenshot_scene`** | **`ScreenshotScene`** | **`backgroundImage`** (path in `public/`), **`screenshotSteps`** (list of overlays) | **`screenshotSize` (natural px w/h), `cursorStartAt`, `accentColor`** | **Approach-1 synthetic UI — drop any screenshot, animate scripted overlays on top (cursor, click_pulse, type_into, bubble_append, typing_dots, highlight_box, callout_balloon). Viewer-indistinguishable from a real recording for 15–30s focused demos. Coordinates are normalized (0–1) against the contain-fit rect. See [`.agents/skills/synthetic-ui-recording/SKILL.md`](../.agents/skills/synthetic-ui-recording/SKILL.md) (planned).** || **`skin_cross_section`** | **`SkinCrossSection`** | — | **`phase` (scar / sealed / healed), `crossLabels` {epidermis, dermis, collagen, moisture, signal}, `introFade`** | **Animated skin cut: chaotic orange collagen → sheet lowers → moisture film → fibroblast pulses slow → fibres align. Leaves the bottom ~35% free for a `thesis` overlay** |
+| **`size_guide`** | **`SizeGuide`** | — | **`sizeItems` [{cm: [w,h], zone: face/arm/abdomen/burn, label}]** | **Four sheets drop onto body-zone silhouettes with sizes (Yafho topic 06)** |
+| **`end_card`** | **`EndCard`** | — | **`logoSrc`, `brand`, `tagline`, `handle`, `qr` (0/1 matrix), `qrCaption`** | **Navy brand end card: logo or wordmark, QR, @handle** |
+
+Yafho components use the bundled Onest / JetBrains Mono fonts (`public/fonts/yafho`) and the `yafho-clinical` theme (flat background, no vignette).
 
 ---
 
@@ -35,7 +39,24 @@ When you add a new component, append it here and in `src/components/index.ts`.
 | `section_title` | `SectionTitle` | `text` | `accentColor`, `position` (top-left, etc.) | Tiny section label |
 | `stat_reveal` | `StatReveal` | `text` | `subtitle`, `accentColor`, `position` | Corner stat badge |
 | `hero_title` | `HeroTitle` (as overlay) | `text` | `subtitle` | Full-frame title overlay |
-| **`provider_chip`** | **`ProviderChip`** | **`providers`** (list of strings) | **`cycleSeconds`, `position`, `accentColor`, `label`** | **Rotating badge that cycles through provider names — used in AI-generated-motion scenes to show which model produced the clip** |
+| **`provider_chip`** | **`ProviderChip`** | **`providers`** (list of strings) | **`cycleSeconds`, `position`, `accentColor`, `label`** | **Rotating badge that cycles through provider names — used in AI-generated-motion scenes to show which model produced the clip** || **`thesis`** | **`ThesisTitle`** | **`text`** | **`variant` (dark/light), `position` (bottom/center/top), `fontSize`, `layouts`** | **Large thesis title (≤ 6 words, ≥ 64px). `"1 · Текст"` renders a step badge. In `layout: "split"` it moves to the right text panel** |
+| **`margin_overlay`** | **`MarginOverlay`** | — | **`scarBox` {x,y,w,h} in 1080×1920 source px, `marginPx`, `label`** | **Orange "+1 см" sheet outline over footage; registered to the video under objectFit: cover in every format** |
+| **`time_counter`** | **`TimeCounter`** | — | **`labels` (default 2 нед → 1 мес → 3 мес → 6 мес), `position` (top/bottom)** | **Timeline chips that light up in turn over a result shot** |
+
+Any overlay may set `layouts: ["full"]` or `["split"]` to render only in that layout.
+
+## Composition props
+
+| Prop | Purpose |
+|---|---|
+| `layout: "split"` | 16:9 frame: scenes render in a 9:16 panel (left, or `splitPanel: "center"`), `thesis` overlays in a text panel on the right |
+| `durationSeconds` | Exact length instead of last cut + 1s |
+| `width`, `height` | Override frame size (the CLI `--width/--height` also work) |
+
+## Render environment switches (`remotion.config.ts`)
+
+- `REMOTION_BROWSER_EXECUTABLE=/path/to/headless_shell` — use an existing Chrome instead of downloading one.
+- `REMOTION_OFFLINE_GOOGLE_FONTS=1` — stub every `@remotion/google-fonts/*` import (no fonts.gstatic.com requests; system fallbacks).
 
 ---
 

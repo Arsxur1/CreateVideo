@@ -36,6 +36,8 @@ export interface ThemeConfig {
   transitionDuration: number;
   captionHighlightColor: string;
   captionBackgroundColor: string;
+  /** Flat brand background: no animated gradient, no video vignette. */
+  flat?: boolean;
 }
 
 export const THEMES: Record<string, ThemeConfig> = {
@@ -87,6 +89,23 @@ export const THEMES: Record<string, ThemeConfig> = {
     captionHighlightColor: "#E94560",
     captionBackgroundColor: "rgba(250, 250, 250, 0.9)",
   },
+  "yafho-clinical": {
+    primaryColor: "#0F2440",
+    accentColor: "#D4560F",
+    backgroundColor: "#FBFAF7",
+    surfaceColor: "#FBFAF7",
+    textColor: "#0F2440",
+    mutedTextColor: "#5B6472",
+    headingFont: "Onest",
+    bodyFont: "Onest",
+    monoFont: "JetBrains Mono",
+    chartColors: ["#D4560F", "#0F2440", "#0D9488", "#8A8F98"],
+    springConfig: { damping: 200, stiffness: 100, mass: 1 },
+    transitionDuration: 0.4,
+    captionHighlightColor: "#D4560F",
+    captionBackgroundColor: "rgba(15, 36, 64, 0.9)",
+    flat: true,
+  },
   "anime-ghibli": {
     primaryColor: "#2D5016",
     accentColor: "#FFB347",
@@ -123,13 +142,20 @@ export function resolveTheme(props: Record<string, unknown>): ThemeConfig {
 const calculateMetadata: CalculateMetadataFunction<ExplainerProps> = async ({
   props,
 }) => {
+  const size = {
+    ...(props.width ? { width: props.width } : {}),
+    ...(props.height ? { height: props.height } : {}),
+  };
+  if (props.durationSeconds) {
+    return { durationInFrames: Math.ceil(props.durationSeconds * 30), ...size };
+  }
   const cuts = props.cuts || [];
   if (cuts.length === 0) {
-    return { durationInFrames: 30 * 60 };
+    return { durationInFrames: 30 * 60, ...size };
   }
   const lastEnd = Math.max(...cuts.map((c) => c.out_seconds || 0));
   // Add 1 second padding for final fade
-  return { durationInFrames: Math.ceil((lastEnd + 1) * 30) };
+  return { durationInFrames: Math.ceil((lastEnd + 1) * 30), ...size };
 };
 
 export const Root: React.FC = () => {
