@@ -959,9 +959,17 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
 
       {layout === "split" ? (
         <>
-          {cuts
-            .filter(isBleed)
-            .map((cut) => renderCut({ ...cut, focusX: (textLeft * 0.5) / width, fitFrac: (textLeft * 0.9) / width, centerY: 0.5 }))}
+          {/* soft fade before the text panel so close-ups never run under the copy */}
+          <AbsoluteFill
+            style={{
+              maskImage: `linear-gradient(to right, #000 ${textLeft - 160}px, transparent ${textLeft - 30}px)`,
+              WebkitMaskImage: `linear-gradient(to right, #000 ${textLeft - 160}px, transparent ${textLeft - 30}px)`,
+            }}
+          >
+            {cuts
+              .filter(isBleed)
+              .map((cut) => renderCut({ ...cut, focusX: (textLeft * 0.5) / width, fitFrac: (textLeft * 0.9) / width, centerY: 0.5 }))}
+          </AbsoluteFill>
           <div style={{ position: "absolute", left: panelLeft, top: 0, width: panelW, height, overflow: "hidden" }}>
             <div style={{ position: "relative", width: 1080, height: 1920, transform: `scale(${panelScale})`, transformOrigin: "0 0" }}>
               <CanvasContext.Provider value={{ width: 1080, height: 1920 }}>{scenes}</CanvasContext.Provider>
