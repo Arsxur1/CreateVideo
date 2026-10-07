@@ -11,6 +11,8 @@ export interface HealingTimelineProps {
   ticks?: boolean;
   /** Rendered inside the 16:9 text panel instead of over the picture. */
   inPanel?: boolean;
+  /** Move to the centre of the frame and grow — the "window" beat. */
+  emphasis?: boolean;
 }
 
 // Stylised (not to scale): the long remodelling phase gets most of the bar.
@@ -38,6 +40,7 @@ export const HealingTimeline: React.FC<HealingTimelineProps> = ({
   highlightWindow = false,
   ticks = false,
   inPanel = false,
+  emphasis = false,
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
@@ -167,10 +170,20 @@ export const HealingTimeline: React.FC<HealingTimelineProps> = ({
     </div>
   );
 
+  const emph = emphasis ? ease(frame, 0.2 * fps, 1.2 * fps) : 0;
+
   if (inPanel) {
     return <AbsoluteFill style={{ justifyContent: "flex-start", paddingTop: height * 0.12 }}>{content}</AbsoluteFill>;
   }
   return (
-    <AbsoluteFill style={{ alignItems: "center", paddingTop: height * 0.055, pointerEvents: "none" }}>{content}</AbsoluteFill>
+    <AbsoluteFill
+      style={{
+        alignItems: "center",
+        paddingTop: height * (0.055 + 0.27 * emph),
+        pointerEvents: "none",
+      }}
+    >
+      <div style={{ transform: `scale(${1 + 0.1 * emph})`, transformOrigin: "50% 0" }}>{content}</div>
+    </AbsoluteFill>
   );
 };

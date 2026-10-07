@@ -1,7 +1,9 @@
 """Yafho SiliSkin — hero v2 «Окно перестройки» (story version).
 
-Stage 2 — animatic (this script, default):
+Stage 2 — animatic:
     python projects/yafho/build_v2.py --animatic
+Stage 3 — draft with the animated 3D story (Kling slots + scratch voice):
+    python projects/yafho/build_v2.py --draft
   * 3D scenes → stills rendered from SkinCrossSection3D (fast, no animation)
   * new 3D scenes → sketch cards with the shot description
   * Kling shots → the clip if present in assets/kling/, else a «нужен H0X» card
@@ -68,7 +70,13 @@ def render_still(scene: dict, dest: Path) -> None:
     props_path.unlink()
 
 
-def scratch_voice(scenes: list[dict]) -> tuple[Path, list[dict]]:
+def tts_text(text: str, data: dict) -> str:
+    for word, say in data.get("pronunciation", {}).items():
+        text = text.replace(word, say)
+    return text
+
+
+def scratch_voice(scenes: list[dict], data: dict) -> tuple[Path, list[dict]]:
     """espeak-ng female voice per line, placed at scene start + VO_LEAD."""
     tmp = OUT / "vo"
     tmp.mkdir(parents=True, exist_ok=True)
@@ -77,7 +85,7 @@ def scratch_voice(scenes: list[dict]) -> tuple[Path, list[dict]]:
     filters: list[str] = []
     for i, s in enumerate(scenes):
         wav = tmp / f"{s['id']}.wav"
-        subprocess.run(["espeak-ng", "-v", "ru+f3", "-s", "150", "-w", str(wav), s["vo"]], check=True)
+        subprocess.run(["espeak-ng", "-v", "ru+f3", "-s", "150", "-w", str(wav), tts_text(s["vo"], data)], check=True)
         dur = float(subprocess.run(
             ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(wav)],
             capture_output=True, text=True, check=True).stdout.strip())
@@ -96,15 +104,17 @@ def scratch_voice(scenes: list[dict]) -> tuple[Path, list[dict]]:
     return dest, report
 
 
-def build_animatic(data: dict, with_voice: bool) -> dict:
+def build_animatic(data: dict, with_voice: bool, mode: str = "animatic") -> dict:
     PUBLIC.mkdir(parents=True, exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
     cuts: list[dict] = []
     overlays: list[dict] = []
 
+    prev_3d = False
     for s in data["scenes"]:
         cut: dict = {"id": s["id"], "source": "", "in_seconds": s["start"], "out_seconds": s["end"]}
         kind = s["kind"]
+        is_3d = kind.startswith("3D") and "phase3d" in s
         if kind == "R":
             clip = KLING / f"{s['kling']}.mp4"
             if clip.exists():
@@ -114,17 +124,22 @@ def build_animatic(data: dict, with_voice: bool) -> dict:
             else:
                 cut.update(type="text_card", text=f"нужен {s['kling']}", fontSize=48,
                            color="#0F2440", backgroundColor="#ECE6DD")
+        elif is_3d and mode == "draft":
+            # continuous 3D story: no fade between consecutive 3D phases
+            cut.update(type="skin_cross_section_3d", phase=s["phase3d"], introFade=not prev_3d)
         elif kind == "3D" and "still" in s:
             png = PUBLIC / f"{s['id']}.png"
             print(f"  still {s['id']} ({s['still']['phase']} @ {s['still']['at']})")
             render_still(s, png)
             cut["source"] = f"{PUBLIC_REL}/{png.name}"
         elif kind == "C":
-            cut.update(type="end_card", brand="Yafho SiliSkin", handle="@sil.icare")
+            cut.update(type="end_card", brand="Yafho SiliSkin", handle="@sil.icare",
+                       qr=qr_matrix("https://instagram.com/sil.icare"), qrCaption="instagram.com/sil.icare")
         else:  # new 3D scene, not built yet → sketch card
             cut.update(type="text_card", text=f"[эскиз] {s['shot']}", fontSize=42,
                        color="#0F2440", backgroundColor="#ECE6DD")
         cuts.append(cut)
+        prev_3d = is_3d
 
         if s.get("title") and kind != "C":
             ov = {"type": "thesis", "text": s["title"], "variant": "dark",
@@ -140,8 +155,9 @@ def build_animatic(data: dict, with_voice: bool) -> dict:
                              "in_seconds": s["start"] + 1.5, "out_seconds": s["end"]})
         if s.get("margin"):
             overlays.append({"type": "margin_overlay", "label": "+1 см", "in_seconds": s["start"] + 0.3, "out_seconds": s["end"]})
-        overlays.append({"type": "animatic_note", "label": f"{s['id']} · {fmt_t(s['start'])}–{fmt_t(s['end'])} · {kind}",
-                         "text": s["vo"], "in_seconds": s["start"], "out_seconds": s["end"]})
+        if mode == "animatic":
+            overlays.append({"type": "animatic_note", "label": f"{s['id']} · {fmt_t(s['start'])}–{fmt_t(s['end'])} · {kind}",
+                             "text": s["vo"], "in_seconds": s["start"], "out_seconds": s["end"]})
 
     props: dict = {
         "version": "1.0", "renderer_family": "explainer-data", "render_runtime": "remotion",
@@ -150,9 +166,18 @@ def build_animatic(data: dict, with_voice: bool) -> dict:
     }
     report = []
     if with_voice:
-        vo, report = scratch_voice(data["scenes"])
+        vo, report = scratch_voice(data["scenes"], data)
         props["audio"]["narration"] = {"src": f"{PUBLIC_REL}/{vo.name}", "volume": 1}
     return {"props": props, "report": report}
+
+
+def qr_matrix(url: str) -> list[list[int]]:
+    import qrcode
+
+    qr = qrcode.QRCode(error_correction=qrcode.constants.ERROR_CORRECT_M, border=0)
+    qr.add_data(url)
+    qr.make(fit=True)
+    return [[int(v) for v in row] for row in qr.get_matrix()]
 
 
 def render(props: dict, out: Path, profile: str) -> None:
@@ -190,14 +215,16 @@ def contact_sheet(video: Path, scenes: list[dict], dest: Path) -> None:
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("--animatic", action="store_true", default=True)
+    ap.add_argument("--animatic", action="store_true", help="stills + notes (stage 2, default)")
+    ap.add_argument("--draft", action="store_true", help="animated 3D story, no notes (stage 3)")
     ap.add_argument("--no-voice", action="store_true", help="skip the espeak-ng scratch voice")
     args = ap.parse_args()
 
     data = json.loads(DATA.read_text(encoding="utf-8"))
-    print("animatic: building scenes")
-    built = build_animatic(data, with_voice=not args.no_voice and shutil.which("espeak-ng") is not None)
-    (OUT / "animatic_props.json").write_text(json.dumps(built["props"], ensure_ascii=False, indent=2), encoding="utf-8")
+    mode = "draft" if args.draft else "animatic"
+    print(f"{mode}: building scenes")
+    built = build_animatic(data, with_voice=not args.no_voice and shutil.which("espeak-ng") is not None, mode=mode)
+    (OUT / f"{mode}_props.json").write_text(json.dumps(built["props"], ensure_ascii=False, indent=2), encoding="utf-8")
 
     if built["report"]:
         lines = ["| Сцена | Слот, с | Голос (черновой), с | Влезает |", "|---|---|---|---|"]
@@ -206,10 +233,10 @@ def main() -> None:
         (OUT / "timing_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
         print("\n".join(lines))
 
-    video = OUT / "animatic_9x16.mp4"
-    print("animatic: rendering 9:16")
+    video = OUT / f"{mode}_9x16.mp4"
+    print(f"{mode}: rendering 9:16")
     render(built["props"], video, "instagram_reels")
-    contact_sheet(video, data["scenes"], OUT / "animatic_sheet.png")
+    contact_sheet(video, data["scenes"], OUT / f"{mode}_sheet.png")
     print(f"→ {video.relative_to(ROOT)}")
 
 

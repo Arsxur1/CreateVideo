@@ -7,10 +7,18 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
 import { YAFHO, ease, useCanvas } from "./yafho/tokens";
 import type { SkinCrossSectionLabels, SkinPhase } from "./SkinCrossSection";
 
+/**
+ * Story phases (hero v2, continuous from one to the next):
+ *   dive → closing → patch → months → drying → alarm → freeze … seal → healed
+ * plus the hero v1 pair scar → sealed.
+ */
+export type Skin3DPhase = SkinPhase | "dive" | "closing" | "patch" | "months" | "drying" | "alarm" | "freeze" | "seal";
+
+export type Skin3DLabels = SkinCrossSectionLabels & { fibroblast?: string; signalUp?: string };
+
 export interface SkinCrossSection3DProps {
-  /** Same story beats as the 2D SkinCrossSection: scar → sealed (animated) → healed. */
-  phase?: SkinPhase;
-  labels?: SkinCrossSectionLabels;
+  phase?: Skin3DPhase;
+  labels?: Skin3DLabels;
   introFade?: boolean;
   /** Where the block's centre sits, as fractions of the canvas (leave room for a thesis). */
   focusX?: number;
@@ -21,12 +29,14 @@ export interface SkinCrossSection3DProps {
   grade?: boolean;
 }
 
-const DEFAULT_LABELS: SkinCrossSectionLabels = {
+const DEFAULT_LABELS: Skin3DLabels = {
   epidermis: "эпидермис",
   dermis: "дерма",
   collagen: "коллаген",
   moisture: "влага ↑",
   signal: "сигнал ↓",
+  signalUp: "сигнал ↑",
+  fibroblast: "фибробласт",
 };
 
 // ---------------------------------------------------------------------------
@@ -40,7 +50,10 @@ const DERMIS_BOTTOM = -1.9;
 const FAT_BOTTOM = -2.7;
 const BUMP_HALF = 1.35;
 const BUMP_H = 0.34;
-const N_FIBRES = 26;
+const N_FIBRES = 26; // base scar collagen
+const N_EXTRA = 14; // extra collagen laid down on the "alarm" signal
+const N_ALL = N_FIBRES + N_EXTRA;
+const SLIT_BOTTOM = -1.0; // depth of the (bloodless) incision groove
 const SHEET_HALF = 1.65;
 const SHEET_T = 0.09;
 
@@ -74,7 +87,7 @@ function mulberry32(seed: number) {
 type V3 = [number, number, number];
 
 const rnd = mulberry32(20261006);
-const CHAOTIC: V3[][] = Array.from({ length: N_FIBRES }, () => {
+const CHAOTIC: V3[][] = Array.from({ length: N_ALL }, () => {
   const cx = (rnd() - 0.5) * 2.2;
   const cy = -0.45 - rnd() * 1.2;
   const a = rnd() * Math.PI;
@@ -88,14 +101,14 @@ const CHAOTIC: V3[][] = Array.from({ length: N_FIBRES }, () => {
 });
 // Healed: long, staggered, gently wavy fibres running parallel to the surface.
 const rndA = mulberry32(424242);
-const ALIGNED: V3[][] = Array.from({ length: N_FIBRES }, (_, i) => {
-  const y = -0.42 - (i / (N_FIBRES - 1)) * 1.3 + (rndA() - 0.5) * 0.05;
+const ALIGNED: V3[][] = Array.from({ length: N_ALL }, (_, i) => {
+  const y = -0.42 - (i / (N_ALL - 1)) * 1.3 + (rndA() - 0.5) * 0.05;
   const len = 1.3 + rndA() * 1.0;
   const x0 = -1.35 + rndA() * (2.7 - len);
   const amp = 0.02 + rndA() * 0.03;
   return [0, 1, 2, 3].map((k) => [x0 + (k * len) / 3, y + (k === 1 ? amp : k === 2 ? -amp : 0), FRONT_Z - 0.005] as V3);
 });
-const FIBRE_R = Array.from({ length: N_FIBRES }, () => 0.032 + rnd() * 0.014);
+const FIBRE_R = Array.from({ length: N_ALL }, () => 0.032 + rnd() * 0.014);
 const CELLS: V3[] = [
   [-0.75, -0.75, FRONT_Z],
   [0.55, -0.6, FRONT_Z],
@@ -103,6 +116,16 @@ const CELLS: V3[] = [
   [0.85, -1.45, FRONT_Z],
   [-0.6, -1.5, FRONT_Z],
 ];
+// Fibroblasts wait in the healthy dermis and migrate into the wound ("patch").
+const CELL_HOME: V3[] = CELLS.map(([x, y, z], i) => [(i % 2 ? 1 : -1) * (2.1 + (i % 3) * 0.35), y, z]);
+// Pale first-responder cells drawn to the closing incision (no blood).
+const rndG = mulberry32(777);
+const GATHER = Array.from({ length: 22 }, () => ({
+  from: [(rndG() - 0.5) * 4.6, -0.2 - rndG() * 1.3, FRONT_Z - 0.01] as V3,
+  to: [(rndG() - 0.5) * 0.16, -0.08 - rndG() * 0.85, FRONT_Z + 0.005] as V3,
+  r: 0.035 + rndG() * 0.025,
+  delay: rndG() * 0.35,
+}));
 const FAT_LOBULES = Array.from({ length: 18 }, (_, i) => ({
   x: -HALF_W + 0.25 + i * 0.39,
   y: -2.1 - (i % 3) * 0.2,
@@ -263,6 +286,39 @@ function profileGeometry(
   return geo;
 }
 
+/** Layer slab with a V-groove (healing incision) of half-width `g` at the surface. */
+function slitGeometry(yTop: number, yBot: number, g: number): THREE.ExtrudeGeometry {
+  const half = (y: number) => (y >= SLIT_BOTTOM ? (g * (y - SLIT_BOTTOM)) / -SLIT_BOTTOM : 0);
+  const shapes: THREE.Shape[] = [];
+  if (yBot >= SLIT_BOTTOM) {
+    // groove cuts through the whole layer → two pieces
+    for (const side of [-1, 1]) {
+      const sh = new THREE.Shape();
+      sh.moveTo(side * HALF_W, yTop);
+      sh.lineTo(side * half(yTop), yTop);
+      sh.lineTo(side * half(yBot), yBot);
+      sh.lineTo(side * HALF_W, yBot);
+      sh.closePath();
+      shapes.push(sh);
+    }
+  } else {
+    const sh = new THREE.Shape();
+    sh.moveTo(-HALF_W, yTop);
+    sh.lineTo(-half(yTop), yTop);
+    sh.lineTo(0, SLIT_BOTTOM);
+    sh.lineTo(half(yTop), yTop);
+    sh.lineTo(HALF_W, yTop);
+    sh.lineTo(HALF_W, yBot);
+    sh.lineTo(-HALF_W, yBot);
+    sh.closePath();
+    shapes.push(sh);
+  }
+  const geo = new THREE.ExtrudeGeometry(shapes, { depth: DEPTH, bevelEnabled: false, steps: 1, curveSegments: 1 });
+  geo.translate(0, 0, FRONT_Z - DEPTH);
+  geo.computeVertexNormals();
+  return geo;
+}
+
 const Environment: React.FC = () => {
   const { gl, scene } = useThree();
   useMemo(() => {
@@ -291,7 +347,43 @@ interface Pose {
 
 const WIDE: Pose = { az: -26, el: 20, zoom: 1, target: [0, -1.05, 0.2] };
 
-const SHOTS: Record<SkinPhase, { at: number; pose: Pose }[]> = {
+const P_TOP: Pose = { az: -20, el: 76, zoom: 0.4, target: [0, 0, 0.4] };
+const P_REVEAL: Pose = { az: -30, el: 26, zoom: 0.84, target: [0, -0.6, 0.3] };
+const P_SLIT: Pose = { az: -18, el: 20, zoom: 0.62, target: [0, -0.45, 0.7] };
+const P_PATCH: Pose = { az: -8, el: 18, zoom: 0.72, target: [0, -0.85, 0.7] };
+const P_DRY: Pose = { az: -38, el: 30, zoom: 0.62, target: [0, 0.05, 0.1] };
+const P_ALARM: Pose = { az: -12, el: 14, zoom: 0.68, target: [0, -0.9, 0.7] };
+const P_FREEZE: Pose = { az: -22, el: 22, zoom: 1.2, target: [0, -1.05, 0.2] };
+
+const SHOTS: Record<Skin3DPhase, { at: number; pose: Pose }[]> = {
+  dive: [
+    { at: 0, pose: P_TOP },
+    { at: 1, pose: P_REVEAL },
+  ],
+  closing: [
+    { at: 0, pose: P_REVEAL },
+    { at: 1, pose: P_SLIT },
+  ],
+  patch: [
+    { at: 0, pose: P_SLIT },
+    { at: 1, pose: P_PATCH },
+  ],
+  months: [
+    { at: 0, pose: P_PATCH },
+    { at: 1, pose: WIDE },
+  ],
+  drying: [
+    { at: 0, pose: WIDE },
+    { at: 1, pose: P_DRY },
+  ],
+  alarm: [
+    { at: 0, pose: P_DRY },
+    { at: 1, pose: P_ALARM },
+  ],
+  freeze: [
+    { at: 0, pose: P_ALARM },
+    { at: 1, pose: P_FREEZE },
+  ],
   // Macro glide over the skin to the raised scar, then crane down to reveal the cut.
   scar: [
     { at: 0, pose: { az: -58, el: 38, zoom: 0.52, target: [-0.3, 0.05, -0.1] } },
@@ -310,9 +402,11 @@ const SHOTS: Record<SkinPhase, { at: number; pose: Pose }[]> = {
     { at: 0, pose: { az: -14, el: 16, zoom: 0.8, target: [0, -0.9, 0.4] } },
     { at: 1, pose: { az: -24, el: 22, zoom: 0.92, target: [0, -0.9, 0.2] } },
   ],
+  seal: [],
 };
+SHOTS.seal = SHOTS.sealed;
 
-function poseAt(phase: SkinPhase, p: number): Pose {
+function poseAt(phase: Skin3DPhase, p: number): Pose {
   const keys = SHOTS[phase];
   let i = 0;
   while (i < keys.length - 2 && p > keys[i + 1].at) i++;
@@ -379,19 +473,106 @@ function project(spec: CameraSpec, width: number, height: number, p: V3): [numbe
 }
 
 // ---------------------------------------------------------------------------
-// Scene
+// Story state: each phase eases a few values from → to, so consecutive
+// phases join seamlessly (end of one = start of the next).
 // ---------------------------------------------------------------------------
-interface SceneState {
+interface StoryValues {
+  slit: number; // incision half-width at the surface (0 = closed)
+  gather: number; // first-responder cells travelling to the incision
+  migrate: number; // fibroblasts: home (0) → wound (1)
+  grow: number; // collagen laid down (0..1)
+  extra: number; // extra collagen on the alarm signal
+  bump: number; // scar ridge height (× BUMP_H)
+  scarTint: number; // redness of the scar line
+  evaporation: number;
+  freq: number; // fibroblast signalling, pulses per second
   plate: number;
   film: number;
   align: number;
+  timeScale: number; // 1 = real time, →0 = frozen
+  veil: number; // white wash for the "freeze" beat
+}
+type Key = keyof StoryValues;
+
+const BASE: StoryValues = {
+  slit: 0, gather: 0, migrate: 1, grow: 1, extra: 0, bump: 1, scarTint: 1, evaporation: 0,
+  freq: 1.4, plate: 0, film: 0, align: 0, timeScale: 1, veil: 0,
+};
+
+interface PhaseSpec {
+  from: Partial<StoryValues>;
+  to?: Partial<StoryValues>;
+  win?: Partial<Record<Key, [number, number]>>;
+}
+
+const SEAL_WIN: PhaseSpec["win"] = {
+  plate: [0.04, 0.32], film: [0.28, 0.5], freq: [0.4, 0.7], align: [0.5, 0.98], evaporation: [0.04, 0.28],
+};
+
+const STORY: Record<Skin3DPhase, PhaseSpec> = {
+  dive: { from: { slit: 0.3, migrate: 0, grow: 0, bump: 0, scarTint: 0, freq: 0.5 } },
+  closing: {
+    from: { slit: 0.3, migrate: 0, grow: 0, bump: 0, scarTint: 0, freq: 0.5 },
+    to: { slit: 0, gather: 1, scarTint: 0.35 },
+    win: { slit: [0.08, 0.8], gather: [0, 0.95], scarTint: [0.6, 1] },
+  },
+  patch: {
+    from: { migrate: 0, grow: 0, bump: 0, scarTint: 0.35, freq: 0.9 },
+    to: { migrate: 1, grow: 1, bump: 0.4, scarTint: 0.7, freq: 1.2 },
+    win: { migrate: [0, 0.45], grow: [0.2, 1], bump: [0.3, 1], scarTint: [0.3, 1] },
+  },
+  months: { from: { bump: 0.4, scarTint: 0.7, freq: 1.2 }, to: { bump: 0.6, scarTint: 0.85 } },
+  drying: {
+    from: { bump: 0.6, scarTint: 0.85, freq: 1.2 },
+    to: { evaporation: 1, freq: 1.5 },
+    win: { evaporation: [0, 0.35] },
+  },
+  alarm: {
+    from: { bump: 0.6, scarTint: 0.85, evaporation: 1, freq: 1.5 },
+    to: { freq: 2.8, extra: 1, bump: 1, scarTint: 1 },
+    win: { freq: [0, 0.5], extra: [0.1, 0.9], bump: [0.2, 1] },
+  },
+  freeze: {
+    from: { extra: 1, evaporation: 1, freq: 2.8 },
+    to: { timeScale: 0.04, veil: 0.5 },
+    win: { timeScale: [0, 0.5], veil: [0.3, 0.8] },
+  },
+  scar: { from: { evaporation: 1 } },
+  sealed: { from: { evaporation: 1 }, to: { plate: 1, film: 1, align: 1, freq: 0.28, evaporation: 0 }, win: SEAL_WIN },
+  seal: { from: { extra: 1, evaporation: 1, freq: 2.4 }, to: { plate: 1, film: 1, align: 1, freq: 0.28, evaporation: 0 }, win: SEAL_WIN },
+  healed: { from: { align: 1, freq: 0.28 } },
+};
+
+const EASED: Partial<Record<Key, (t: number) => number>> = {
+  plate: Easing.bezier(0.3, 0, 0.25, 1),
+  align: smooth,
+};
+
+function storyAt(phase: Skin3DPhase, p: number): StoryValues {
+  const spec = STORY[phase];
+  const out = { ...BASE, ...spec.from };
+  if (spec.to) {
+    for (const k of Object.keys(spec.to) as Key[]) {
+      const [a, b] = spec.win?.[k] ?? [0, 1];
+      const t = Math.min(1, Math.max(0, (p - a) / (b - a || 1)));
+      const e = (EASED[k] ?? smooth)(t);
+      out[k] = out[k] + ((spec.to[k] as number) - out[k]) * e;
+    }
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
+// Scene
+// ---------------------------------------------------------------------------
+interface SceneState extends StoryValues {
   cycles: number;
-  evaporation: number;
-  timeSec: number;
+  timeSec: number; // simulated time (slows down with timeScale)
 }
 
 const SkinScene: React.FC<{ s: SceneState }> = ({ s }) => {
-  const h = BUMP_H * (1 - s.align);
+  const h = BUMP_H * s.bump * (1 - s.align);
+  const slitQ = Math.round(s.slit * 100) / 100;
   const surface = (x: number) => h * bumpShape(x);
   const hq = Math.round(h * 200) / 200; // quantise geometry rebuilds
 
@@ -407,13 +588,18 @@ const SkinScene: React.FC<{ s: SceneState }> = ({ s }) => {
   );
 
   const epiGeo = useMemo(
-    () => profileGeometry(-HALF_W, HALF_W, (x) => hq * bumpShape(x), (x) => hq * bumpShape(x) - EPI, DEPTH, FRONT_Z),
-    [hq],
+    () =>
+      slitQ > 0
+        ? slitGeometry(0, -EPI, slitQ)
+        : profileGeometry(-HALF_W, HALF_W, (x) => hq * bumpShape(x), (x) => hq * bumpShape(x) - EPI, DEPTH, FRONT_Z),
+    [hq, slitQ],
   );
   const dermisGeo = useMemo(
     () =>
-      profileGeometry(-HALF_W, HALF_W, (x) => hq * bumpShape(x) - EPI, (x) => DERMIS_BOTTOM + hq * 0.3 * bumpShape(x), DEPTH, FRONT_Z),
-    [hq],
+      slitQ > 0
+        ? slitGeometry(-EPI, DERMIS_BOTTOM, slitQ)
+        : profileGeometry(-HALF_W, HALF_W, (x) => hq * bumpShape(x) - EPI, (x) => DERMIS_BOTTOM + hq * 0.3 * bumpShape(x), DEPTH, FRONT_Z),
+    [hq, slitQ],
   );
   const fatGeo = useMemo(
     () => profileGeometry(-HALF_W, HALF_W, (x) => DERMIS_BOTTOM + hq * 0.3 * bumpShape(x), () => FAT_BOTTOM, DEPTH, FRONT_Z),
@@ -443,15 +629,21 @@ const SkinScene: React.FC<{ s: SceneState }> = ({ s }) => {
     return new THREE.CanvasTexture(c);
   }, []);
   const scarGeo = useMemo(() => {
-    const g = new THREE.PlaneGeometry(1.6, DEPTH * 0.998, 64, 1);
+    const g = new THREE.PlaneGeometry(0.3 + 1.3 * Math.max(s.bump, 0.05), DEPTH * 0.998, 64, 1);
     g.rotateX(-Math.PI / 2);
     const pos = g.attributes.position;
     for (let i = 0; i < pos.count; i++) pos.setY(i, hq * bumpShape(pos.getX(i)) + 0.004);
     g.computeVertexNormals();
     return g;
-  }, [hq]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hq, Math.round(s.bump * 40)]);
 
+  // Collagen: each fibre is spun out along its path (grow), extras join on "alarm".
   const fibreCurves = CHAOTIC.map((c, i) => {
+    const visible = i < N_FIBRES ? s.grow : s.extra;
+    const order = i < N_FIBRES ? i / N_FIBRES : (i - N_FIBRES) / N_EXTRA;
+    const g = Math.min(1, Math.max(0, visible * 1.6 - order * 0.6));
+    if (g <= 0.02) return null;
     const pts = c.map((p, k) => {
       const a = ALIGNED[i][k];
       const drift = Math.sin(s.timeSec * 0.7 + i * 1.7 + k) * 0.02 * (1 - s.align);
@@ -461,7 +653,10 @@ const SkinScene: React.FC<{ s: SceneState }> = ({ s }) => {
         THREE.MathUtils.lerp(p[2], a[2], s.align),
       );
     });
-    return new THREE.CatmullRomCurve3(pts);
+    const full = new THREE.CatmullRomCurve3(pts);
+    if (g >= 0.999) return full;
+    const sampled = full.getPoints(40).slice(0, Math.max(2, Math.round(40 * g) + 1));
+    return new THREE.CatmullRomCurve3(sampled);
   });
 
   // Sheet: falls bending like fabric (edges trail), then drapes over the ridge.
@@ -562,7 +757,7 @@ const SkinScene: React.FC<{ s: SceneState }> = ({ s }) => {
       {/* scar tissue: denser, darker zone on the cut face; glossy red ridge on top */}
       <mesh position={[0, -0.95 + h * 0.2, FRONT_Z + 0.002]} scale={[1.35, 0.9, 1]}>
         <circleGeometry args={[1, 64]} />
-        <meshBasicMaterial color="#D58B76" transparent opacity={0.3 * (1 - s.align)} depthWrite={false} />
+        <meshBasicMaterial color="#D58B76" transparent opacity={0.3 * s.bump * (1 - s.align)} depthWrite={false} />
       </mesh>
       <mesh geometry={scarGeo}>
         <meshPhysicalMaterial
@@ -572,7 +767,7 @@ const SkinScene: React.FC<{ s: SceneState }> = ({ s }) => {
           clearcoatRoughness={0.25}
           alphaMap={scarAlpha}
           transparent
-          opacity={0.9 * (1 - s.align * 0.7)}
+          opacity={0.9 * s.scarTint * (1 - s.align * 0.7)}
           depthWrite={false}
           bumpMap={tex.skinBump}
           bumpScale={0.4}
@@ -600,7 +795,8 @@ const SkinScene: React.FC<{ s: SceneState }> = ({ s }) => {
       )}
 
       {/* collagen in the scar: chaotic → aligned */}
-      {fibreCurves.map((c, i) => (
+      {fibreCurves.map((c, i) =>
+        c && (
         <mesh key={i} castShadow>
           <tubeGeometry args={[c, 56, FIBRE_R[i], 12, false]} />
           <meshPhysicalMaterial
@@ -614,13 +810,16 @@ const SkinScene: React.FC<{ s: SceneState }> = ({ s }) => {
             sheenColor="#ffb08a"
           />
         </mesh>
-      ))}
+        ),
+      )}
 
       {/* fibroblasts and their signalling pulses */}
       {CELLS.map((c, i) => {
         const ph = (s.cycles + i * 0.37) % 1;
+        const m = Math.min(1, Math.max(0, s.migrate * 1.3 - i * 0.06));
+        const pos: V3 = [0, 1, 2].map((k) => THREE.MathUtils.lerp(CELL_HOME[i][k], c[k], m)) as V3;
         return (
-          <group key={i} position={c}>
+          <group key={i} position={pos}>
             <mesh scale={[0.11, 0.065, 0.05]}>
               <sphereGeometry args={[1, 24, 16]} />
               <meshPhysicalMaterial color={YAFHO.navy} roughness={0.25} clearcoat={1} clearcoatRoughness={0.1} />
@@ -632,6 +831,21 @@ const SkinScene: React.FC<{ s: SceneState }> = ({ s }) => {
           </group>
         );
       })}
+
+      {/* first-responder cells drawn into the closing incision */}
+      {s.gather > 0.001 &&
+        s.gather < 0.999 &&
+        GATHER.map((g, i) => {
+          const t = Math.min(1, Math.max(0, (s.gather - g.delay) / (1 - g.delay)));
+          const e = smooth(t);
+          const fade = t < 0.85 ? 1 : 1 - (t - 0.85) / 0.15;
+          return (
+            <mesh key={i} position={[0, 1, 2].map((k) => THREE.MathUtils.lerp(g.from[k], g.to[k], e)) as V3} scale={g.r * fade}>
+              <sphereGeometry args={[1, 16, 12]} />
+              <meshPhysicalMaterial color="#F6EAD6" roughness={0.3} clearcoat={0.6} sheen={0.5} sheenColor="#ffffff" />
+            </mesh>
+          );
+        })}
 
       {/* moisture escaping without a sheet (fine mist) */}
       {s.evaporation > 0.01 &&
@@ -740,60 +954,63 @@ export const SkinCrossSection3D: React.FC<SkinCrossSection3DProps> = ({
   const D = durationInFrames;
   const p = frame / Math.max(1, D - 1);
 
-  let plate = 0, film = 0, slow = 0, align = 0;
-  if (phase === "sealed") {
-    plate = interpolate(frame, [D * 0.04, D * 0.32], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: Easing.bezier(0.3, 0, 0.25, 1) });
-    film = ease(frame, D * 0.28, D * 0.5);
-    slow = ease(frame, D * 0.4, D * 0.7);
-    align = interpolate(frame, [D * 0.5, D * 0.98], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp", easing: smooth });
-  } else if (phase === "healed") {
-    slow = 1;
-    align = 1;
-  }
-  const freqAt = (f: number) => {
-    const sl = phase === "sealed" ? ease(f, D * 0.4, D * 0.7) : slow;
-    return interpolate(sl, [0, 1], [1.4, 0.28]);
-  };
+  const v = storyAt(phase, p);
+  // Integrate signalling pulses and simulated time so slow-motion never jumps.
   let cycles = 0;
-  for (let f = 0; f < frame; f++) cycles += freqAt(f) / fps;
+  let simTime = 0;
+  for (let f = 0; f < frame; f++) {
+    const vf = storyAt(phase, f / Math.max(1, D - 1));
+    cycles += (vf.freq * vf.timeScale) / fps;
+    simTime += vf.timeScale / fps;
+  }
+  const { plate, film, align } = v;
+  const slow = phase === "sealed" || phase === "seal" ? ease(frame, D * 0.4, D * 0.7) : phase === "healed" ? 1 : 0;
 
-  const state: SceneState = {
-    plate,
-    film,
-    align,
-    cycles,
-    evaporation: phase === "scar" ? 1 : phase === "sealed" ? 1 - Math.min(1, plate * 1.3) : 0,
-    timeSec: frame / fps,
-  };
+  const state: SceneState = { ...v, cycles, timeSec: simTime };
 
-  const cam = cameraFor(poseAt(phase, p), width, height, focusX, centerY, fitFrac);
+  const pose = poseAt(phase, p);
+  if (phase === "alarm") {
+    // nervous micro-shake that grows with the alarm
+    const k = 0.012 * ease(frame, 0, D * 0.5);
+    pose.target = [pose.target[0] + Math.sin(frame * 0.9) * k, pose.target[1] + Math.sin(frame * 1.3 + 1) * k, pose.target[2]];
+  }
+  const cam = cameraFor(pose, width, height, focusX, centerY, fitFrac);
   const intro = introFade ? ease(frame, 0, Math.round(0.6 * fps)) : 1;
-  const h = BUMP_H * (1 - align);
+  const h = BUMP_H * v.bump * (1 - align);
+  const isSeal = phase === "sealed" || phase === "seal";
 
   // Labels appear only once the camera shows what they point at.
   const reveal = (from: number) => ease(frame, D * from, D * from + 0.4 * fps);
-  const anchors: { key: keyof SkinCrossSectionLabels; at: V3; side: "left" | "right"; swatch: string; show: number }[] =
+  type Anchor = { key: keyof Skin3DLabels; at: V3; side: "left" | "right"; swatch: string; show: number };
+  const collagenAt: V3 = [
+    THREE.MathUtils.lerp(CHAOTIC[5][2][0], ALIGNED[5][2][0], align),
+    THREE.MathUtils.lerp(CHAOTIC[5][2][1], ALIGNED[5][2][1], align),
+    FRONT_Z,
+  ];
+  const anchors: Anchor[] =
     phase === "scar"
       ? [
           { key: "epidermis", at: [-2.4, -0.11, FRONT_Z], side: "left", swatch: COLORS.epiCut, show: reveal(0.7) },
           { key: "dermis", at: [-2.4, -1.15, FRONT_Z], side: "left", swatch: COLORS.dermisCut, show: reveal(0.74) },
           { key: "collagen", at: CHAOTIC[5][2], side: "right", swatch: YAFHO.orange, show: reveal(0.78) },
         ]
-      : [
-          { key: "moisture", at: [1.0, h * bumpShape(1.0) + 0.06, 0.95], side: "right", swatch: YAFHO.teal, show: phase === "sealed" ? reveal(0.36) : 1 },
-          { key: "signal", at: CELLS[3], side: "right", swatch: YAFHO.navy, show: phase === "sealed" ? reveal(0.5) : 1 },
-          {
-            key: "collagen",
-            at: [
-              THREE.MathUtils.lerp(CHAOTIC[5][2][0], ALIGNED[5][2][0], align),
-              THREE.MathUtils.lerp(CHAOTIC[5][2][1], ALIGNED[5][2][1], align),
-              FRONT_Z,
-            ],
-            side: "left",
-            swatch: YAFHO.orange,
-            show: phase === "sealed" ? reveal(0.62) : 1,
-          },
-        ];
+      : phase === "patch"
+        ? [
+            { key: "fibroblast", at: CELLS[1], side: "right", swatch: YAFHO.navy, show: reveal(0.4) },
+            { key: "collagen", at: collagenAt, side: "left", swatch: YAFHO.orange, show: reveal(0.7) },
+          ]
+        : phase === "alarm"
+          ? [
+              { key: "signalUp", at: CELLS[3], side: "right", swatch: YAFHO.navy, show: reveal(0.25) },
+              { key: "collagen", at: collagenAt, side: "left", swatch: YAFHO.orange, show: reveal(0.5) },
+            ]
+          : isSeal || phase === "healed"
+            ? [
+                { key: "moisture", at: [1.0, h * bumpShape(1.0) + 0.06, 0.95], side: "right", swatch: YAFHO.teal, show: isSeal ? reveal(0.36) : 1 },
+                { key: "signal", at: CELLS[3], side: "right", swatch: YAFHO.navy, show: isSeal ? reveal(0.5) : 1 },
+                { key: "collagen", at: collagenAt, side: "left", swatch: YAFHO.orange, show: isSeal ? reveal(0.62) : 1 },
+              ]
+            : [];
 
   const regionL = Math.max(0, (focusX - fitFrac / 2) * width);
   const regionR = Math.min(width, (focusX + fitFrac / 2) * width);
@@ -819,6 +1036,7 @@ export const SkinCrossSection3D: React.FC<SkinCrossSection3DProps> = ({
         <CameraRig spec={cam} width={width} height={height} />
         <SkinScene s={state} />
       </ThreeCanvas>
+      {v.veil > 0 && <AbsoluteFill style={{ background: YAFHO.offWhite, opacity: v.veil }} />}
       {grade && <Grade width={width} height={height} frame={frame} />}
       <svg width={width} height={height} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
         {placed.map((a) => {

@@ -29,21 +29,23 @@
       "timeline": {
         "from": 0,
         "to": 0
-      }
+      },
+      "phase3d": "dive"
     },
     {
       "id": "S03",
       "act": 2,
       "start": 8.5,
       "end": 12.0,
-      "kind": "3D-new",
+      "kind": "3D",
       "shot": "3D: узкая щель в коже, края сходятся и смыкаются, к ним стягиваются клетки (без крови)",
       "vo": "Тело закрывает рану за считанные дни.",
       "title": "Дни —\nрана закрывается",
       "timeline": {
         "from": 0,
         "to": 0.17
-      }
+      },
+      "phase3d": "closing"
     },
     {
       "id": "S04",
@@ -61,7 +63,8 @@
       "timeline": {
         "from": 0.18,
         "to": 0.41
-      }
+      },
+      "phase3d": "patch"
     },
     {
       "id": "S05",
@@ -79,7 +82,8 @@
       "timeline": {
         "from": 0.42,
         "to": 0.55
-      }
+      },
+      "phase3d": "months"
     },
     {
       "id": "S06",
@@ -97,7 +101,8 @@
       "timeline": {
         "from": 0.55,
         "to": 0.6
-      }
+      },
+      "phase3d": "drying"
     },
     {
       "id": "S07",
@@ -120,7 +125,8 @@
         "value": "39–68%",
         "label": "гипертрофический рубец после операций",
         "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158"
-      }
+      },
+      "phase3d": "alarm"
     },
     {
       "id": "S08",
@@ -138,8 +144,10 @@
       "timeline": {
         "from": 0.65,
         "to": 0.65,
-        "highlightWindow": true
-      }
+        "highlightWindow": true,
+        "emphasis": true
+      },
+      "phase3d": "freeze"
     },
     {
       "id": "S09",
@@ -149,7 +157,7 @@
       "kind": "R",
       "kling": "H04",
       "shot": "Kling H04: руки достают пластину из белой коробки; логотип из кода",
-      "vo": "Силиконовая пластина Yafho SiliSkin.",
+      "vo": "Силиконовая пластина Silicare.",
       "title": "Yafho SiliSkin ·\nмедицинский силикон"
     },
     {
@@ -169,7 +177,8 @@
         "from": 0.42,
         "to": 0.6,
         "highlightWindow": true
-      }
+      },
+      "phase3d": "seal"
     },
     {
       "id": "S11a",
@@ -230,8 +239,11 @@
       "end": 77.0,
       "kind": "C",
       "shot": "Эндкард navy: логотип, QR, @sil.icare",
-      "vo": "Yafho SiliSkin. Помогите коже на главном этапе.",
+      "vo": "Silicare. Помогите коже на главном этапе.",
       "title": "@sil.icare"
     }
-  ]
+  ],
+  "pronunciation": {
+    "Silicare": "Силикэр"
+  }
 }

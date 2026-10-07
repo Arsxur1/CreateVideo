@@ -334,6 +334,7 @@ interface Overlay {
   to?: number;
   highlightWindow?: boolean;
   ticks?: boolean;
+  emphasis?: boolean;
   // stat_badge
   value?: string;
   source?: string;
@@ -885,6 +886,7 @@ const OverlayRenderer: React.FC<{ overlay: Overlay; inPanel?: boolean }> = ({ ov
         to={overlay.to}
         highlightWindow={overlay.highlightWindow}
         ticks={overlay.ticks}
+        emphasis={overlay.emphasis}
         inPanel={inPanel}
       />
     );
