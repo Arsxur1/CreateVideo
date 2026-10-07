@@ -184,7 +184,7 @@ def render(props: dict, out: Path, profile: str) -> None:
 def contact_sheet(video: Path, scenes: list[dict], dest: Path) -> None:
     w, h = (int(v) for v in subprocess.run(
         ["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height", "-of", "csv=p=0",
-         str(video)], capture_output=True, text=True, check=True).stdout.strip().split(","))
+         str(video)], capture_output=True, text=True, check=True).stdout.strip().strip(",").split(",")[:2])
     th = 480
     tw = int(round(th * w / h / 2) * 2)
     frames = []
