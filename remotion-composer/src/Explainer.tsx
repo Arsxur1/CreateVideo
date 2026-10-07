@@ -55,6 +55,9 @@ import { TimeCounter } from "./components/TimeCounter";
 import { SizeGuide } from "./components/SizeGuide";
 import type { SizeGuideItem } from "./components/SizeGuide";
 import { EndCard } from "./components/EndCard";
+import { HealingTimeline } from "./components/HealingTimeline";
+import { AnimaticNote } from "./components/AnimaticNote";
+import { StatBadge } from "./components/StatBadge";
 import { CanvasContext } from "./components/yafho/tokens";
 import type { ParticleType } from "./components/ParticleOverlay";
 import { resolveTheme, type ThemeConfig, DEFAULT_THEME } from "./Root";
@@ -304,7 +307,10 @@ interface Overlay {
     | "provider_chip"
     | "thesis"
     | "margin_overlay"
-    | "time_counter";
+    | "time_counter"
+    | "healing_timeline"
+    | "animatic_note"
+    | "stat_badge";
   in_seconds: number;
   out_seconds: number;
   text?: string;
@@ -323,6 +329,14 @@ interface Overlay {
   marginPx?: number;
   // time_counter
   labels?: string[];
+  // healing_timeline
+  from?: number;
+  to?: number;
+  highlightWindow?: boolean;
+  ticks?: boolean;
+  // stat_badge
+  value?: string;
+  source?: string;
   /** Only render in these layouts (default: all). */
   layouts?: ("full" | "split")[];
 }
@@ -399,12 +413,27 @@ const Vignette: React.FC = () => (
 // Enhanced Image Scene — spring physics, parallax, variety
 // ---------------------------------------------------------------------------
 
-const ImageScene: React.FC<{ src: string; animation?: string }> = ({
+const ImageScene: React.FC<{ src: string; animation?: string; flat?: boolean }> = ({
   src,
   animation,
+  flat = false,
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
+
+  if (flat) {
+    // Brand-flat treatment: 0.4s fade-in, gentle push-in, no vignette or dimming.
+    const fade = interpolate(frame, [0, 0.4 * fps], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+    const push = interpolate(frame, [0, durationInFrames], [1, animation === "static" ? 1 : 1.06], {
+      extrapolateLeft: "clamp",
+      extrapolateRight: "clamp",
+    });
+    return (
+      <AbsoluteFill style={{ overflow: "hidden" }}>
+        <Img src={resolveAsset(src)} style={{ width: "100%", height: "100%", objectFit: "cover", opacity: fade, transform: `scale(${push})` }} />
+      </AbsoluteFill>
+    );
+  }
 
   // Smooth spring fade-in
   const fadeIn = spring({ frame, fps, config: { damping: 18, stiffness: 80 } });
@@ -814,7 +843,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   const animation = cut.animation || cut.transform?.animation;
 
   if (cut.source && isImage(cut.source)) {
-    return maybeWrapWithBg(<ImageScene src={cut.source} animation={animation} />);
+    return maybeWrapWithBg(<ImageScene src={cut.source} animation={animation} flat={theme.flat} />);
   }
 
   if (cut.source && isVideo(cut.source)) {
@@ -823,7 +852,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
 
   // Final fallback — try as image if source exists, otherwise show text_card
   if (cut.source) {
-    return maybeWrapWithBg(<ImageScene src={cut.source} animation={animation} />);
+    return maybeWrapWithBg(<ImageScene src={cut.source} animation={animation} flat={theme.flat} />);
   }
 
   // No source, no type — render as text card with cut id as fallback
@@ -842,11 +871,29 @@ const OverlayRenderer: React.FC<{ overlay: Overlay; inPanel?: boolean }> = ({ ov
         variant={overlay.variant}
         placement={inPanel ? "panel" : ((overlay.position as any) || "bottom")}
         fontSize={inPanel ? undefined : overlay.fontSize}
+        note={overlay.subtitle}
       />
     );
   }
   if (overlay.type === "margin_overlay") {
     return <MarginOverlay scarBox={overlay.scarBox} marginPx={overlay.marginPx} label={overlay.label} />;
+  }
+  if (overlay.type === "healing_timeline") {
+    return (
+      <HealingTimeline
+        from={overlay.from}
+        to={overlay.to}
+        highlightWindow={overlay.highlightWindow}
+        ticks={overlay.ticks}
+        inPanel={inPanel}
+      />
+    );
+  }
+  if (overlay.type === "stat_badge" && overlay.value && overlay.source) {
+    return <StatBadge value={overlay.value} label={overlay.label ?? ""} source={overlay.source} position={(overlay.position as any) || "upper"} />;
+  }
+  if (overlay.type === "animatic_note" && overlay.label) {
+    return <AnimaticNote label={overlay.label} text={overlay.text} />;
   }
   if (overlay.type === "time_counter") {
     return <TimeCounter labels={overlay.labels} placement={(overlay.position as any) || "top"} />;
@@ -901,7 +948,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
   const layout = props.layout === "split" ? "split" : "full";
   const visibleOverlays = (overlays ?? []).filter((o) => !o.layouts || o.layouts.includes(layout));
   // In split layout thesis titles leave the video panel for the side panel.
-  const panelOverlays = layout === "split" && props.splitPanel !== "center" ? visibleOverlays.filter((o) => o.type === "thesis") : [];
+  const panelOverlays = layout === "split" && props.splitPanel !== "center" ? visibleOverlays.filter((o) => o.type === "thesis" || o.type === "healing_timeline") : [];
   const canvasOverlays = visibleOverlays.filter((o) => !panelOverlays.includes(o));
 
   const renderOverlay = (overlay: Overlay, i: number, inPanel = false) => {

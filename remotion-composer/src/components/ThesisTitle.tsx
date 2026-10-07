@@ -8,6 +8,8 @@ export interface ThesisTitleProps {
   /** "panel" = bare left-aligned text for the 16:9 side panel. */
   placement?: "bottom" | "center" | "top" | "panel";
   fontSize?: number;
+  /** Small source / footnote line under the title. */
+  note?: string;
 }
 
 // "1 · Очистить" → step badge + text
@@ -22,6 +24,7 @@ export const ThesisTitle: React.FC<ThesisTitleProps> = ({
   variant = "dark",
   placement = "bottom",
   fontSize,
+  note,
 }) => {
   const frame = useCurrentFrame();
   const { width, height } = useCanvas();
@@ -62,6 +65,9 @@ export const ThesisTitle: React.FC<ThesisTitleProps> = ({
           >
             {body}
           </div>
+          {note && (
+            <div style={{ fontFamily: YAFHO.sans, fontWeight: 500, fontSize: 24, color: YAFHO.muted, marginTop: 24, lineHeight: 1.35 }}>{note}</div>
+          )}
         </div>
       </AbsoluteFill>
     );
@@ -122,18 +128,35 @@ export const ThesisTitle: React.FC<ThesisTitleProps> = ({
               {step[1]}
             </div>
           )}
-          <div
-            style={{
-              fontFamily: YAFHO.sans,
-              fontWeight: 800,
-              fontSize: size,
-              lineHeight: 1.12,
-              letterSpacing: "-0.01em",
-              textAlign: step ? "left" : "center",
-              whiteSpace: "pre-line",
-            }}
-          >
-            {body}
+          <div>
+            <div
+              style={{
+                fontFamily: YAFHO.sans,
+                fontWeight: 800,
+                fontSize: size,
+                lineHeight: 1.12,
+                letterSpacing: "-0.01em",
+                textAlign: step ? "left" : "center",
+                whiteSpace: "pre-line",
+              }}
+            >
+              {body}
+            </div>
+            {note && (
+              <div
+                style={{
+                  fontFamily: YAFHO.sans,
+                  fontWeight: 500,
+                  fontSize: Math.round(size * 0.34),
+                  lineHeight: 1.3,
+                  marginTop: size * 0.25,
+                  textAlign: "center",
+                  color: dark ? "#C9D2DE" : YAFHO.muted,
+                }}
+              >
+                {note}
+              </div>
+            )}
           </div>
         </div>
       </div>

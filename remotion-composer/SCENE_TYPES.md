@@ -44,6 +44,12 @@ Yafho components use the bundled Onest / JetBrains Mono fonts (`public/fonts/yaf
 | **`margin_overlay`** | **`MarginOverlay`** | — | **`scarBox` {x,y,w,h} in 1080×1920 source px, `marginPx`, `label`** | **Orange "+1 см" sheet outline over footage; registered to the video under objectFit: cover in every format** |
 | **`time_counter`** | **`TimeCounter`** | — | **`labels` (default 2 нед → 1 мес → 3 мес → 6 мес), `position` (top/bottom)** | **Timeline chips that light up in turn over a result shot** |
 
+| **`healing_timeline`** | **`HealingTimeline`** | — | **`from`, `to` (cursor 0..1), `highlightWindow`, `ticks`** | **Story spine «День 0 → Дни → Недели → Месяцы»; months light up orange as the window to act; ticks show 2 нед → 6 мес. In split layout it moves to the text panel** |
+| **`stat_badge`** | **`StatBadge`** | **`value`, `source`** | **`label`, `position` (upper/middle)** | **Brand stat card with mandatory source line** |
+| **`animatic_note`** | **`AnimaticNote`** | **`label`** | **`text` (VO line)** | **Draft-only strip: shot number, timing, voice-over line** |
+
+`thesis` also accepts `subtitle`, rendered as a small source/footnote line under the title.
+
 Any overlay may set `layouts: ["full"]` or `["split"]` to render only in that layout.
 
 ## Composition props
