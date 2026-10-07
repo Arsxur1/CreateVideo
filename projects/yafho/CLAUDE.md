@@ -1,6 +1,9 @@
-# Yafho SiliSkin — инструкция для Claude Code
+# Yafho-Silicare — инструкция для Claude Code
 
-Работаешь в репозитории OpenMontage (Arsxur1/CreateVideo), ветка `claude/portfolio-spec-vwosry`. Задача — собирать ролики про силиконовые пластыри Yafho SiliSkin по `projects/yafho/TZ.md`. Это пилот: только бесплатные инструменты, без платных API.
+Работаешь в репозитории OpenMontage (Arsxur1/CreateVideo), ветка `claude/portfolio-spec-vwosry`. Задача — собирать ролики про силиконовые пластыри Yafho-Silicare по `projects/yafho/TZ.md`. Это пилот: только бесплатные инструменты, без платных API.
+
+## Название
+Бренд — **Yafho-Silicare** (решение заказчика; в TZ.md встречается старое «Yafho SiliSkin» — не использовать). Аккаунт @sil.icare.
 
 ## Источники правды
 - `projects/yafho/TZ.md` — факты, тексты титров, раскадровка, промпты. Факты не придумывать.
@@ -10,7 +13,7 @@
 - Реалистичные кадры (R): пользователь генерирует вручную в Kling (картинка → image-to-video, 5 с) и кладёт в `projects/yafho/assets/kling/` с именами `H01.mp4`, `H04.mp4`… Ты их НЕ генерируешь. Если файла нет — ставь `text_card` с подписью «нужен H0X» и продолжай.
 - Абстракция, инфографика, титры, логотип, эндкард (C): делаешь кодом в `remotion-composer/`.
 - Музыка: бесплатная (Pixabay Music / YouTube Audio Library), спокойный эмбиент 80–95 BPM, громкость 0.08–0.12. Файл → `projects/yafho/assets/music/`. Записать название и лицензию в `projects/yafho/CREDITS.md`.
-- Голос + крупные титры-тезисы (≤ 6 слов, ≥ 64 px при 1080×1920, держать ≥ 2.5 с), ролик должен читаться и без звука. (Решение заказчика для hero v2; изначально в ТЗ голоса не было.) Сюжет и тексты — `projects/yafho/SCRIPT_hero_v2.md`.
+- Голоса нет (решение заказчика: синтез звучал плохо). Только крупные титры-тезисы (≤ 6 слов, ≥ 64 px при 1080×1920, держать ≥ 2.5 с) и стрелки-пояснения там, где они объясняют движение. Сюжет — `projects/yafho/SCRIPT_hero_v2.md`, данные сцен — `projects/yafho/hero_v2.json`.
 
 ## Порядок работ
 1. Создать `styles/yafho-clinical.yaml` по схеме `schemas/styles/playbook.schema.json` (за образец — `styles/clean-professional.yaml`): primary #0F2440, accent #D4560F / #0D9488, background #FBFAF7, шрифт Onest (заголовки 800, тело 500), цифры JetBrains Mono; движения fade/slide 0.4 с, без bounce; `image_prompt_prefix` и `image_negative_prompt` — STYLE и NEGATIVE из TZ.md.
@@ -19,7 +22,7 @@
    - `MarginOverlay` — оранжевый контур «+1 см» поверх видео.
    - `TimeCounter` — «2 нед → 1 мес → 3 мес → 6 мес» поверх H08.
    - `SizeGuide` — 4 пластины на силуэты зон (тема 06).
-   - `EndCard` — navy, логотип (`projects/yafho/assets/logo.png`, если нет — текст «Yafho SiliSkin»), @sil.icare, QR (сгенерировать на https://instagram.com/sil.icare).
+   - `EndCard` — navy, логотип (`projects/yafho/assets/logo.png`, если нет — текст «Yafho-Silicare»), @sil.icare, QR (сгенерировать на https://instagram.com/sil.icare).
    Для стат-карточек и графика использовать существующие `stat_card` и `line_chart`.
 3. Пилот: собрать hero 50 с (таблица раздела 2 в TZ.md) в `edit_decisions` → рендер 1080×1920.
 4. Из тех же клипов сделать 16:9 (1920×1080): вертикальный клип по центру/слева, справа — титр на #FBFAF7; и 4:5 (1080×1350) с кадрированием по центру.

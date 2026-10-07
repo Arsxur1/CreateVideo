@@ -14,7 +14,7 @@ import type { SkinCrossSectionLabels, SkinPhase } from "./SkinCrossSection";
  */
 export type Skin3DPhase = SkinPhase | "dive" | "closing" | "patch" | "months" | "drying" | "alarm" | "freeze" | "seal";
 
-export type Skin3DLabels = SkinCrossSectionLabels & { fibroblast?: string; signalUp?: string };
+export type Skin3DLabels = SkinCrossSectionLabels & { fibroblast?: string; signalUp?: string; moistureOut?: string };
 
 export interface SkinCrossSection3DProps {
   phase?: Skin3DPhase;
@@ -37,6 +37,7 @@ const DEFAULT_LABELS: Skin3DLabels = {
   signal: "сигнал ↓",
   signalUp: "сигнал ↑",
   fibroblast: "фибробласт",
+  moistureOut: "влага уходит",
 };
 
 // ---------------------------------------------------------------------------
@@ -999,6 +1000,8 @@ export const SkinCrossSection3D: React.FC<SkinCrossSection3DProps> = ({
             { key: "fibroblast", at: CELLS[1], side: "right", swatch: YAFHO.navy, show: reveal(0.4) },
             { key: "collagen", at: collagenAt, side: "left", swatch: YAFHO.orange, show: reveal(0.7) },
           ]
+        : phase === "drying"
+          ? [{ key: "moistureOut", at: [0.5, h * bumpShape(0.5) + 0.85, 0.6], side: "right", swatch: YAFHO.teal, show: reveal(0.3) }]
         : phase === "alarm"
           ? [
               { key: "signalUp", at: CELLS[3], side: "right", swatch: YAFHO.navy, show: reveal(0.25) },
@@ -1009,6 +1012,32 @@ export const SkinCrossSection3D: React.FC<SkinCrossSection3DProps> = ({
                 { key: "moisture", at: [1.0, h * bumpShape(1.0) + 0.06, 0.95], side: "right", swatch: YAFHO.teal, show: isSeal ? reveal(0.36) : 1 },
                 { key: "signal", at: CELLS[3], side: "right", swatch: YAFHO.navy, show: isSeal ? reveal(0.5) : 1 },
                 { key: "collagen", at: collagenAt, side: "left", swatch: YAFHO.orange, show: isSeal ? reveal(0.62) : 1 },
+              ]
+            : [];
+
+  // Motion arrows (world space → screen): explain what moves where.
+  type MoveArrow = { from: V3; to: V3; color: string; show: number };
+  const crest = h;
+  const fadeOut = (a: number, b: number) => 1 - ease(frame, D * a, D * b);
+  const moves: MoveArrow[] =
+    phase === "closing"
+      ? [
+          { from: [-1.45, 0.28, FRONT_Z], to: [-0.4, 0.28, FRONT_Z], color: YAFHO.navy, show: reveal(0.04) * fadeOut(0.72, 0.88) },
+          { from: [1.45, 0.28, FRONT_Z], to: [0.4, 0.28, FRONT_Z], color: YAFHO.navy, show: reveal(0.04) * fadeOut(0.72, 0.88) },
+        ]
+      : phase === "drying"
+        ? [-0.7, 0, 0.7].map((x, i) => ({
+            from: [x, h * bumpShape(x) + 0.12, 0.6] as V3,
+            to: [x, h * bumpShape(x) + 0.85, 0.6] as V3,
+            color: YAFHO.teal,
+            show: reveal(0.15 + i * 0.06),
+          }))
+        : phase === "alarm"
+          ? [{ from: [0, crest + 0.12, 1.25], to: [0, crest + 0.75, 1.25], color: YAFHO.orange, show: reveal(0.35) }]
+          : isSeal
+            ? [
+                { from: [0, 2.3, 0.6], to: [0, 1.15, 0.6], color: YAFHO.navy, show: reveal(0.01) * fadeOut(0.24, 0.32) },
+                { from: [0, 0.95, 1.25], to: [0, crest + 0.12, 1.25], color: YAFHO.orange, show: reveal(0.62) },
               ]
             : [];
 
@@ -1039,6 +1068,29 @@ export const SkinCrossSection3D: React.FC<SkinCrossSection3DProps> = ({
       {v.veil > 0 && <AbsoluteFill style={{ background: YAFHO.offWhite, opacity: v.veil }} />}
       {grade && <Grade width={width} height={height} frame={frame} />}
       <svg width={width} height={height} style={{ position: "absolute", inset: 0, overflow: "visible" }}>
+        {moves
+          .filter((m) => m.show > 0.01)
+          .map((m, i) => {
+            const [x1, y1] = project(cam, width, height, m.from);
+            const [x2f, y2f] = project(cam, width, height, m.to);
+            const x2 = x1 + (x2f - x1) * m.show;
+            const y2 = y1 + (y2f - y1) * m.show;
+            const ang = Math.atan2(y2 - y1, x2 - x1);
+            const hl = fs * 0.9;
+            const sw = Math.max(5, fs * 0.22);
+            const head = (c: string, grow: number) =>
+              `${x2 + Math.cos(ang) * grow},${y2 + Math.sin(ang) * grow} ` +
+              `${x2 - Math.cos(ang - 0.5) * (hl + grow)},${y2 - Math.sin(ang - 0.5) * (hl + grow)} ` +
+              `${x2 - Math.cos(ang + 0.5) * (hl + grow)},${y2 - Math.sin(ang + 0.5) * (hl + grow)}`;
+            return (
+              <g key={`mv${i}`} opacity={Math.min(1, m.show * 1.5)}>
+                <line x1={x1} y1={y1} x2={x2 - Math.cos(ang) * hl * 0.6} y2={y2 - Math.sin(ang) * hl * 0.6} stroke={YAFHO.white} strokeWidth={sw + 6} strokeLinecap="round" />
+                <polygon points={head(YAFHO.white, 4)} fill={YAFHO.white} />
+                <line x1={x1} y1={y1} x2={x2 - Math.cos(ang) * hl * 0.6} y2={y2 - Math.sin(ang) * hl * 0.6} stroke={m.color} strokeWidth={sw} strokeLinecap="round" />
+                <polygon points={head(m.color, 0)} fill={m.color} />
+              </g>
+            );
+          })}
         {placed.map((a) => {
           const text = L[a.key]!;
           const { ax, ay, py } = a;
@@ -1049,7 +1101,13 @@ export const SkinCrossSection3D: React.FC<SkinCrossSection3DProps> = ({
           return (
             <g key={a.key} opacity={a.show} transform={`translate(${slide}, 0)`}>
               <line x1={edgeX} y1={py} x2={ax} y2={ay} stroke={YAFHO.navy} strokeWidth={Math.max(2, fs * 0.07)} />
-              <circle cx={ax} cy={ay} r={fs * 0.22} fill={YAFHO.white} stroke={YAFHO.navy} strokeWidth={Math.max(2, fs * 0.07)} />
+              {(() => {
+                // arrowhead on the leader, pointing at the anchor
+                const ang = Math.atan2(ay - py, ax - edgeX);
+                const hl = fs * 0.5;
+                const pts = `${ax},${ay} ${ax - Math.cos(ang - 0.45) * hl},${ay - Math.sin(ang - 0.45) * hl} ${ax - Math.cos(ang + 0.45) * hl},${ay - Math.sin(ang + 0.45) * hl}`;
+                return <polygon points={pts} fill={YAFHO.navy} stroke={YAFHO.white} strokeWidth={2} />;
+              })()}
               <rect x={px} y={py - ph / 2} width={w} height={ph} rx={ph / 2} fill={YAFHO.white} />
               <circle cx={px + fs * 0.9} cy={py} r={fs * 0.3} fill={a.swatch} />
               <text x={px + fs * 1.5} y={py + fs * 0.36} fontSize={fs} fontFamily={YAFHO.sans} fontWeight={800} fill={YAFHO.navy}>

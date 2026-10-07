@@ -1,17 +1,16 @@
-"""Yafho SiliSkin — hero v2 «Окно перестройки» (story version).
+"""Yafho-Silicare — hero v2 «Окно перестройки» (story version, no voice).
 
-Stage 2 — animatic:
+Stage 2 — animatic (3D stills, sketch cards, dashed shot notes):
     python projects/yafho/build_v2.py --animatic
-Stage 3 — draft with the animated 3D story (Kling slots + scratch voice):
+Stage 3 — draft with the animated 3D story:
     python projects/yafho/build_v2.py --draft
-  * 3D scenes → stills rendered from SkinCrossSection3D (fast, no animation)
-  * new 3D scenes → sketch cards with the shot description
-  * Kling shots → the clip if present in assets/kling/, else a «нужен H0X» card
-  * healing timeline, titles, stat card and a dashed note with shot number + VO line
-  * scratch voice (espeak-ng, robotic — only for timing) and a timing report
+
+The story is carried by title sequences (≤ 6 words, held ≥ 2.5 s) and
+arrows in the 3D scenes; no voice-over (client decision). Kling shots come
+from assets/kling/H0X.mp4, else a «нужен H0X» card.
 
 Scene data: projects/yafho/hero_v2.json (shared with the final build).
-Output: output/yafho/v2/animatic_9x16.mp4, contact sheet, timing report.
+Output: output/yafho/v2/<mode>_9x16.mp4 + contact sheet.
 """
 
 from __future__ import annotations
@@ -35,7 +34,6 @@ OUT = ROOT / "output" / "yafho" / "v2"
 PUBLIC_REL = "yafho-v2"  # remotion-composer/public/<PUBLIC_REL> (git-ignored)
 PUBLIC = COMPOSER / "public" / PUBLIC_REL
 STILL_SECONDS = 9.0  # nominal scene length the still poses are sampled from
-VO_LEAD = 0.3  # voice starts this long after the scene cut
 
 
 def fmt_t(t: float) -> str:
@@ -70,41 +68,7 @@ def render_still(scene: dict, dest: Path) -> None:
     props_path.unlink()
 
 
-def tts_text(text: str, data: dict) -> str:
-    for word, say in data.get("pronunciation", {}).items():
-        text = text.replace(word, say)
-    return text
-
-
-def scratch_voice(scenes: list[dict], data: dict) -> tuple[Path, list[dict]]:
-    """espeak-ng female voice per line, placed at scene start + VO_LEAD."""
-    tmp = OUT / "vo"
-    tmp.mkdir(parents=True, exist_ok=True)
-    report = []
-    inputs: list[str] = []
-    filters: list[str] = []
-    for i, s in enumerate(scenes):
-        wav = tmp / f"{s['id']}.wav"
-        subprocess.run(["espeak-ng", "-v", "ru+f3", "-s", "150", "-w", str(wav), tts_text(s["vo"], data)], check=True)
-        dur = float(subprocess.run(
-            ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(wav)],
-            capture_output=True, text=True, check=True).stdout.strip())
-        slot = s["end"] - s["start"] - VO_LEAD
-        report.append({"id": s["id"], "vo": s["vo"], "dur": dur, "slot": slot, "fits": dur <= slot})
-        inputs += ["-i", str(wav)]
-        delay = int((s["start"] + VO_LEAD) * 1000)
-        filters.append(f"[{i}:a]adelay={delay}|{delay}[a{i}]")
-    mix = "".join(f"[a{i}]" for i in range(len(scenes)))
-    dest = PUBLIC / "vo_scratch.wav"
-    subprocess.run(
-        ["ffmpeg", "-y", "-loglevel", "error", *inputs, "-filter_complex",
-         ";".join(filters) + f";{mix}amix=inputs={len(scenes)}:normalize=0[out]", "-map", "[out]", str(dest)],
-        check=True,
-    )
-    return dest, report
-
-
-def build_animatic(data: dict, with_voice: bool, mode: str = "animatic") -> dict:
+def build_animatic(data: dict, mode: str = "animatic") -> dict:
     PUBLIC.mkdir(parents=True, exist_ok=True)
     OUT.mkdir(parents=True, exist_ok=True)
     cuts: list[dict] = []
@@ -133,7 +97,7 @@ def build_animatic(data: dict, with_voice: bool, mode: str = "animatic") -> dict
             render_still(s, png)
             cut["source"] = f"{PUBLIC_REL}/{png.name}"
         elif kind == "C":
-            cut.update(type="end_card", brand="Yafho SiliSkin", handle="@sil.icare",
+            cut.update(type="end_card", brand=data.get("brand", "Yafho-Silicare"), handle="@sil.icare",
                        qr=qr_matrix("https://instagram.com/sil.icare"), qrCaption="instagram.com/sil.icare")
         else:  # new 3D scene, not built yet → sketch card
             cut.update(type="text_card", text=f"[эскиз] {s['shot']}", fontSize=42,
@@ -141,10 +105,14 @@ def build_animatic(data: dict, with_voice: bool, mode: str = "animatic") -> dict
         cuts.append(cut)
         prev_3d = is_3d
 
-        if s.get("title") and kind != "C":
-            ov = {"type": "thesis", "text": s["title"], "variant": "dark",
-                  "in_seconds": s["start"] + 0.3, "out_seconds": s["end"]}
-            if s.get("footnote"):
+        # title sequence: each title holds until the next one (or the cut end)
+        titles = s.get("titles", [])
+        dur = s["end"] - s["start"]
+        for i, t in enumerate(titles):
+            t_in = s["start"] + t["at"] * dur + (0.3 if t["at"] == 0 else 0)
+            t_out = s["start"] + titles[i + 1]["at"] * dur if i + 1 < len(titles) else s["end"]
+            ov = {"type": "thesis", "text": t["text"], "variant": "dark", "in_seconds": round(t_in, 2), "out_seconds": round(t_out, 2)}
+            if t.get("footnote") and s.get("footnote"):
                 ov["subtitle"] = s["footnote"]
             overlays.append(ov)
         if s.get("timeline"):
@@ -152,23 +120,19 @@ def build_animatic(data: dict, with_voice: bool, mode: str = "animatic") -> dict
         if s.get("stat"):
             st = s["stat"]
             overlays.append({"type": "stat_badge", "value": st["value"], "label": st["label"], "source": st["source"],
-                             "in_seconds": s["start"] + 1.5, "out_seconds": s["end"]})
+                             "position": st.get("position", "upper"), "in_seconds": s["start"] + 1.5, "out_seconds": s["end"]})
         if s.get("margin"):
             overlays.append({"type": "margin_overlay", "label": "+1 см", "in_seconds": s["start"] + 0.3, "out_seconds": s["end"]})
         if mode == "animatic":
             overlays.append({"type": "animatic_note", "label": f"{s['id']} · {fmt_t(s['start'])}–{fmt_t(s['end'])} · {kind}",
-                             "text": s["vo"], "in_seconds": s["start"], "out_seconds": s["end"]})
+                             "text": s.get("notes"), "in_seconds": s["start"], "out_seconds": s["end"]})
 
     props: dict = {
         "version": "1.0", "renderer_family": "explainer-data", "render_runtime": "remotion",
         "theme": "yafho-clinical", "playbook": "yafho-clinical",
         "durationSeconds": data["duration"], "cuts": cuts, "overlays": overlays, "audio": {},
     }
-    report = []
-    if with_voice:
-        vo, report = scratch_voice(data["scenes"], data)
-        props["audio"]["narration"] = {"src": f"{PUBLIC_REL}/{vo.name}", "volume": 1}
-    return {"props": props, "report": report}
+    return {"props": props}
 
 
 def qr_matrix(url: str) -> list[list[int]]:
@@ -217,21 +181,13 @@ def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--animatic", action="store_true", help="stills + notes (stage 2, default)")
     ap.add_argument("--draft", action="store_true", help="animated 3D story, no notes (stage 3)")
-    ap.add_argument("--no-voice", action="store_true", help="skip the espeak-ng scratch voice")
     args = ap.parse_args()
 
     data = json.loads(DATA.read_text(encoding="utf-8"))
     mode = "draft" if args.draft else "animatic"
     print(f"{mode}: building scenes")
-    built = build_animatic(data, with_voice=not args.no_voice and shutil.which("espeak-ng") is not None, mode=mode)
+    built = build_animatic(data, mode=mode)
     (OUT / f"{mode}_props.json").write_text(json.dumps(built["props"], ensure_ascii=False, indent=2), encoding="utf-8")
-
-    if built["report"]:
-        lines = ["| Сцена | Слот, с | Голос (черновой), с | Влезает |", "|---|---|---|---|"]
-        for r in built["report"]:
-            lines.append(f"| {r['id']} | {r['slot']:.1f} | {r['dur']:.1f} | {'да' if r['fits'] else '**нет**'} |")
-        (OUT / "timing_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
-        print("\n".join(lines))
 
     video = OUT / f"{mode}_9x16.mp4"
     print(f"{mode}: rendering 9:16")

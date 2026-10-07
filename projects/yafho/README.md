@@ -1,4 +1,4 @@
-# Yafho SiliSkin — контент-портфель
+# Yafho-Silicare — контент-портфель
 
 - `TZ.md` — ТЗ (единственный источник фактов и титров), `CLAUDE.md` — правила работы.
 - `build_hero.py` — hero 50 с: собирает `artifacts/edit_decisions_hero.json` и рендерит
@@ -10,7 +10,7 @@
 |---|---|
 | `assets/kling/H01.mp4`, `H04.mp4` … `H08.mp4` | клипы Kling по промптам TZ §2 (без файла — заглушка «нужен H0X») |
 | `assets/music/<трек>.mp3` | один бесплатный эмбиент-трек 80–95 BPM → вписать в `CREDITS.md` |
-| `assets/logo.png` | логотип (без файла — текстовый «Yafho SiliSkin») |
+| `assets/logo.png` | логотип (без файла — текстовый «Yafho-Silicare») |
 
 ## Рендер
 ```bash

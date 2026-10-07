@@ -7,7 +7,7 @@ export interface StatBadgeProps {
   label: string;
   /** Required: every study figure carries its source (TZ 0.1). */
   source: string;
-  position?: "upper" | "middle";
+  position?: "upper" | "middle" | "lower";
 }
 
 /** Brand stat card: big mono figure, short label, small source line. */
@@ -17,11 +17,12 @@ export const StatBadge: React.FC<StatBadgeProps> = ({ value, label, source, posi
   const { opacity, translateY } = useFadeSlide(frame, 6);
   const fs = Math.round(width * 0.03);
   return (
-    <AbsoluteFill style={{ alignItems: "flex-end", pointerEvents: "none" }}>
+    <AbsoluteFill style={{ alignItems: position === "lower" ? "flex-start" : "flex-end", pointerEvents: "none" }}>
       <div
         style={{
-          marginTop: height * (position === "upper" ? 0.2 : 0.42),
+          marginTop: height * (position === "upper" ? 0.2 : position === "middle" ? 0.42 : 0.555),
           marginRight: width * 0.06,
+          marginLeft: width * 0.06,
           width: width * 0.5,
           background: YAFHO.white,
           borderLeft: `${fs * 0.3}px solid ${YAFHO.orange}`,

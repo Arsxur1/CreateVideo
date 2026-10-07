@@ -1,4 +1,4 @@
-"""Yafho SiliSkin — hero 50s: edit decisions + 9:16 / 16:9 / 4:5 renders.
+"""Yafho-Silicare — hero 50s: edit decisions + 9:16 / 16:9 / 4:5 renders.
 
 Usage (from repo root):
     python projects/yafho/build_hero.py               # decisions + all formats + previews
@@ -40,7 +40,7 @@ SCENES = [
     ("H01", 0, 5, "R", "Рубец остался.\nПлотный и заметный"),
     ("H02", 5, 14, "C", "Под кожей — лишний коллаген"),
     ("H03", 14, 22, "C", "Силикон держит влагу → сигнал ↓"),
-    ("H04", 22, 27, "R", "Yafho SiliSkin ·\nмедицинский силикон"),
+    ("H04", 22, 27, "R", "Yafho-Silicare ·\nмедицинский силикон"),
     ("H05", 27, 32, "R", "1 · Очистить"),
     ("H06", 32, 37, "R", "2 · +1 см за край"),
     ("H07", 37, 41, "R", "3 · 12–23 ч в сутки"),
@@ -93,7 +93,7 @@ def build_decisions(cross_section: str = "3d") -> dict:
             cut.update(type=section_type, phase="sealed", introFade=False)
         elif sid == "H09":
             logo = ASSETS / "logo.png"
-            cut.update(type="end_card", brand="Yafho SiliSkin", handle="@sil.icare",
+            cut.update(type="end_card", brand="Yafho-Silicare", handle="@sil.icare",
                        qr=qr_matrix(INSTAGRAM_URL), qrCaption="instagram.com/sil.icare")
             if logo.exists():
                 cut["logoSrc"] = str(logo)

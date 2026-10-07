@@ -18,7 +18,7 @@ export interface EndCardProps {
  */
 export const EndCard: React.FC<EndCardProps> = ({
   logoSrc,
-  brand = "Yafho SiliSkin",
+  brand = "Yafho-Silicare",
   tagline,
   handle = "@sil.icare",
   qr,
@@ -35,7 +35,10 @@ export const EndCard: React.FC<EndCardProps> = ({
 
   const compact = height < 1500;
   const qrSize = compact ? 300 : 360;
-  const [first, ...rest] = brand.split(" ");
+  // "Yafho-Silicare" / "Yafho SiliSkin": first part bold, separator kept
+  const m = brand.match(/^(\S+?)([- ])(.+)$/);
+  const first = m ? m[1] : brand;
+  const rest = m ? `${m[2]}${m[3]}` : "";
 
   return (
     <AbsoluteFill
@@ -55,7 +58,7 @@ export const EndCard: React.FC<EndCardProps> = ({
         ) : (
           <div style={{ fontSize: 104, lineHeight: 1, letterSpacing: "-0.02em" }}>
             <span style={{ fontWeight: 800 }}>{first}</span>
-            {rest.length > 0 && <span style={{ fontWeight: 500 }}>{` ${rest.join(" ")}`}</span>}
+            {rest && <span style={{ fontWeight: 500 }}>{rest}</span>}
           </div>
         )}
         <div style={{ width: 120, height: 8, borderRadius: 4, background: YAFHO.orange, margin: "36px auto 0" }} />
