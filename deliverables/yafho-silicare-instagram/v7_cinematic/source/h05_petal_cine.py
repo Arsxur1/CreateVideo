@@ -1,0 +1,6 @@
+src=open('h04_tests_cine.py').read(); exec(src[:src.index('# ---- ПЕРСИК')])
+b=open('b01_neonatology.py').read(); exec(b[b.index('def petal('):b.index('def shreds(')])
+stage = petal(150,600,360,520,-8,'pL',torn=True) + petal(570,600,360,520,8,'pR') + plaster(190,790,280,96,-14,'tp') + mini_sili(630,790,240,10,'ts')
+stage = stage.replace('background:#C3CEE0','background:#0B0C10')
+s=build('m5_lepestok_cinematic','Лепесток','Её кожа тоньше','этого лепестка.',stage,['pLh'],'ts','tp',False,'Лепесток порван','Лепесток цел','Её кожа помнит','первое прикосновение.','Пусть оно будет мягким.<br>🏥 Отделениям неонатологии — образцы в директ',(130.8,164.8,196,261.6),'#F19BB1','#D9577B')
+strip(s,'kp/chk_m5.jpg'); print('ok')
