@@ -17,7 +17,8 @@
           "text": "Рана зажила.\nА рубец остался.",
           "at": 0
         }
-      ]
+      ],
+      "exit": "dive"
     },
     {
       "id": "S02",
@@ -276,7 +277,15 @@
       "kind": "R",
       "kling": "H06",
       "shot": "Kling H06: линейка, +1 см, оранжевый контур из кода",
-      "margin": true,
+      "margin": {
+        "scarBox": {
+          "x": 470,
+          "y": 640,
+          "w": 140,
+          "h": 600
+        },
+        "marginPx": 80
+      },
       "notes": "На сантиметр шире рубца.",
       "titles": [
         {
@@ -341,5 +350,30 @@
     }
   ],
   "audio": "no voice — titles + music only (client decision)",
-  "brand": "Yafho-Silicare"
+  "brand": "Yafho-Silicare",
+  "music": {
+    "file": "yafho_ambient_v2.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.5,
+    "fadeOutSeconds": 2.0
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      },
+      "stat_position": "top"
+    }
+  }
 }

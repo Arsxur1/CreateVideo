@@ -7,23 +7,45 @@ export interface StatBadgeProps {
   label: string;
   /** Required: every study figure carries its source (TZ 0.1). */
   source: string;
-  position?: "upper" | "middle" | "lower";
+  position?: "upper" | "middle" | "lower" | "top";
+  /** Inside the 16:9 text panel: sits under the title, full panel width. */
+  inPanel?: boolean;
 }
 
 /** Brand stat card: big mono figure, short label, small source line. */
-export const StatBadge: React.FC<StatBadgeProps> = ({ value, label, source, position = "upper" }) => {
+export const StatBadge: React.FC<StatBadgeProps> = ({ value, label, source, position = "upper", inPanel = false }) => {
   const frame = useCurrentFrame();
   const { width, height } = useCanvas();
   const { opacity, translateY } = useFadeSlide(frame, 6);
-  const fs = Math.round(width * 0.03);
+  const fs = inPanel ? 26 : Math.round(width * (position === "top" ? 0.026 : 0.03));
+  if (inPanel) {
+    return (
+      <AbsoluteFill style={{ justifyContent: "flex-end", paddingBottom: height * 0.1, pointerEvents: "none" }}>
+        <div
+          style={{
+            background: YAFHO.white,
+            borderLeft: `${fs * 0.3}px solid ${YAFHO.orange}`,
+            borderRadius: 16,
+            padding: `${fs * 0.6}px ${fs * 0.8}px`,
+            opacity,
+            transform: `translateY(${translateY}px)`,
+          }}
+        >
+          <div style={{ fontFamily: YAFHO.mono, fontWeight: 700, fontSize: fs * 2, lineHeight: 1, color: YAFHO.navy }}>{value}</div>
+          <div style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: fs, color: YAFHO.navy, marginTop: fs * 0.3 }}>{label}</div>
+          <div style={{ fontFamily: YAFHO.sans, fontWeight: 500, fontSize: fs * 0.7, color: YAFHO.muted, marginTop: fs * 0.4 }}>{source}</div>
+        </div>
+      </AbsoluteFill>
+    );
+  }
   return (
     <AbsoluteFill style={{ alignItems: position === "lower" ? "flex-start" : "flex-end", pointerEvents: "none" }}>
       <div
         style={{
-          marginTop: height * (position === "upper" ? 0.2 : position === "middle" ? 0.42 : 0.555),
+          marginTop: height * (position === "top" ? 0.15 : position === "upper" ? 0.2 : position === "middle" ? 0.42 : 0.555),
           marginRight: width * 0.06,
           marginLeft: width * 0.06,
-          width: width * 0.5,
+          width: width * (position === "top" ? 0.44 : 0.5),
           background: YAFHO.white,
           borderLeft: `${fs * 0.3}px solid ${YAFHO.orange}`,
           borderRadius: 20,

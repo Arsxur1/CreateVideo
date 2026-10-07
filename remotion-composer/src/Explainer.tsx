@@ -288,6 +288,10 @@ interface Cut {
   focusX?: number;
   centerY?: number;
   fitFrac?: number;
+  /** "Dive" exit: push in, soften and fade out over the last N seconds of the cut. */
+  exitZoom?: number;
+  /** Video playback speed (e.g. stretch a 5 s Kling clip over a 7.5 s slot). */
+  playbackRate?: number;
   // Size guide (type: "size_guide")
   sizeItems?: SizeGuideItem[];
   // End card (type: "end_card")
@@ -501,10 +505,11 @@ const ImageScene: React.FC<{ src: string; animation?: string; flat?: boolean }> 
 // Enhanced Video Scene
 // ---------------------------------------------------------------------------
 
-const VideoScene: React.FC<{ src: string; startFrom?: number; flat?: boolean }> = ({
+const VideoScene: React.FC<{ src: string; startFrom?: number; flat?: boolean; playbackRate?: number }> = ({
   src,
   startFrom = 0,
   flat = false,
+  playbackRate = 1,
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
@@ -521,6 +526,7 @@ const VideoScene: React.FC<{ src: string; startFrom?: number; flat?: boolean }> 
           src={resolveAsset(src)}
           startFrom={Math.round(startFrom * fps)}
           style={{ width: "100%", height: "100%", objectFit: "cover", opacity: fade }}
+          playbackRate={playbackRate}
           muted
         />
       </AbsoluteFill>
@@ -848,7 +854,9 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   }
 
   if (cut.source && isVideo(cut.source)) {
-    return maybeWrapWithBg(<VideoScene src={cut.source} startFrom={cut.source_in_seconds ?? 0} flat={theme.flat} />);
+    return maybeWrapWithBg(
+      <VideoScene src={cut.source} startFrom={cut.source_in_seconds ?? 0} flat={theme.flat} playbackRate={cut.playbackRate} />,
+    );
   }
 
   // Final fallback — try as image if source exists, otherwise show text_card
@@ -859,6 +867,30 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   // No source, no type — render as text card with cut id as fallback
   return <TextCard text={cut.text || cut.id} color={textColor} backgroundColor={bgColor} />;
 };
+
+// "Dive" exit: the shot pushes in, softens and fades to the background so the
+// next scene (which fades in from the same background) reads as going inside.
+const ExitZoom: React.FC<{ seconds: number; children: React.ReactNode }> = ({ seconds, children }) => {
+  const frame = useCurrentFrame();
+  const { fps, durationInFrames } = useVideoConfig();
+  const start = durationInFrames - seconds * fps;
+  const p = interpolate(frame, [start, durationInFrames], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const e = p * p;
+  return (
+    <AbsoluteFill style={{ transform: `scale(${1 + 0.6 * e})`, filter: `blur(${8 * e}px)`, opacity: 1 - 0.85 * e }}>
+      {children}
+    </AbsoluteFill>
+  );
+};
+
+const CutScene: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme }) =>
+  cut.exitZoom ? (
+    <ExitZoom seconds={cut.exitZoom}>
+      <SceneRenderer cut={cut} theme={theme} />
+    </ExitZoom>
+  ) : (
+    <SceneRenderer cut={cut} theme={theme} />
+  );
 
 // ---------------------------------------------------------------------------
 // Overlay renderer
@@ -892,7 +924,15 @@ const OverlayRenderer: React.FC<{ overlay: Overlay; inPanel?: boolean }> = ({ ov
     );
   }
   if (overlay.type === "stat_badge" && overlay.value && overlay.source) {
-    return <StatBadge value={overlay.value} label={overlay.label ?? ""} source={overlay.source} position={(overlay.position as any) || "upper"} />;
+    return (
+      <StatBadge
+        value={overlay.value}
+        label={overlay.label ?? ""}
+        source={overlay.source}
+        position={(overlay.position as any) || "upper"}
+        inPanel={inPanel}
+      />
+    );
   }
   if (overlay.type === "animatic_note" && overlay.label) {
     return <AnimaticNote label={overlay.label} text={overlay.text} />;
@@ -950,7 +990,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
   const layout = props.layout === "split" ? "split" : "full";
   const visibleOverlays = (overlays ?? []).filter((o) => !o.layouts || o.layouts.includes(layout));
   // In split layout thesis titles leave the video panel for the side panel.
-  const panelOverlays = layout === "split" && props.splitPanel !== "center" ? visibleOverlays.filter((o) => o.type === "thesis" || o.type === "healing_timeline") : [];
+  const panelOverlays = layout === "split" && props.splitPanel !== "center" ? visibleOverlays.filter((o) => o.type === "thesis" || o.type === "healing_timeline" || o.type === "stat_badge") : [];
   const canvasOverlays = visibleOverlays.filter((o) => !panelOverlays.includes(o));
 
   const renderOverlay = (overlay: Overlay, i: number, inPanel = false) => {
@@ -971,7 +1011,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
     const duration = Math.round((cut.out_seconds - cut.in_seconds) * fps);
     return (
       <Sequence key={cut.id} from={from} durationInFrames={duration}>
-        <SceneRenderer cut={cut} theme={theme} />
+        <CutScene cut={cut} theme={theme} />
       </Sequence>
     );
   };
@@ -985,7 +1025,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
 
         return (
           <Sequence key={cut.id} from={from} durationInFrames={duration}>
-            <SceneRenderer cut={cut} theme={theme} />
+            <CutScene cut={cut} theme={theme} />
           </Sequence>
         );
       })}
