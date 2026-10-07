@@ -10,7 +10,7 @@
 - Реалистичные кадры (R): пользователь генерирует вручную в Kling (картинка → image-to-video, 5 с) и кладёт в `projects/yafho/assets/kling/` с именами `H01.mp4`, `H04.mp4`… Ты их НЕ генерируешь. Если файла нет — ставь `text_card` с подписью «нужен H0X» и продолжай.
 - Абстракция, инфографика, титры, логотип, эндкард (C): делаешь кодом в `remotion-composer/`.
 - Музыка: бесплатная (Pixabay Music / YouTube Audio Library), спокойный эмбиент 80–95 BPM, громкость 0.08–0.12. Файл → `projects/yafho/assets/music/`. Записать название и лицензию в `projects/yafho/CREDITS.md`.
-- Голоса нет. Только крупные титры-тезисы (≤ 6 слов, ≥ 64 px при 1080×1920, держать ≥ 2.5 с).
+- Голос + крупные титры-тезисы (≤ 6 слов, ≥ 64 px при 1080×1920, держать ≥ 2.5 с), ролик должен читаться и без звука. (Решение заказчика для hero v2; изначально в ТЗ голоса не было.) Сюжет и тексты — `projects/yafho/SCRIPT_hero_v2.md`.
 
 ## Порядок работ
 1. Создать `styles/yafho-clinical.yaml` по схеме `schemas/styles/playbook.schema.json` (за образец — `styles/clean-professional.yaml`): primary #0F2440, accent #D4560F / #0D9488, background #FBFAF7, шрифт Onest (заголовки 800, тело 500), цифры JetBrains Mono; движения fade/slide 0.4 с, без bounce; `image_prompt_prefix` и `image_negative_prompt` — STYLE и NEGATIVE из TZ.md.
