@@ -101,7 +101,7 @@ def render_compare_still(progress: float, profile: str, data: dict) -> Path:
     w, h = (1080, 1350) if profile == "instagram_portrait" else (1080, 1920)
     bd = backdrop_for(data, (w, h))
     tag = Path(bd).stem if bd else "plain"
-    dest = PUBLIC / f"compare_{progress:g}_{w}x{h}_{tag}.png"
+    dest = PUBLIC / f"compare_{progress:g}_{w}x{h}_{tag}_arrows.png"
     if dest.exists():
         return dest
     PUBLIC.mkdir(parents=True, exist_ok=True)
@@ -113,7 +113,7 @@ def render_compare_still(progress: float, profile: str, data: dict) -> Path:
     props_path = OUT / ".compare_still.json"
     props_path.write_text(json.dumps(props), encoding="utf-8")
     subprocess.run(["npx", "remotion", "still", "src/index.tsx", "Explainer", str(dest), f"--props={props_path}",
-                    "--frame=0", f"--width={w}", f"--height={h}", "--image-format=png"],
+                    "--frame=29", f"--width={w}", f"--height={h}", "--image-format=png"],  # last frame: arrows shown
                    cwd=COMPOSER, env=remotion_env(), check=True, capture_output=True)
     props_path.unlink()
     return dest
