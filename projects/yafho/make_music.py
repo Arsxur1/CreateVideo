@@ -15,8 +15,9 @@ plus quiet sound accents: whoosh on the dive into 3D, a click on the
 88 BPM · 48 kHz stereo · mastered to about -18 LUFS (calm background level).
 
 Usage (from repo root):
-    python projects/yafho/make_music.py
-Output: projects/yafho/assets/music/yafho_ambient_v2.wav
+    python projects/yafho/make_music.py                                  # hero v2 (acts)
+    python projects/yafho/make_music.py --data projects/yafho/hero_v3.json  # v3 (score section)
+Output: projects/yafho/assets/music/<music.file from the scene file>
 """
 
 from __future__ import annotations
@@ -267,6 +268,68 @@ def compose(data: dict) -> np.ndarray:
     return buf * 0.7
 
 
+def compose_score(data: dict) -> np.ndarray:
+    """Data-driven score: `score.segments` (mood + chords) and `score.accents` from the scene file."""
+    total = float(data["duration"])
+    buf = np.zeros((2, int(total * SR)))
+    beat = 60 / data["score"].get("bpm", BPM)
+
+    for seg in data["score"]["segments"]:
+        s, e, mood, chords = seg["start"], seg["end"], seg["mood"], seg["chords"]
+        step = (e - s) / len(chords)
+        bright = {"impact": 0.5, "hold": 0.35, "light": 0.45, "tension": 0.45, "alarm": 0.65,
+                  "resolve": 0.55, "lift": 0.65, "end": 0.45}.get(mood, 0.4)
+        gain = {"impact": 0.6, "hold": 0.45, "light": 0.4, "tension": 0.55, "alarm": 0.62,
+                "resolve": 0.5, "lift": 0.6, "end": 0.55}.get(mood, 0.5)
+        for i, c in enumerate(chords):
+            attack = 0.08 if (mood == "impact" and i == 0) else 0.6
+            release = 2.5 if mood == "end" else 1.4
+            chord(buf, c, s + i * step, step, gain, bright=bright, attack=attack, release=release)
+            if mood in ("light", "resolve", "lift"):
+                tones = [note(n) + 12 for n in CHORDS[c][1:4]]
+                t, k = s + i * step, 0
+                while t < s + (i + 1) * step - 0.05:
+                    place(buf, pluck(hz(tones[k % len(tones)] + (12 if k % 4 == 3 else 0))), t,
+                          0.07 if mood == "lift" else 0.055, pan=0.35 * np.sin(k))
+                    t += beat / 2
+                    k += 1
+        # pulse
+        every = {"impact": 1, "tension": 1, "alarm": 1, "resolve": 4, "lift": 2}.get(mood)
+        if every:
+            t = s
+            while t < e:
+                place(buf, thump(), t, 0.34 if mood in ("impact", "alarm") else 0.24)
+                t += every * beat
+        if mood in ("tension", "alarm"):
+            t = s
+            while t < e:
+                q = (t - s) / (e - s)
+                place(buf, tick(), t, 0.04 + 0.08 * q * (mood == "alarm") + 0.02, pan=float(rng.uniform(-0.5, 0.5)))
+                t += beat / (2 if mood == "tension" else (2 if q < 0.5 else 4))
+
+    for a in data["score"].get("accents", []):
+        t, kind = a["t"], a["kind"]
+        if kind == "impact":
+            place(buf, thump(0.8), t, 0.5)
+            place(buf, bell(hz(note("A4"))), t + 0.02, 0.12, pan=-0.2)
+            place(buf, whoosh(0.9, rising=False), t, 0.08)
+        elif kind == "whoosh":
+            place(buf, whoosh(1.0, rising=True), t - 0.6, 0.12)
+        elif kind == "chime":
+            place(buf, bell(hz(note("C5"))), t, 0.10)
+            place(buf, bell(hz(note("G5"))), t + 0.2, 0.06, pan=0.3)
+        elif kind == "click":
+            place(buf, tick(0.08), t, 0.25)
+            place(buf, bell(hz(note("E5"))), t + 0.05, 0.07)
+        elif kind == "land":
+            place(buf, thump(0.4), t, 0.22)
+
+    buf = reverb(buf)
+    buf *= env(buf.shape[1], 0.01, 2.2)
+    buf /= np.max(np.abs(buf)) + 1e-9
+    return buf * 0.7
+
+
 def write_wav(path: Path, buf: np.ndarray) -> None:
     pcm = (np.clip(buf.T, -1, 1) * 32767).astype("<i2")
     with wave.open(str(path), "wb") as w:
@@ -289,14 +352,20 @@ def loudnorm(src: Path, dst: Path, target: float = -18.0) -> str:
 
 
 def main() -> None:
-    data = json.loads((PROJECT / "hero_v2.json").read_text(encoding="utf-8"))
-    buf = compose(data)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
+    import argparse
+
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--data", default=str(PROJECT / "hero_v2.json"))
+    args = ap.parse_args()
+    data = json.loads(Path(args.data).read_text(encoding="utf-8"))
+    buf = compose_score(data) if "score" in data else compose(data)
+    out = PROJECT / "assets" / "music" / data.get("music", {}).get("file", OUT.name)
+    out.parent.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         raw = Path(tmp) / "raw.wav"
         write_wav(raw, buf)
-        measured = loudnorm(raw, OUT)
-    print(f"{OUT.relative_to(PROJECT.parent.parent)} · {data['duration']} s · raw {measured} LUFS → -18 LUFS")
+        measured = loudnorm(raw, out)
+    print(f"{out.relative_to(PROJECT.parent.parent)} · {data['duration']} s · raw {measured} LUFS → -18 LUFS")
 
 
 if __name__ == "__main__":

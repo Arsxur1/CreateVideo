@@ -26,6 +26,8 @@ When you add a new component, append it here and in `src/components/index.ts`.
 | **`terminal_scene`** | **`TerminalScene`** | **`steps`** (list of cmd/out/pause/pill) | **`terminalTitle`, `prompt`, `accentColor`** | **Synthetic terminal animation — NO real capture needed. See [`.agents/skills/synthetic-screen-recording/SKILL.md`](../.agents/skills/synthetic-screen-recording/SKILL.md)** |
 | **`screenshot_scene`** | **`ScreenshotScene`** | **`backgroundImage`** (path in `public/`), **`screenshotSteps`** (list of overlays) | **`screenshotSize` (natural px w/h), `cursorStartAt`, `accentColor`** | **Approach-1 synthetic UI — drop any screenshot, animate scripted overlays on top (cursor, click_pulse, type_into, bubble_append, typing_dots, highlight_box, callout_balloon). Viewer-indistinguishable from a real recording for 15–30s focused demos. Coordinates are normalized (0–1) against the contain-fit rect. See [`.agents/skills/synthetic-ui-recording/SKILL.md`](../.agents/skills/synthetic-ui-recording/SKILL.md) (planned).** || **`skin_cross_section`** | **`SkinCrossSection`** | — | **`phase` (scar / sealed / healed), `crossLabels` {epidermis, dermis, collagen, moisture, signal}, `introFade`** | **Animated skin cut: chaotic orange collagen → sheet lowers → moisture film → fibroblast pulses slow → fibres align. Leaves the bottom ~35% free for a `thesis` overlay** |
 | **`skin_cross_section_3d`** | **`SkinCrossSection3D`** | — | **`phase` — story: `dive` → `closing` → `patch` → `months` → `drying` → `alarm` → `freeze`, then `seal` → `healed`; hero v1: `scar` → `sealed`. Consecutive phases join seamlessly (state + camera); set `introFade: false` on all but the first. Also `crossLabels`, `introFade`, `focusX`, `centerY`, `fitFrac`** | **Cinematic Three.js version: directed camera per phase (scar: macro glide → crane to the cut; sealed: sheet falls like fabric and drapes, push-in on collagen aligning), light-olive skin, frosted gel sheet, water film, rim light, grain + vignette. Labels reveal as the camera shows them. In `layout: "split"` it renders full-frame left of the text panel. Needs WebGL (`REMOTION_GL=angle` headless); ~50 s CPU per second of video** |
+| **`scar_compare`** | **`ScarCompare`** | — | **`progressFrom`, `progressTo` (1 → 1 holds the end), `introFade`** | **The effect: two 3D cards — the same young scar over 6 months «без ухода» (ridge rises, collagen tangles, ↑) vs «с силиконом» (flattens, aligns, ↓), month counter, «схема» note** |
+| **`blank`** | — | — | — | **Nothing; the brand `backdrop` shows through (e.g. under `audience_chips`)** |
 | **`size_guide`** | **`SizeGuide`** | — | **`sizeItems` [{cm: [w,h], zone: face/arm/abdomen/burn, label}]** | **Four sheets drop onto body-zone silhouettes with sizes (Yafho topic 06)** |
 | **`end_card`** | **`EndCard`** | — | **`logoSrc`, `brand`, `tagline`, `handle`, `qr` (0/1 matrix), `qrCaption`** | **Navy brand end card: logo or wordmark, QR, @handle** |
 
@@ -50,6 +52,10 @@ Yafho components use the bundled Onest / JetBrains Mono fonts (`public/fonts/yaf
 
 `thesis` also accepts `subtitle`, rendered as a small source/footnote line under the title.
 
+| **`audience_chips`** | **`AudienceChips`** | **`chips`** (list) | **`text` (title, default «Это про вас, если:»)** | **Recognisable situations pop in one by one — reach and relevance** |
+
+`stat_badge` also takes `position: "hero"` — the effect figure as the frame's headline. `end_card` takes `cta`.
+
 Any overlay may set `layouts: ["full"]` or `["split"]` to render only in that layout.
 
 ## Composition props
@@ -57,6 +63,7 @@ Any overlay may set `layouts: ["full"]` or `["split"]` to render only in that la
 | Prop | Purpose |
 |---|---|
 | `layout: "split"` | 16:9 frame: scenes render in a 9:16 panel (left, or `splitPanel: "center"`), `thesis` overlays in a text panel on the right |
+| `backdrop` | `{image}` or `{color}` behind every scene that does not paint its own background (brand look) |
 | `durationSeconds` | Exact length instead of last cut + 1s |
 | `width`, `height` | Override frame size (the CLI `--width/--height` also work) |
 

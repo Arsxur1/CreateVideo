@@ -7,7 +7,7 @@ export interface StatBadgeProps {
   label: string;
   /** Required: every study figure carries its source (TZ 0.1). */
   source: string;
-  position?: "upper" | "middle" | "lower" | "top";
+  position?: "upper" | "middle" | "lower" | "top" | "hero";
   /** Inside the 16:9 text panel: sits under the title, full panel width. */
   inPanel?: boolean;
 }
@@ -18,6 +18,34 @@ export const StatBadge: React.FC<StatBadgeProps> = ({ value, label, source, posi
   const { width, height } = useCanvas();
   const { opacity, translateY } = useFadeSlide(frame, 6);
   const fs = inPanel ? 26 : Math.round(width * (position === "top" ? 0.026 : 0.03));
+  if (position === "hero") {
+    // The effect figure as the frame's headline.
+    const hs = Math.round(width * 0.05);
+    return (
+      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", paddingBottom: height * 0.12, pointerEvents: "none" }}>
+        <div
+          style={{
+            width: width * 0.86,
+            background: YAFHO.white,
+            borderRadius: 36,
+            borderTop: `${hs * 0.25}px solid ${YAFHO.teal}`,
+            padding: `${hs * 0.9}px ${hs}px`,
+            boxSizing: "border-box",
+            boxShadow: "0 24px 60px rgba(15,36,64,0.18)",
+            textAlign: "center",
+            opacity,
+            transform: `translateY(${translateY}px)`,
+          }}
+        >
+          <div style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: hs * 2.3, lineHeight: 1, color: YAFHO.navy }}>{value}</div>
+          <div style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: hs * 0.95, lineHeight: 1.2, color: YAFHO.navy, marginTop: hs * 0.5, whiteSpace: "pre-line" }}>
+            {label}
+          </div>
+          <div style={{ fontFamily: YAFHO.sans, fontWeight: 500, fontSize: hs * 0.5, lineHeight: 1.35, color: YAFHO.muted, marginTop: hs * 0.6 }}>{source}</div>
+        </div>
+      </AbsoluteFill>
+    );
+  }
   if (inPanel) {
     return (
       <AbsoluteFill style={{ justifyContent: "flex-end", paddingBottom: height * 0.1, pointerEvents: "none" }}>

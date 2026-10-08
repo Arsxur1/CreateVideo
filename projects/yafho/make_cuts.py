@@ -2,6 +2,7 @@
 
     python projects/yafho/make_cuts.py              # every hero_v2_<fmt>.mp4 that exists
     python projects/yafho/make_cuts.py --formats 9x16
+    python projects/yafho/make_cuts.py --data projects/yafho/hero_v3.json   # cuts + audience cards from the scene file
 
 Each cut is a list of (scene, from, to) windows in scene-relative seconds,
 chosen so every title is already on screen and held ≥ 2.5 s. Windows are
@@ -45,32 +46,46 @@ def second_title_at(scene: dict) -> float:
     return t["at"] * (scene["end"] - scene["start"])
 
 
-def build_cut(video: Path, music: Path | None, data: dict, key: str, dest: Path) -> float:
+def build_cut(video: Path, music: Path | None, data: dict, windows: list, dest: Path, cards_dir: Path | None = None,
+              fmt: str = "9x16") -> float:
     scenes = {s["id"]: s for s in data["scenes"]}
-    spans = []
-    for sid, a, b in CUTS[key]["windows"]:
+    inputs = ["-i", str(video)]
+    # each item: (input index, start, end)
+    spans: list[tuple[int, float, float]] = []
+    for w in windows:
+        if isinstance(w, dict) and "card" in w:
+            clip = (cards_dir or video.parent) / f"card_{w['card']}_{fmt}.mp4"
+            if not clip.exists():
+                raise SystemExit(f"missing {clip} — render it with build_v2.py --cards")
+            inputs += ["-i", str(clip)]
+            idx = len(inputs) // 2 - 1
+            dur = float(data["cards"][w["card"]]["duration"])
+            spans.append((idx, 0.0, dur))
+            continue
+        sid, a, b = w
         sc = scenes[sid]
         a = second_title_at(sc) if a is None else a
-        spans.append((sc["start"] + a, sc["start"] + b))
+        spans.append((0, sc["start"] + a, sc["start"] + b))
 
     parts = []
-    for i, (a, b) in enumerate(spans):
-        parts.append(f"[0:v]trim=start={a:.3f}:end={b:.3f},setpts=PTS-STARTPTS,fps=30,format=yuv420p[v{i}]")
-    length = spans[0][1] - spans[0][0]
+    for i, (src, a, b) in enumerate(spans):
+        parts.append(f"[{src}:v]trim=start={a:.3f}:end={b:.3f},setpts=PTS-STARTPTS,fps=30,format=yuv420p[v{i}]")
+    length = spans[0][2] - spans[0][1]
     last = "v0"
     for i in range(1, len(spans)):
-        d = spans[i][1] - spans[i][0]
+        d = spans[i][2] - spans[i][1]
         out = f"x{i}"
         parts.append(f"[{last}][v{i}]xfade=transition=fade:duration={XFADE}:offset={length - XFADE:.3f}[{out}]")
         length += d - XFADE
         last = out
-    cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", str(video)]
+    cmd = ["ffmpeg", "-y", "-loglevel", "error", *inputs]
     maps = ["-map", f"[{last}]"]
     if music and music.exists():
         total = data["duration"]
         cmd += ["-i", str(music)]
+        mi = len(inputs) // 2
         parts.append(
-            f"[1:a]atrim=start={total - length:.3f}:end={total:.3f},asetpts=PTS-STARTPTS,"
+            f"[{mi}:a]atrim=start={total - length:.3f}:end={total:.3f},asetpts=PTS-STARTPTS,"
             f"afade=t=in:d=0.6,afade=t=out:st={length - 1.2:.3f}:d=1.2[a]"
         )
         maps += ["-map", "[a]"]
@@ -84,17 +99,21 @@ def build_cut(video: Path, music: Path | None, data: dict, key: str, dest: Path)
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--formats", default="9x16,16x9,4x5")
+    ap.add_argument("--data", default=str(PROJECT / "hero_v2.json"))
     args = ap.parse_args()
-    data = json.loads((PROJECT / "hero_v2.json").read_text(encoding="utf-8"))
+    data_path = Path(args.data)
+    data = json.loads(data_path.read_text(encoding="utf-8"))
+    out_dir = ROOT / data.get("output_dir", "output/yafho/v2")
     music = PROJECT / "assets" / "music" / data["music"]["file"]
+    cuts = data.get("cuts") or {k: {"name": v["name"], "windows": [list(w) for w in v["windows"]]} for k, v in CUTS.items()}
     for fmt in [f.strip() for f in args.formats.split(",") if f.strip()]:
-        video = OUT / f"hero_v2_{fmt}.mp4"
+        video = out_dir / f"{data_path.stem}_{fmt}.mp4"
         if not video.exists():
             print(f"skip {fmt}: {video.relative_to(ROOT)} not rendered yet")
             continue
-        for key, cut in CUTS.items():
-            dest = OUT / f"cut_{key}_{fmt}.mp4"
-            length = build_cut(video, music, data, key, dest)
+        for key, cut in cuts.items():
+            dest = out_dir / f"cut_{key}_{fmt}.mp4"
+            length = build_cut(video, music, data, cut["windows"], dest, out_dir, fmt)
             print(f"{dest.relative_to(ROOT)} · {length:.1f} s · «{cut['name']}»")
 
 

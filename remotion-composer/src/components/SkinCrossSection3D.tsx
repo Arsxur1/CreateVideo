@@ -12,7 +12,11 @@ import type { SkinCrossSectionLabels, SkinPhase } from "./SkinCrossSection";
  *   dive → closing → patch → months → drying → alarm → freeze … seal → healed
  * plus the hero v1 pair scar → sealed.
  */
-export type Skin3DPhase = SkinPhase | "dive" | "closing" | "patch" | "months" | "drying" | "alarm" | "freeze" | "seal";
+export type Skin3DPhase =
+  | SkinPhase
+  | "dive" | "closing" | "patch" | "months" | "drying" | "alarm" | "freeze" | "seal"
+  // effect comparison: the same young scar over ~6 months, without care / with a sheet
+  | "untreated" | "treated";
 
 export type Skin3DLabels = SkinCrossSectionLabels & { fibroblast?: string; signalUp?: string; moistureOut?: string };
 
@@ -27,6 +31,9 @@ export interface SkinCrossSection3DProps {
   fitFrac?: number;
   /** Film grain + vignette. */
   grade?: boolean;
+  /** Map the cut onto a slice of the phase timeline (e.g. 1 → 1 holds the end state). */
+  progressFrom?: number;
+  progressTo?: number;
 }
 
 const DEFAULT_LABELS: Skin3DLabels = {
@@ -404,8 +411,14 @@ const SHOTS: Record<Skin3DPhase, { at: number; pose: Pose }[]> = {
     { at: 1, pose: { az: -24, el: 22, zoom: 0.92, target: [0, -0.9, 0.2] } },
   ],
   seal: [],
+  untreated: [
+    { at: 0, pose: { az: -20, el: 26, zoom: 0.74, target: [0, -0.65, 0.4] } },
+    { at: 1, pose: { az: -15, el: 23, zoom: 0.68, target: [0, -0.65, 0.4] } },
+  ],
+  treated: [],
 };
 SHOTS.seal = SHOTS.sealed;
+SHOTS.treated = SHOTS.untreated;
 
 function poseAt(phase: Skin3DPhase, p: number): Pose {
   const keys = SHOTS[phase];
@@ -542,6 +555,16 @@ const STORY: Record<Skin3DPhase, PhaseSpec> = {
   sealed: { from: { evaporation: 1 }, to: { plate: 1, film: 1, align: 1, freq: 0.28, evaporation: 0 }, win: SEAL_WIN },
   seal: { from: { extra: 1, evaporation: 1, freq: 2.4 }, to: { plate: 1, film: 1, align: 1, freq: 0.28, evaporation: 0 }, win: SEAL_WIN },
   healed: { from: { align: 1, freq: 0.28 } },
+  untreated: {
+    from: { bump: 0.25, scarTint: 0.45, grow: 0.55, extra: 0, freq: 1.0, evaporation: 0.6 },
+    to: { bump: 1, scarTint: 1, grow: 1, extra: 1, freq: 2.6, evaporation: 1 },
+    win: { grow: [0, 0.5], extra: [0.3, 1], freq: [0, 0.6] },
+  },
+  treated: {
+    from: { bump: 0.25, scarTint: 0.45, grow: 0.55, freq: 1.0, plate: 1, film: 1 },
+    to: { grow: 0.9, align: 0.9, freq: 0.35 },
+    win: { grow: [0, 0.5], align: [0.15, 1], freq: [0, 0.6] },
+  },
 };
 
 const EASED: Partial<Record<Key, (t: number) => number>> = {
@@ -947,20 +970,25 @@ export const SkinCrossSection3D: React.FC<SkinCrossSection3DProps> = ({
   centerY = 0.36,
   fitFrac = 0.96,
   grade = true,
+  progressFrom = 0,
+  progressTo = 1,
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
-  const { width, height } = useCanvas();
+  const canvas = useCanvas();
+  const width = Math.round(canvas.width);
+  const height = Math.round(canvas.height);
   const L = { ...DEFAULT_LABELS, ...labels };
   const D = durationInFrames;
-  const p = frame / Math.max(1, D - 1);
+  const toP = (f: number) => progressFrom + (progressTo - progressFrom) * (f / Math.max(1, D - 1));
+  const p = toP(frame);
 
   const v = storyAt(phase, p);
   // Integrate signalling pulses and simulated time so slow-motion never jumps.
   let cycles = 0;
   let simTime = 0;
   for (let f = 0; f < frame; f++) {
-    const vf = storyAt(phase, f / Math.max(1, D - 1));
+    const vf = storyAt(phase, toP(f));
     cycles += (vf.freq * vf.timeScale) / fps;
     simTime += vf.timeScale / fps;
   }
@@ -1034,6 +1062,10 @@ export const SkinCrossSection3D: React.FC<SkinCrossSection3DProps> = ({
           }))
         : phase === "alarm"
           ? [{ from: [0, crest + 0.12, 1.25], to: [0, crest + 0.75, 1.25], color: YAFHO.orange, show: reveal(0.35) }]
+          : phase === "untreated"
+            ? [{ from: [0, crest + 0.15, 1.25] as V3, to: [0, crest + 0.8, 1.25] as V3, color: YAFHO.orange, show: reveal(0.35) }]
+          : phase === "treated"
+            ? [{ from: [0, 1.0, 1.25] as V3, to: [0, crest + 0.2, 1.25] as V3, color: YAFHO.teal, show: reveal(0.35) }]
           : isSeal
             ? [
                 { from: [0, 2.3, 0.6], to: [0, 1.15, 0.6], color: YAFHO.navy, show: reveal(0.01) * fadeOut(0.24, 0.32) },

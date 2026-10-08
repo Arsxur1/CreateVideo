@@ -49,6 +49,7 @@ import { ProviderChip } from "./components/ProviderChip";
 import { ThesisTitle } from "./components/ThesisTitle";
 import { SkinCrossSection } from "./components/SkinCrossSection";
 import { SkinCrossSection3D } from "./components/SkinCrossSection3D";
+import { ScarCompare } from "./components/ScarCompare";
 import type { SkinPhase, SkinCrossSectionLabels } from "./components/SkinCrossSection";
 import { MarginOverlay } from "./components/MarginOverlay";
 import { TimeCounter } from "./components/TimeCounter";
@@ -58,6 +59,7 @@ import { EndCard } from "./components/EndCard";
 import { HealingTimeline } from "./components/HealingTimeline";
 import { AnimaticNote } from "./components/AnimaticNote";
 import { StatBadge } from "./components/StatBadge";
+import { AudienceChips } from "./components/AudienceChips";
 import { CanvasContext } from "./components/yafho/tokens";
 import type { ParticleType } from "./components/ParticleOverlay";
 import { resolveTheme, type ThemeConfig, DEFAULT_THEME } from "./Root";
@@ -288,6 +290,9 @@ interface Cut {
   focusX?: number;
   centerY?: number;
   fitFrac?: number;
+  // scar_compare / skin_cross_section_3d progress window
+  progressFrom?: number;
+  progressTo?: number;
   /** "Dive" exit: push in, soften and fade out over the last N seconds of the cut. */
   exitZoom?: number;
   /** Video playback speed (e.g. stretch a 5 s Kling clip over a 7.5 s slot). */
@@ -301,6 +306,7 @@ interface Cut {
   handle?: string;
   qr?: number[][];
   qrCaption?: string;
+  cta?: string;
 }
 
 interface Overlay {
@@ -314,7 +320,8 @@ interface Overlay {
     | "time_counter"
     | "healing_timeline"
     | "animatic_note"
-    | "stat_badge";
+    | "stat_badge"
+    | "audience_chips";
   in_seconds: number;
   out_seconds: number;
   text?: string;
@@ -339,6 +346,8 @@ interface Overlay {
   highlightWindow?: boolean;
   ticks?: boolean;
   emphasis?: boolean;
+  // audience_chips
+  chips?: string[];
   // stat_badge
   value?: string;
   source?: string;
@@ -377,6 +386,8 @@ export interface ExplainerProps {
   durationSeconds?: number;
   width?: number;
   height?: number;
+  /** Brand backdrop behind every scene that does not paint its own background. */
+  backdrop?: { image?: string; color?: string };
   cuts: Cut[];
   overlays?: Overlay[];
   captions?: WordCaption[];
@@ -742,8 +753,17 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         focusX={cut.focusX}
         centerY={cut.centerY}
         fitFrac={cut.fitFrac}
+        progressFrom={cut.progressFrom}
+        progressTo={cut.progressTo}
       />
     );
+  }
+  if (cut.type === "blank") {
+    // nothing — the brand backdrop shows through (used under audience chips)
+    return <AbsoluteFill />;
+  }
+  if (cut.type === "scar_compare") {
+    return <ScarCompare progressFrom={cut.progressFrom} progressTo={cut.progressTo} introFade={cut.introFade} />;
   }
   if (cut.type === "size_guide") {
     return <SizeGuide items={cut.sizeItems} />;
@@ -757,6 +777,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         handle={cut.handle}
         qr={cut.qr}
         qrCaption={cut.qrCaption}
+        cta={cut.cta}
       />
     );
   }
@@ -923,6 +944,9 @@ const OverlayRenderer: React.FC<{ overlay: Overlay; inPanel?: boolean }> = ({ ov
       />
     );
   }
+  if (overlay.type === "audience_chips" && overlay.chips) {
+    return <AudienceChips title={overlay.text} chips={overlay.chips} />;
+  }
   if (overlay.type === "stat_badge" && overlay.value && overlay.source) {
     return (
       <StatBadge
@@ -1045,6 +1069,12 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
     <AbsoluteFill style={{ background: theme.backgroundColor, fontFamily: theme.headingFont || fontFamily }}>
       {/* Layer 0: Animated gradient background — driven by theme (flat themes skip it) */}
       {!theme.flat && <AnimatedBackground theme={theme} />}
+      {props.backdrop?.color && <AbsoluteFill style={{ background: props.backdrop.color }} />}
+      {props.backdrop?.image && (
+        <AbsoluteFill>
+          <Img src={resolveAsset(props.backdrop.image)} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+        </AbsoluteFill>
+      )}
 
       {layout === "split" ? (
         <>

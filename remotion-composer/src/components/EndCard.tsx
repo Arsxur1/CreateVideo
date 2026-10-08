@@ -10,6 +10,8 @@ export interface EndCardProps {
   /** QR module matrix (rows of 0/1), quiet zone excluded. */
   qr?: number[][];
   qrCaption?: string;
+  /** Call to action above the handle. */
+  cta?: string;
 }
 
 /**
@@ -23,6 +25,7 @@ export const EndCard: React.FC<EndCardProps> = ({
   handle = "@sil.icare",
   qr,
   qrCaption = "instagram.com/sil.icare",
+  cta,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -78,7 +81,14 @@ export const EndCard: React.FC<EndCardProps> = ({
         </div>
       )}
 
-      <div style={{ ...step(2), fontWeight: 800, fontSize: 88, letterSpacing: "-0.01em" }}>{handle}</div>
+      {cta && (
+        <div style={{ ...step(2), fontWeight: 800, fontSize: compact ? 60 : 72, lineHeight: 1.12, whiteSpace: "pre-line", maxWidth: "88%" }}>
+          {cta}
+        </div>
+      )}
+      <div style={{ ...step(cta ? 3 : 2), fontWeight: 800, fontSize: cta ? 64 : 88, letterSpacing: "-0.01em", color: cta ? "#D7DEE8" : YAFHO.white }}>
+        {handle}
+      </div>
     </AbsoluteFill>
   );
 };
