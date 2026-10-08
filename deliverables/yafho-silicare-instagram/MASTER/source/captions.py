@@ -137,6 +137,7 @@ for r in rows:
     if 'c2_overlei' in p:
         n=int(re.search(r'(\d{3})',p).group(1)); cap,fc,tg,alt,chk=(s.format(n=n,stage=STAGE[n]) for s in SERIES)
     else: cap,fc,tg,alt,chk=get(p)
+    if '⚠' in r['title'] and not chk: chk='сверить цифру «2–3 слоя клеток против 10–20» с первоисточником (Lund et al.); если не подтвердится — пост снять'
     chk='; '.join(x.strip(' ;') for x in re.split(r'(?:^|\s)- ',chk) if x.strip(' ;'))
     if FOOT not in cap: cap=cap.rstrip()+'\n\n'+FOOT
     d=dt.date.fromisoformat(r['date'])
