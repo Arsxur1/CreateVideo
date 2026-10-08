@@ -96,16 +96,20 @@ def render_still(scene: dict, dest: Path) -> None:
     props_path.unlink()
 
 
-def render_compare_still(progress: float, profile: str) -> Path:
-    """Render the comparison cards at a fixed progress once per canvas size (no titles, transparent around)."""
+def render_compare_still(progress: float, profile: str, data: dict) -> Path:
+    """Render the comparison cards at a fixed progress once per canvas size, on the same brand backdrop."""
     w, h = (1080, 1350) if profile == "instagram_portrait" else (1080, 1920)
-    dest = PUBLIC / f"compare_{progress:g}_{w}x{h}.png"
+    bd = backdrop_for(data, (w, h))
+    tag = Path(bd).stem if bd else "plain"
+    dest = PUBLIC / f"compare_{progress:g}_{w}x{h}_{tag}.png"
     if dest.exists():
         return dest
     PUBLIC.mkdir(parents=True, exist_ok=True)
     props = {"theme": "yafho-clinical", "durationSeconds": 1,
              "cuts": [{"id": "still", "source": "", "in_seconds": 0, "out_seconds": 1, "type": "scar_compare",
                        "progressFrom": progress, "progressTo": progress, "introFade": False}]}
+    if bd:
+        props["backdrop"] = {"image": bd}
     props_path = OUT / ".compare_still.json"
     props_path.write_text(json.dumps(props), encoding="utf-8")
     subprocess.run(["npx", "remotion", "still", "src/index.tsx", "Explainer", str(dest), f"--props={props_path}",
@@ -158,7 +162,7 @@ def build_animatic(data: dict, mode: str = "animatic", fmt: dict | None = None) 
             a, b = s.get("progress", [0, 1])
             if mode == "final" and a == b:
                 # frozen comparison: one rendered frame + gentle push instead of two live WebGL scenes
-                png = render_compare_still(b, (fmt or {}).get("profile", "instagram_reels"))
+                png = render_compare_still(b, (fmt or {}).get("profile", "instagram_reels"), data)
                 cut.update(source=f"{PUBLIC_REL}/{png.name}", animation="gentle", introFade=False)
             else:
                 cut.update(type="scar_compare", progressFrom=a, progressTo=b, introFade=False)
