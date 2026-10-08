@@ -1,10 +1,11 @@
 # Шаг 16: озвучка «немых» роликов v6 + выравнивание громкости всех роликов календаря.
 # Один проход кодирования из исходника в git (многократное перекодирование AAC давало «плавающие» пики).
-import sys, os, json, subprocess, tempfile, csv, glob
+import sys, os, shutil, json, subprocess, tempfile, csv, glob
 sys.path.insert(0,'/home/user/CreateVideo/projects/yafho-silicare-instagram'); import sfx
 D='/home/user/CreateVideo/deliverables/yafho-silicare-instagram'; REPO='/home/user/CreateVideo'
 TMP=tempfile.mkdtemp(dir='/tmp/claude-0/-home-user-CreateVideo/8f17faa1-693e-57ef-8190-9cf6a8124841/scratchpad')
-BASE=sys.argv[1] if len(sys.argv)>1 else 'HEAD'   # коммит с исходными (необработанными) роликами
+BASE=sys.argv[1] if len(sys.argv)>1 else 'HEAD'   # коммит с исходными роликами, или WORKTREE — взять файл как есть (свежий рендер)
+ONLY=sys.argv[2] if len(sys.argv)>2 else ''        # обработать только файлы, содержащие эту строку
 PAD=(110,164.8,220,277.2)
 SILENT={
  'v6_campaign/c1_den_1_iz_180/c1_den_1_iz_180.mp4':(15,[(0,sfx.whoosh(.8,.25)),(.8,sfx.chime(523,.14,2.5)),(6.0,sfx.whoosh(.6,.2))]+[(6.4+3.2*(i/16)**.8,sfx.click(.2)) for i in range(16)]+[(9.7,sfx.chime(784,.16,2.5)),(11.0,sfx.whoosh(.9,.3)),(11.3,sfx.boom(.5)),(11.6,sfx.chime(659,.18,3))]),
@@ -14,10 +15,12 @@ SILENT={
 def run(*a): return subprocess.run(a,check=True,capture_output=True,text=True)
 os.chdir(D)
 vids=sorted({v for r in csv.DictReader(open('MASTER/master_calendar.csv')) if os.path.isdir(r['file']) for v in glob.glob(r['file']+'/*.mp4')})
-for v in vids:
+for v in [x for x in vids if ONLY in x]:
     b=os.path.basename(v); src=f'{TMP}/src_{b}'; wav=f'{TMP}/{b}.wav'
     rel=os.path.relpath(os.path.join(D,v),REPO)
-    with open(src,'wb') as f: subprocess.run(['git','-C',REPO,'show',f'{BASE}:{rel}'],stdout=f,check=True)
+    if BASE=='WORKTREE': shutil.copy(os.path.join(D,v),src)
+    else:
+        with open(src,'wb') as f: subprocess.run(['git','-C',REPO,'show',f'{BASE}:{rel}'],stdout=f,check=True)
     if v in SILENT: dur,ev=SILENT[v]; sfx.mix(dur,ev,wav,PAD,.05)
     else: run('ffmpeg','-y','-i',src,'-vn','-ac','2','-ar','48000',wav)
     e=subprocess.run(['ffmpeg','-hide_banner','-i',wav,'-af','loudnorm=I=-15:TP=-3:LRA=11:print_format=json','-f','null','-'],capture_output=True,text=True).stderr

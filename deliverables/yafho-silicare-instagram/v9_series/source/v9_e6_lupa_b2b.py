@@ -14,7 +14,7 @@ body=f'''<section id="h0" class="clip" data-start="0" data-duration="2.4" data-t
 js='tl.from("#lz",{scale:.3,opacity:0,duration:.6,ease:"back.out(1.4)"},.05).from("#hk",{opacity:0,y:30,duration:.5},.5);'
 ev=[(.05,sfx.whoosh(.6,.25)),(.6,sfx.chime(440,.15,2))]
 for i,((n,dep,tex),t) in enumerate(zip(P,T)):
-    k='abcd'[i]; body+=scene(k,t,D,tex,n,dep).replace('font-weight:800;font-size:66px;color:#fff','font-weight:800;font-size:56px;color:#fff;white-space:nowrap')
+    k='abcd'[i]; body+=scene(k,t,D,tex,n,dep).replace('ПОД ЛУПОЙ · SILI-CARE','ПОД ЛУПОЙ · YAFHO').replace('font-weight:800;font-size:66px;color:#fff','font-weight:800;font-size:56px;color:#fff;white-space:nowrap')
     js+=f'tl.fromTo("#{k}t",{{filter:"blur(18px)",scale:1.25,x:60,y:40}},{{filter:"blur(0px)",scale:1.05,x:-60,y:-40,duration:{D},ease:"power1.out"}},{t});tl.fromTo("#{k}t",{{filter:"blur(18px)"}},{{filter:"blur(0px)",duration:.9}},{t});'
     js+=f'tl.from("#{k}l",{{opacity:0,y:30,duration:.4}},{t+.6}).from("#{k}s",{{opacity:0,duration:.4}},{t+1.0}).fromTo("#{k} .sheen",{{xPercent:-60}},{{xPercent:60,duration:{D},ease:"none"}},{t});'
     ev+=[(t-.2,sfx.whoosh(.5,.18)),(t+.2,sfx.tear(1.0,.05)),(t+.7,sfx.chime([523,587,659,784][i],.12,2))]
