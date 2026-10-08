@@ -1,4 +1,4 @@
-# Yafho-Silicare — кадры Kling для hero v2 «Окно перестройки»
+# Yafho-Silicare — кадры Kling для hero v2 «Окно перестройки» и hero v3 «Один рубец — два исхода»
 
 **Этап 4 из 5.** Реальные кадры генерирует заказчик вручную в Kling. Всё остальное — 3D, титры, стрелки, шкала, логотип и эндкард — делается кодом. Этот документ — техническое задание на 6 клипов: что снять, зачем этот кадр сюжету, как он стыкуется с 3D и как выбрать лучший дубль.
 
@@ -234,3 +234,37 @@ the scar gradually flattens and fades over time, completely static camera, light
 ## 5. Дополнительные кадры для нарезок и постов (по желанию, после hero)
 
 Для тем из раздела 3 ТЗ (показания, ошибки, подбор размера) пригодятся те же руки и тот же стиль. Промпты к ним уже есть в `TZ.md`, раздел 3. Генерировать их лучше после hero, используя H01 как референс рук.
+
+---
+
+## 6. Hero v3: дополнительные кадры аудиторий (P01–P03)
+
+Hero v3 использует те же **H04–H07**, что и v2 (H01 и H08 в v3 не нужны: крючок и эффект сделаны 3D-сравнением). Для **нарезок по аудиториям** нужны ещё три коротких кадра. В нарезке на экране 3,5 с, поверх кадра — титр под аудиторию. Промпты взяты из ТЗ, раздел 3, тема 03 «Показания», с добавлением модели рук.
+
+| Файл | Нарезка | Титр поверх |
+|---|---|---|
+| `P01.mp4` | O «После операции» | «Рубец после операции ещё формируется» |
+| `P02.mp4` | K «После кесарева» | «Шов после кесарева меняется ещё месяцы» |
+| `P03.mp4` | B «После ожога» | «Ожог зажил — рубец ещё растёт» |
+
+**P01 — после операции**
+```
+Healed pink linear surgical scar on the inner forearm, fingertips gently touching it, Central Asian woman's hands, light olive skin, short natural nails, no jewelry, vertical 9:16, scar in the central third, [STYLE]
+```
+
+**P02 — после кесарева**
+```
+Healed horizontal C-section scar on the lower abdomen, high-waist light underwear, a hand resting gently nearby, no face, Central Asian woman, light olive skin, short natural nails, no jewelry, vertical 9:16, scar in the central third, [STYLE]
+```
+
+**P03 — после ожога**
+```
+Healed burn scar on the back of a hand, the other hand gently holding it, Central Asian woman's hands, light olive skin, short natural nails, no jewelry, vertical 9:16, scar in the central third, [STYLE]
+```
+
+**Движение для всех трёх:**
+```
+fingertips gently touch the scar and move away, static camera, soft window light
+```
+
+Чек-лист тот же (раздел 3). Для P02 дополнительно: бельё светлое и закрытое, кадр спокойный и деликатный — только живот и рука, без лица.

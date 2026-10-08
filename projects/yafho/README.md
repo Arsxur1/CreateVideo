@@ -5,7 +5,9 @@
 |---|---|
 | `TZ.md` | исходное ТЗ: факты, промпты, раскадровка пилота (название в нём устарело — см. `CLAUDE.md`) |
 | `CLAUDE.md` | правила работы над проектом |
-| `SCRIPT_hero_v2.md` | сценарий hero v2 «Окно перестройки» (утверждён; без голоса — титры и стрелки) |
+| `CONCEPT_v3.md` | **hero v3 «Один рубец — два исхода»** — основная версия: крючок-эффект, смысл, охват, нарезки по аудиториям |
+| `hero_v3.json` | данные сцен v3 (тайминг, титры, сравнение, плашки, музыка, карточки и нарезки аудиторий) |
+| `SCRIPT_hero_v2.md` | сценарий hero v2 «Окно перестройки» — длинная версия (YouTube, врачи) |
 | `hero_v2.json` | данные сцен: тайминг, титры, 3D-фазы, шкала, стрелки, форматы — **источник правды для сборки** |
 | `KLING_SHOTS_v2.md` | ТЗ на 6 реальных кадров Kling (H01, H04–H08) |
 | `CREDITS.md` | музыка, шрифты, лицензии |
@@ -16,6 +18,20 @@
 | `assets/kling/H01.mp4`, `H04.mp4` … `H08.mp4` | клипы Kling по `KLING_SHOTS_v2.md` (без файла — заглушка «нужен H0X») |
 | `assets/logo.png` | логотип (без файла — текстовый «Yafho-Silicare») |
 | `assets/music/` | музыка; по умолчанию собственный трек из `make_music.py` |
+| `assets/brand/` | фон бренда с сайта Yafho (`backdrop.png` или по форматам) |
+| `assets/kling/P01.mp4` … `P03.mp4` | кадры аудиторий для нарезок v3 (`KLING_SHOTS_v2.md`, раздел 6) |
+
+## Сборка hero v3 (основная)
+```bash
+python projects/yafho/make_backdrop.py                                   # фон бренда (пока — лён)
+python projects/yafho/make_music.py --data projects/yafho/hero_v3.json   # музыка под v3
+python projects/yafho/build_v2.py  --data projects/yafho/hero_v3.json --final          # 9:16, 16:9, 4:5
+python projects/yafho/build_v2.py  --data projects/yafho/hero_v3.json --cards          # карточки аудиторий
+python projects/yafho/make_cuts.py --data projects/yafho/hero_v3.json                  # нарезки K, O, B, G по 15 с
+```
+Результат — `output/yafho/v3/`: `hero_v3_<формат>.mp4`, `cut_<K|O|B|G>_<формат>.mp4`.
+
+**Фон бренда.** Положите картинку с сайта Yafho в `assets/brand/backdrop.png` (или `backdrop_1080x1920.png`, `backdrop_1920x1080.png`, `backdrop_1080x1350.png` под каждый формат) — сборка возьмёт её вместо сгенерированного льна.
 
 ## Сборка hero v2
 ```bash
