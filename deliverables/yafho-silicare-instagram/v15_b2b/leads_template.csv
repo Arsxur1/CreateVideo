@@ -1,0 +1,2 @@
+date,instagram,code_word,source_post,type(clinic/pharmacy/distributor/patient),department,region,contact,status(new/qualified/samples/order/lost),next_step,owner
+2026-11-02,@example,КАТАЛОГ,g1_katalog_za_30_sekund,clinic,ОРИТН,[город],[телефон],qualified,звонок 04.11,[менеджер]
