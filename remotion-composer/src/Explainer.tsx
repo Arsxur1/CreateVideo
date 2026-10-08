@@ -429,18 +429,19 @@ const Vignette: React.FC = () => (
 // Enhanced Image Scene — spring physics, parallax, variety
 // ---------------------------------------------------------------------------
 
-const ImageScene: React.FC<{ src: string; animation?: string; flat?: boolean }> = ({
+const ImageScene: React.FC<{ src: string; animation?: string; flat?: boolean; introFade?: boolean }> = ({
   src,
   animation,
   flat = false,
+  introFade = true,
 }) => {
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
   if (flat) {
     // Brand-flat treatment: 0.4s fade-in, gentle push-in, no vignette or dimming.
-    const fade = interpolate(frame, [0, 0.4 * fps], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
-    const push = interpolate(frame, [0, durationInFrames], [1, animation === "static" ? 1 : 1.06], {
+    const fade = introFade ? interpolate(frame, [0, 0.4 * fps], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) : 1;
+    const push = interpolate(frame, [0, durationInFrames], [1, animation === "static" ? 1 : animation === "gentle" ? 1.025 : 1.06], {
       extrapolateLeft: "clamp",
       extrapolateRight: "clamp",
     });
@@ -871,7 +872,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   const animation = cut.animation || cut.transform?.animation;
 
   if (cut.source && isImage(cut.source)) {
-    return maybeWrapWithBg(<ImageScene src={cut.source} animation={animation} flat={theme.flat} />);
+    return maybeWrapWithBg(<ImageScene src={cut.source} animation={animation} flat={theme.flat} introFade={cut.introFade !== false} />);
   }
 
   if (cut.source && isVideo(cut.source)) {
@@ -882,7 +883,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
 
   // Final fallback — try as image if source exists, otherwise show text_card
   if (cut.source) {
-    return maybeWrapWithBg(<ImageScene src={cut.source} animation={animation} flat={theme.flat} />);
+    return maybeWrapWithBg(<ImageScene src={cut.source} animation={animation} flat={theme.flat} introFade={cut.introFade !== false} />);
   }
 
   // No source, no type — render as text card with cut id as fallback
