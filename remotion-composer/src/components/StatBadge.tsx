@@ -18,7 +18,7 @@ export const StatBadge: React.FC<StatBadgeProps> = ({ value, label, source, posi
   const { width, height } = useCanvas();
   const { opacity, translateY } = useFadeSlide(frame, 6);
   const isHero = position === "hero" || position === "hero_low";
-  const fs = inPanel ? (isHero ? 34 : 26) : Math.round(width * (position === "top" ? 0.026 : 0.03));
+  const fs = inPanel ? (isHero ? 46 : 26) : Math.round(width * (position === "top" ? 0.026 : 0.03));
   if (isHero && !inPanel) {
     // The effect figure as the frame's headline.
     const hs = Math.round(width * 0.05);
@@ -56,7 +56,7 @@ export const StatBadge: React.FC<StatBadgeProps> = ({ value, label, source, posi
   }
   if (inPanel) {
     return (
-      <AbsoluteFill style={{ justifyContent: "flex-end", paddingBottom: height * 0.1, pointerEvents: "none" }}>
+      <AbsoluteFill style={{ justifyContent: isHero ? "center" : "flex-end", paddingBottom: height * 0.1, pointerEvents: "none" }}>
         <div
           style={{
             background: YAFHO.white,
