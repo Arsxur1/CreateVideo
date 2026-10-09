@@ -483,7 +483,15 @@ export const SkinSwatch: React.FC<SkinSwatchProps> = ({
                     <line x1={cx} y1={ay - 4} x2={cx} y2={ay - ppc + 2} markerStart="url(#ms-a)" markerEnd="url(#ms-a)" />
                   </g>
                 </svg>
-                <Chip fs={fs * 1.15} style={{ left: ax + ppc + 18, top: cy - fs * 0.95, opacity: labelsO, color: YAFHO.orange }}>
+                <Chip
+                  fs={fs * 1.15}
+                  style={
+                    // wide scars (C-section): no room at the right edge → label under the arrow
+                    ax + ppc + 18 + fs * 5 > cardW - 12
+                      ? { left: Math.min(ax + ppc / 2 - fs * 2.5, cardW - fs * 5.4), top: cy + fs * 1.0, opacity: labelsO, color: YAFHO.orange }
+                      : { left: ax + ppc + 18, top: cy - fs * 0.95, opacity: labelsO, color: YAFHO.orange }
+                  }
+                >
                   +1 см
                 </Chip>
                 <Chip fs={fs * 1.15} style={{ left: cx + 22, top: ay - ppc - fs * 1.0, opacity: labelsO, color: YAFHO.orange }}>
