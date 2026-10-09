@@ -96,7 +96,7 @@ export const MythFact: React.FC<MythFactProps> = ({ myth, fact, counter, areaTop
   );
 
   return (
-    <AbsoluteFill style={{ alignItems: "center", paddingTop: height * areaTop, opacity: out }}>
+    <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", paddingTop: height * areaTop * 0.5, paddingBottom: height * areaTop, opacity: out }}>
       {counter && (
         <div
           style={{
