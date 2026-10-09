@@ -24,7 +24,7 @@ def badge(id,x,ok,text):
     return (f'<div id="{id}" style="position:absolute;left:{x}px;top:{CY+CH+28}px;width:{CW}px;text-align:center">'
             f'<span style="display:inline-block;width:84px;height:84px;border-radius:50%;background:{c};color:#fff;{F};font-weight:900;font-size:56px;line-height:84px">{s}</span>'
             f'<div style="margin-top:12px;{F};font-weight:700;font-size:32px;line-height:1.2;color:{INK}">{text}</div></div>')
-def effect_reel(name,n,hook,obj,dmg,stuck,right_pad,wait_txt,bad_txt,good_txt,why,end1,end2,cta,note,left_lbl='ОБЫЧНЫЙ ПЛАСТЫРЬ',right_lbl='СИЛИКОН YAFHO',extra_js='',extra_ev=(),decor=''):
+def effect_reel(name,n,hook,obj,dmg,stuck,right_pad,wait_txt,bad_txt,good_txt,why,end1,end2,cta,note,left_lbl='ОБЫЧНЫЙ ПЛАСТЫРЬ',right_lbl='СИЛИКОН YAFHO',extra_js='',extra_ev=(),decor='',left_pad=None):
     """obj(id) — объект 360×360 в центре карточки; dmg — повреждение под левым пластырем; stuck — что остаётся на пластыре;
        right_pad — html силиконовой повязки (в коробке 300×300)."""
     T1,T2,T3,T4,T5,T6=2.4,4.4,6.2,7.8,9.6,13.4; DUR=18.4
@@ -33,7 +33,7 @@ def effect_reel(name,n,hook,obj,dmg,stuck,right_pad,wait_txt,bad_txt,good_txt,wh
     sc=f'transform:scale({S/360});transform-origin:0 0'
     L=(f'<div style="position:absolute;left:{ox}px;top:{oy}px;width:360px;height:360px;{sc}">{obj("ol")}'
        f'<div id="dm" style="position:absolute;inset:0;opacity:0">{dmg}</div>'
-       f'<div id="pl" style="position:absolute;left:-10px;top:120px;width:380px;height:130px">{plaster(0,0,380,130,-8,"plx")}'
+       f'<div id="pl" style="position:absolute;left:-10px;top:120px;width:380px;height:130px">{left_pad if left_pad is not None else plaster(0,0,380,130,-8,"plx")}'
        f'<div id="st" style="position:absolute;inset:0;opacity:0;transform:rotate(-8deg)">{stuck}</div></div></div>{decor}')
     R=(f'<div style="position:absolute;left:{ox}px;top:{oy}px;width:360px;height:360px;{sc}">{obj("or")}'
        f'<div id="pr" style="position:absolute;left:30px;top:30px;width:300px;height:300px">{right_pad}</div></div>{decor}')

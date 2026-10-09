@@ -54,6 +54,11 @@ A={
  't8':('Reel','ТЕСТ №8 «Что остаётся на пластыре?»','🧪 Тест','v20_effect/t8_chto_na_plastyre','v20_effect/t8_chto_na_plastyre/cover.png',''),
  't9':('Reel','ТЕСТ №9 «Банан: 8 часов» — пролежни','🧪 Тест','v20_effect/t9_banan_8_chasov','v20_effect/t9_banan_8_chasov/cover.png',''),
  't10':('Reel','ТЕСТ №10 «Как правильно снимать пластырь»','🧪 Тест','v20_effect/t10_kak_snimat','v20_effect/t10_kak_snimat/cover.png',''),
+ 't11':('Reel','ТЕСТ №11 «Вата на ране» — порез на кухне','🧪 Тест','v20_effect/t11_vata_na_rane','v20_effect/t11_vata_na_rane/cover.png',''),
+ 't12':('Reel','ТЕСТ №12 «Белая кожа вокруг раны» (мацерация)','🧪 Тест','v20_effect/t12_belaya_kozha','v20_effect/t12_belaya_kozha/cover.png',''),
+ 't13':('Reel','ТЕСТ №13 «Пластырь на колене: 10 приседаний»','🧪 Тест','v20_effect/t13_na_sgibe','v20_effect/t13_na_sgibe/cover.png',''),
+ 't14':('Reel','ТЕСТ №14 «Ожог от противня»: мифы vs 20 минут воды','🧪 Тест','v20_effect/t14_ozhog','v20_effect/t14_ozhog/cover.png',''),
+ 't15':('Reel','ТЕСТ №15 «Шрам: 12 недель за 6 секунд»','🧪 Тест','v20_effect/t15_shram_12_nedel','v20_effect/t15_shram_12_nedel/cover.png',''),
  'pk':('Пост','Постер «Твоя кожа помнит всё»','Манифест','v7_cinematic/posters/poster_kozha_pomnit_vsyo.png','v7_cinematic/posters/poster_kozha_pomnit_vsyo.png',''),
  'p3':('Пост','Постер «03:47»','🤱 Акушерство','v7_cinematic/posters/poster_0347_pismo_shramu.png','v7_cinematic/posters/poster_0347_pismo_shramu.png',''),
 }
@@ -73,6 +78,8 @@ WEEKS=[ # 7 слотов Пн..Вс; None = пауза
  ('Неделя 8 · ТЕСТ YAFHO: продолжение',['t5',None,'t2',None,'t4',None,None]),
  ('Неделя 9 · ТЕСТ YAFHO: тонкая и натянутая кожа',['t6',None,'t8',None,'t7',None,None]),
  ('Неделя 10 · ТЕСТ YAFHO: пролежни и техника',['t9',None,'t10',None,None,None,None]),
+ ('Неделя 11 · ТЕСТ YAFHO: праздничная кухня',['t11',None,'t14',None,'t12',None,None]),
+ ('Неделя 12 · ТЕСТ YAFHO: движение и шрамы',[None,'t13',None,None,None,'t15',None]),
 ]
 rows=[]
 for w,(title,slots) in enumerate(WEEKS):
