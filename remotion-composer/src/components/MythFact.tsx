@@ -94,7 +94,7 @@ export const MythFact: React.FC<MythFactProps> = ({ myth, fact, counter, areaTop
     >
       <Mark kind={ok ? "ok" : qa ? "ask" : "no"} size={fs * 1.5} />
       <div style={{ position: "relative" }}>
-        <div style={{ fontFamily: YAFHO.sans, fontWeight: 500, fontSize: fs * 0.5, color: ok ? YAFHO.teal : qa ? YAFHO.navy : WRONG, marginBottom: fs * 0.1 }}>
+        <div style={{ fontFamily: YAFHO.sans, fontWeight: 500, fontSize: fs * 0.5, color: ok ? YAFHO.tealText : qa ? YAFHO.navy : WRONG, marginBottom: fs * 0.1 }}>
           {qa ? (ok ? "Ответ" : "Вопрос") : ok ? "Правильно" : "Ошибка"}
         </div>
         <div style={{ position: "relative", fontFamily: YAFHO.sans, fontWeight: 800, fontSize: fs, lineHeight: 1.12, color: YAFHO.navy, whiteSpace: "pre-line" }}>

@@ -4,7 +4,7 @@
   "brand": "Yafho-Silicare",
   "output_dir": "output/yafho/topics",
   "public_dir": "yafho-topics",
-  "duration": 22,
+  "duration": 22.5,
   "backdrop": "linen",
   "cover_at": 2.5,
   "audio": "no voice — titles + arrows + music",
@@ -74,14 +74,15 @@
     {
       "id": "M4",
       "start": 10.5,
-      "end": 15.5,
+      "end": 16.0,
       "kind": "3D",
       "phase3d": "seal",
       "shot": "3D: пластина, влага ↑, сигнал ↓",
       "titles": [
         {
           "text": "Силикон\nдержит влагу",
-          "at": 0
+          "at": 0,
+          "lead": 0.1
         },
         {
           "text": "Сигнал ↓ —\nколлаген ровнее",
@@ -96,8 +97,8 @@
     },
     {
       "id": "M5",
-      "start": 15.5,
-      "end": 18.5,
+      "start": 16.0,
+      "end": 19.0,
       "kind": "CUT",
       "shot": "эффект на коже: под пластиной рубец мягче, площе, светлее",
       "cut": {
@@ -117,8 +118,8 @@
     },
     {
       "id": "M6",
-      "start": 18.5,
-      "end": 22,
+      "start": 19.0,
+      "end": 22.5,
       "kind": "C",
       "shot": "эндкард",
       "titles": [],
@@ -166,8 +167,8 @@
         ]
       },
       {
-        "start": 15.5,
-        "end": 18.5,
+        "start": 16.0,
+        "end": 19.0,
         "mood": "lift",
         "chords": [
           "F",
@@ -175,8 +176,8 @@
         ]
       },
       {
-        "start": 18.5,
-        "end": 22,
+        "start": 19.0,
+        "end": 22.5,
         "mood": "end",
         "chords": [
           "Cadd9"
@@ -197,11 +198,11 @@
         "kind": "land"
       },
       {
-        "t": 15.5,
+        "t": 16.0,
         "kind": "click"
       },
       {
-        "t": 18.5,
+        "t": 19.0,
         "kind": "chime"
       }
     ]

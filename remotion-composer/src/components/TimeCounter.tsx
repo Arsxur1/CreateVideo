@@ -59,7 +59,7 @@ export const TimeCounter: React.FC<TimeCounterProps> = ({
             return (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 {i > 0 && (
-                  <div style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: fontSize * 0.8, color: done || active ? YAFHO.orange : "#B7BCC4" }}>
+                  <div style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: fontSize * 0.8, color: done || active ? YAFHO.orangeText : "#B7BCC4" }}>
                     →
                   </div>
                 )}

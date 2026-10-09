@@ -165,8 +165,8 @@ export const DayClock: React.FC<DayClockProps> = ({
                   fontWeight: 700,
                   fontSize: fs * 1.05,
                   color: YAFHO.white,
-                  background: wear ? YAFHO.teal : YAFHO.orange,
-                  opacity: it.kind === "wearB" ? 0.85 : 1,
+                  // white text needs the text-safe shades (≥ 4.5:1)
+                  background: wear ? YAFHO.tealText : YAFHO.orangeText,
                   borderRadius: 999,
                   padding: `${fs * 0.15}px ${fs * 0.55}px`,
                   minWidth: fs * 4.6,

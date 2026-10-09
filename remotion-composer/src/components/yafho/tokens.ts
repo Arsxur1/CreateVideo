@@ -58,6 +58,10 @@ export const YAFHO = {
   navy: "#0F2440",
   orange: "#D4560F",
   teal: "#0D9488",
+  // Text-safe shades (WCAG ≥ 4.5:1, TZ rule): orange 5.7:1 / teal 6.0:1 on white.
+  // The brand orange / teal stay for lines, arrows, icons and fills without text.
+  orangeText: "#B04408",
+  tealText: "#0A7067",
   offWhite: "#FBFAF7",
   beige: "#ECE6DD",
   muted: "#5B6472",
