@@ -58,6 +58,10 @@ import { SkinSwatch } from "./components/SkinSwatch";
 import { ResultCurve } from "./components/ResultCurve";
 import type { ResultMilestone } from "./components/ResultCurve";
 import { MythFact } from "./components/MythFact";
+import { CheckList } from "./components/CheckList";
+import type { CheckListItem } from "./components/CheckList";
+import { DayClock } from "./components/DayClock";
+import type { DayClockItem } from "./components/DayClock";
 import { PatchHero3D } from "./components/PatchHero3D";
 import type { ScarState, SkinShape, SkinStep } from "./components/SkinSwatch";
 import type { SizeGuideItem } from "./components/SizeGuide";
@@ -324,6 +328,15 @@ interface Cut {
   myth?: string;
   fact?: string;
   counter?: string;
+  mythVariant?: "myth" | "qa";
+  // Check list (type: "check_list") — header from `title`
+  checkItems?: CheckListItem[];
+  checkNote?: string;
+  // 24 h dial (type: "day_clock")
+  clockItems?: DayClockItem[];
+  clockStart?: number;
+  clockSummary?: string;
+  clockSummaryNote?: string;
   // 3D sheet (type: "patch_3d"); end_card takes patch3d
   motion?: "flex" | "spin";
   size?: number;
@@ -830,7 +843,13 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
     return <ResultCurve months={cut.months} milestones={cut.milestones} areaTop={cut.areaTop} areaBottom={cut.areaBottom} />;
   }
   if (cut.type === "myth_fact" && cut.myth && cut.fact) {
-    return <MythFact myth={cut.myth} fact={cut.fact} counter={cut.counter} />;
+    return <MythFact myth={cut.myth} fact={cut.fact} counter={cut.counter} variant={cut.mythVariant} />;
+  }
+  if (cut.type === "check_list" && cut.checkItems) {
+    return <CheckList title={cut.title} items={cut.checkItems} note={cut.checkNote} />;
+  }
+  if (cut.type === "day_clock") {
+    return <DayClock items={cut.clockItems} start={cut.clockStart} summary={cut.clockSummary} summaryNote={cut.clockSummaryNote} />;
   }
   if (cut.type === "size_guide") {
     return <SizeGuide items={cut.sizeItems} />;

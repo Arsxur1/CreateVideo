@@ -1,0 +1,213 @@
+{
+  "title": "Yafho-Silicare — тема 10 «Когда начинать»",
+  "plan": "projects/yafho/TOPICS_v2.md#10",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 18.5,
+  "backdrop": "linen",
+  "cover_at": 2.4,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_10.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "S1",
+      "start": 0,
+      "end": 3,
+      "kind": "CUT",
+      "shot": "кожа сверху: шов после кесарева без ухода / с силиконом, 0 → 6 мес",
+      "titles": [
+        {
+          "text": "Швы сняли.\nЧто дальше?",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "compare",
+        "progressFrom": 0,
+        "progressTo": 1
+      }
+    },
+    {
+      "id": "S2",
+      "start": 3,
+      "end": 8,
+      "kind": "CUT",
+      "shot": "чек-лист ✓ (паспорт: старт)",
+      "titles": [],
+      "cut": {
+        "type": "check_list",
+        "title": "Можно начинать, если:",
+        "checkItems": [
+          {
+            "text": "Рана закрылась"
+          },
+          {
+            "text": "Швы сняты"
+          },
+          {
+            "text": "Нет корок"
+          },
+          {
+            "text": "Нет воспаления"
+          }
+        ]
+      }
+    },
+    {
+      "id": "S3",
+      "start": 8,
+      "end": 11,
+      "kind": "CUT",
+      "shot": "чек-лист ✗ / ! (паспорт: нельзя)",
+      "titles": [],
+      "cut": {
+        "type": "check_list",
+        "title": "Подождите, если:",
+        "checkItems": [
+          {
+            "text": "Рана открыта",
+            "kind": "no"
+          },
+          {
+            "text": "Есть корки",
+            "kind": "no"
+          },
+          {
+            "text": "Дети, беременность:\nсначала к врачу",
+            "kind": "info"
+          }
+        ]
+      }
+    },
+    {
+      "id": "S4",
+      "start": 11,
+      "end": 15,
+      "kind": "CUT",
+      "shot": "эффект под пластиной",
+      "titles": [
+        {
+          "text": "Первые месяцы —\nглавные",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      }
+    },
+    {
+      "id": "S5",
+      "start": 15,
+      "end": 18.5,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Начните, пока\nрубец молодой"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3,
+        "mood": "impact",
+        "chords": [
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 3,
+        "end": 11,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am"
+        ]
+      },
+      {
+        "start": 11,
+        "end": 15,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 15,
+        "end": 18.5,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "impact"
+      },
+      {
+        "t": 3,
+        "kind": "click"
+      },
+      {
+        "t": 8,
+        "kind": "click"
+      },
+      {
+        "t": 11,
+        "kind": "chime"
+      },
+      {
+        "t": 15,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}

@@ -23,6 +23,8 @@ export { SizeGuide } from "./SizeGuide";
 export { SkinSwatch } from "./SkinSwatch";
 export { ResultCurve } from "./ResultCurve";
 export { MythFact } from "./MythFact";
+export { CheckList } from "./CheckList";
+export { DayClock } from "./DayClock";
 export { PatchHero3D } from "./PatchHero3D";
 export type { SkinShape, SkinStep, ScarState } from "./SkinSwatch";
 export { EndCard } from "./EndCard";

@@ -1,0 +1,196 @@
+{
+  "title": "Yafho-Silicare — тема 13 «Вопрос-ответ»",
+  "plan": "projects/yafho/TOPICS_v2.md#13",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 20.5,
+  "backdrop": "linen",
+  "cover_at": 2.8,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_13.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "Q1",
+      "start": 0.0,
+      "end": 3.5,
+      "kind": "CUT",
+      "shot": "? Видно под одеждой? → Нет: мягкая и прозрачная",
+      "titles": [],
+      "cut": {
+        "type": "myth_fact",
+        "mythVariant": "qa",
+        "myth": "Видно\nпод одеждой?",
+        "fact": "Нет: мягкая\nи прозрачная",
+        "counter": "1 / 4"
+      }
+    },
+    {
+      "id": "Q2",
+      "start": 3.5,
+      "end": 7.0,
+      "kind": "CUT",
+      "shot": "? Сколько носить? → 12–23 ч в сутки",
+      "titles": [],
+      "cut": {
+        "type": "myth_fact",
+        "mythVariant": "qa",
+        "myth": "Сколько носить?",
+        "fact": "12–23 ч\nв сутки",
+        "counter": "2 / 4"
+      }
+    },
+    {
+      "id": "Q3",
+      "start": 7.0,
+      "end": 10.5,
+      "kind": "CUT",
+      "shot": "? Можно мыть? → Да: промыть, чередовать две",
+      "titles": [],
+      "cut": {
+        "type": "myth_fact",
+        "mythVariant": "qa",
+        "myth": "Можно мыть?",
+        "fact": "Да: промыть,\nчередовать две",
+        "counter": "3 / 4"
+      }
+    },
+    {
+      "id": "Q4",
+      "start": 10.5,
+      "end": 14.0,
+      "kind": "CUT",
+      "shot": "? Когда результат? → Заметно — 1–3 мес, ровнее — 3–6 мес",
+      "titles": [],
+      "cut": {
+        "type": "myth_fact",
+        "mythVariant": "qa",
+        "myth": "Когда результат?",
+        "fact": "Заметно — 1–3 мес,\nровнее — 3–6 мес",
+        "counter": "4 / 4"
+      }
+    },
+    {
+      "id": "Q5",
+      "start": 14.0,
+      "end": 17.0,
+      "kind": "CUT",
+      "shot": "эффект под пластиной",
+      "titles": [
+        {
+          "text": "Мягче, светлее,\nровнее",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      }
+    },
+    {
+      "id": "Q6",
+      "start": 17.0,
+      "end": 20.5,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Сохраните\nответы"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 14,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 14,
+        "end": 17,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 17,
+        "end": 20.5,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 1.0,
+        "kind": "click"
+      },
+      {
+        "t": 4.5,
+        "kind": "click"
+      },
+      {
+        "t": 8.0,
+        "kind": "click"
+      },
+      {
+        "t": 11.5,
+        "kind": "click"
+      },
+      {
+        "t": 14,
+        "kind": "chime"
+      },
+      {
+        "t": 17,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}

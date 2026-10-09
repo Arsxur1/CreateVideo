@@ -1,0 +1,173 @@
+{
+  "title": "Yafho-Silicare — тема 11 «День с пластиной»",
+  "plan": "projects/yafho/TOPICS_v2.md#11",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 20,
+  "backdrop": "linen",
+  "cover_at": 11.5,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_11.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "D1",
+      "start": 0,
+      "end": 3.5,
+      "kind": "CUT",
+      "shot": "часы 0 → 23 ч, рукав закрывает пластину",
+      "titles": [
+        {
+          "text": "12–23 ч в сутки —\nэто реально",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "wear"
+      }
+    },
+    {
+      "id": "D2",
+      "start": 3.5,
+      "end": 13.5,
+      "kind": "CUT",
+      "shot": "сутки по кругу: две пластины по очереди (вывод из паспорта)",
+      "titles": [],
+      "cut": {
+        "type": "day_clock"
+      }
+    },
+    {
+      "id": "D3",
+      "start": 13.5,
+      "end": 16.5,
+      "kind": "CUT",
+      "shot": "промыть A, наклеить B",
+      "titles": [
+        {
+          "text": "Две пластины —\nбез перерыва",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "rinse"
+      }
+    },
+    {
+      "id": "D4",
+      "start": 16.5,
+      "end": 20,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Сохраните\nсвой распорядок"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 3.5,
+        "end": 13.5,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 13.5,
+        "end": 16.5,
+        "mood": "resolve",
+        "chords": [
+          "C",
+          "G"
+        ]
+      },
+      {
+        "start": 16.5,
+        "end": 20,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "chime"
+      },
+      {
+        "t": 2.2,
+        "kind": "whoosh"
+      },
+      {
+        "t": 4.2,
+        "kind": "click"
+      },
+      {
+        "t": 9.0,
+        "kind": "click"
+      },
+      {
+        "t": 13.5,
+        "kind": "click"
+      },
+      {
+        "t": 16.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}

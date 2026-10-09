@@ -1,0 +1,179 @@
+{
+  "title": "Yafho-Silicare — тема 12 «Когда нельзя»",
+  "plan": "projects/yafho/TOPICS_v2.md#12",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 15.5,
+  "backdrop": "linen",
+  "cover_at": 3.2,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_12.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "N1",
+      "start": 0,
+      "end": 6,
+      "kind": "CUT",
+      "shot": "чек-лист ✗ (паспорт: нельзя)",
+      "titles": [],
+      "cut": {
+        "type": "check_list",
+        "title": "Не клейте, если:",
+        "checkItems": [
+          {
+            "text": "Открытая рана",
+            "kind": "no"
+          },
+          {
+            "text": "Корки",
+            "kind": "no"
+          },
+          {
+            "text": "Инфекция",
+            "kind": "no"
+          },
+          {
+            "text": "Аллергия на силикон",
+            "kind": "no"
+          }
+        ]
+      }
+    },
+    {
+      "id": "N2",
+      "start": 6,
+      "end": 9,
+      "kind": "CUT",
+      "shot": "чек-лист ! (паспорт: дети, беременность — к врачу)",
+      "titles": [],
+      "cut": {
+        "type": "check_list",
+        "title": "Сначала к врачу:",
+        "checkItems": [
+          {
+            "text": "Ребёнок",
+            "kind": "info"
+          },
+          {
+            "text": "Беременность",
+            "kind": "info"
+          }
+        ]
+      }
+    },
+    {
+      "id": "N3",
+      "start": 9,
+      "end": 12,
+      "kind": "CUT",
+      "shot": "пластина ложится на заживший рубец, рубец смягчается",
+      "titles": [
+        {
+          "text": "Только на\nзажившую кожу",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "idle",
+        "land": true,
+        "soften": true
+      }
+    },
+    {
+      "id": "N4",
+      "start": 12,
+      "end": 15.5,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Отправьте тому,\nкому это важно"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 9,
+        "mood": "hold",
+        "chords": [
+          "Dm",
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 9,
+        "end": 12,
+        "mood": "resolve",
+        "chords": [
+          "C",
+          "G"
+        ]
+      },
+      {
+        "start": 12,
+        "end": 15.5,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "click"
+      },
+      {
+        "t": 6,
+        "kind": "click"
+      },
+      {
+        "t": 10.2,
+        "kind": "land"
+      },
+      {
+        "t": 12,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}
