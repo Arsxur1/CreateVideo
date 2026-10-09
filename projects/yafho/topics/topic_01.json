@@ -1,0 +1,156 @@
+{
+  "title": "Yafho-Silicare — тема 01 «Продукт»",
+  "plan": "projects/yafho/TOPICS_v1.md#01",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 13,
+  "backdrop": "linen",
+  "cover_at": 2.4,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_01.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "P1",
+      "start": 0,
+      "end": 3.5,
+      "kind": "CUT",
+      "kling": "H04",
+      "shot": "3D-пластина: поворот, изгиб, пружинит",
+      "cut": {
+        "type": "patch_3d",
+        "motion": "flex",
+        "centerY": 0.36,
+        "size": 0.5
+      },
+      "titles": [
+        {
+          "text": "Мягкий\nмедицинский силикон",
+          "at": 0,
+          "lead": 0.1
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "start": 3.5,
+      "end": 6.5,
+      "kind": "CUT",
+      "shot": "пластина ложится на кожу — почти не видна",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "idle",
+        "land": true
+      },
+      "titles": [
+        {
+          "text": "Прозрачная —\nпочти не видна",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "start": 6.5,
+      "end": 9.5,
+      "kind": "CUT",
+      "shot": "пластину промывают, клеят снова",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "rinse"
+      },
+      "titles": [
+        {
+          "text": "Многоразовая · CE",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "P4",
+      "start": 9.5,
+      "end": 13,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Начните, пока\nрубец молодой"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 3.5,
+        "end": 9.5,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am"
+        ]
+      },
+      {
+        "start": 9.5,
+        "end": 13,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "chime"
+      },
+      {
+        "t": 4.8,
+        "kind": "land"
+      },
+      {
+        "t": 6.5,
+        "kind": "click"
+      },
+      {
+        "t": 9.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}

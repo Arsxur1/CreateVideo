@@ -54,6 +54,12 @@ import type { SkinPhase, SkinCrossSectionLabels } from "./components/SkinCrossSe
 import { MarginOverlay } from "./components/MarginOverlay";
 import { TimeCounter } from "./components/TimeCounter";
 import { SizeGuide } from "./components/SizeGuide";
+import { SkinSwatch } from "./components/SkinSwatch";
+import { ResultCurve } from "./components/ResultCurve";
+import type { ResultMilestone } from "./components/ResultCurve";
+import { MythFact } from "./components/MythFact";
+import { PatchHero3D } from "./components/PatchHero3D";
+import type { ScarState, SkinShape, SkinStep } from "./components/SkinSwatch";
 import type { SizeGuideItem } from "./components/SizeGuide";
 import { EndCard } from "./components/EndCard";
 import { HealingTimeline } from "./components/HealingTimeline";
@@ -299,6 +305,25 @@ interface Cut {
   playbackRate?: number;
   // Size guide (type: "size_guide")
   sizeItems?: SizeGuideItem[];
+  // Skin close-up with sheet (type: "skin_demo")
+  skinShape?: SkinShape;
+  skinStep?: SkinStep;
+  skinState?: ScarState;
+  skinFrom?: ScarState;
+  months?: number;
+  reveal?: boolean;
+  land?: boolean;
+  zoom?: number;
+  // Result timing curve (type: "result_curve")
+  milestones?: ResultMilestone[];
+  // Myth → fact card (type: "myth_fact")
+  myth?: string;
+  fact?: string;
+  counter?: string;
+  // 3D sheet (type: "patch_3d"); end_card takes patch3d
+  motion?: "flex" | "spin";
+  size?: number;
+  patch3d?: boolean;
   // End card (type: "end_card")
   logoSrc?: string;
   brand?: string;
@@ -766,6 +791,32 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
   if (cut.type === "scar_compare") {
     return <ScarCompare progressFrom={cut.progressFrom} progressTo={cut.progressTo} introFade={cut.introFade} />;
   }
+  if (cut.type === "skin_demo") {
+    return (
+      <SkinSwatch
+        shape={cut.skinShape}
+        step={cut.skinStep}
+        state={cut.skinState}
+        from={cut.skinFrom}
+        progressFrom={cut.progressFrom}
+        progressTo={cut.progressTo}
+        months={cut.months}
+        reveal={cut.reveal}
+        land={cut.land}
+        zoom={cut.zoom}
+        introFade={cut.introFade}
+      />
+    );
+  }
+  if (cut.type === "patch_3d") {
+    return <PatchHero3D motion={cut.motion} centerY={cut.centerY} size={cut.size} introFade={cut.introFade} />;
+  }
+  if (cut.type === "result_curve") {
+    return <ResultCurve months={cut.months} milestones={cut.milestones} />;
+  }
+  if (cut.type === "myth_fact" && cut.myth && cut.fact) {
+    return <MythFact myth={cut.myth} fact={cut.fact} counter={cut.counter} />;
+  }
   if (cut.type === "size_guide") {
     return <SizeGuide items={cut.sizeItems} />;
   }
@@ -779,6 +830,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         qr={cut.qr}
         qrCaption={cut.qrCaption}
         cta={cut.cta}
+        patch3d={cut.patch3d}
       />
     );
   }

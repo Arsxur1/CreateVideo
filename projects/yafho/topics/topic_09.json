@@ -1,0 +1,65 @@
+{
+  "title": "Yafho-Silicare — тема 09 «CTA»",
+  "plan": "projects/yafho/TOPICS_v1.md#09",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 5,
+  "backdrop": "linen",
+  "cover_at": 3.0,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_09.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "C1",
+      "start": 0,
+      "end": 5,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "patch3d": true
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 5,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}

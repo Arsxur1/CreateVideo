@@ -1,5 +1,6 @@
 import { AbsoluteFill, Img, useCurrentFrame, useVideoConfig } from "remotion";
 import { YAFHO, ease, useCanvas } from "./yafho/tokens";
+import { PatchHero3D } from "./PatchHero3D";
 
 export interface EndCardProps {
   /** Resolved logo URL; when absent the wordmark is set in Onest. */
@@ -12,6 +13,8 @@ export interface EndCardProps {
   qrCaption?: string;
   /** Call to action above the handle. */
   cta?: string;
+  /** Topic 09: a translucent 3D sheet turns slowly behind the card content. */
+  patch3d?: boolean;
 }
 
 /**
@@ -26,6 +29,7 @@ export const EndCard: React.FC<EndCardProps> = ({
   qr,
   qrCaption = "instagram.com/sil.icare",
   cta,
+  patch3d = false,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -55,6 +59,11 @@ export const EndCard: React.FC<EndCardProps> = ({
         textAlign: "center",
       }}
     >
+      {patch3d && (
+        <AbsoluteFill style={{ opacity: 0.3 * ease(frame, 0, 0.6 * fps) }}>
+          <PatchHero3D motion="spin" centerY={0.5} size={0.66} wallShadow={false} />
+        </AbsoluteFill>
+      )}
       <div style={step(0)}>
         {logoSrc ? (
           <Img src={logoSrc} style={{ height: compact ? 120 : 150, objectFit: "contain" }} />

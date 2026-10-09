@@ -1,0 +1,258 @@
+{
+  "title": "Yafho-Silicare — тема 03 «Показания»",
+  "plan": "projects/yafho/TOPICS_v1.md#03",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 22.0,
+  "backdrop": "linen",
+  "cover_at": 2.6,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_03.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "I1",
+      "start": 0,
+      "end": 3,
+      "kind": "CHIPS",
+      "shot": "плашки ситуаций",
+      "chips": {
+        "title": "Ваш рубец\nв этом списке?",
+        "items": [
+          "После операции",
+          "После кесарева",
+          "После ожога",
+          "Келоидный рубец",
+          "Растяжки"
+        ]
+      },
+      "titles": []
+    },
+    {
+      "id": "I2",
+      "start": 3.0,
+      "end": 5.5,
+      "kind": "CUT",
+      "shot": "кожа сверху: после операции, пластина ложится",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "idle",
+        "land": true
+      },
+      "titles": [
+        {
+          "text": "После операции",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "I3",
+      "start": 5.5,
+      "end": 8.0,
+      "kind": "CUT",
+      "shot": "кожа сверху: после кесарева, пластина ложится",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "idle",
+        "land": true
+      },
+      "titles": [
+        {
+          "text": "После кесарева",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "I4",
+      "start": 8.0,
+      "end": 10.5,
+      "kind": "CUT",
+      "shot": "кожа сверху: после ожога, пластина ложится",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "burn",
+        "skinStep": "idle",
+        "land": true
+      },
+      "titles": [
+        {
+          "text": "После ожога",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "I5",
+      "start": 10.5,
+      "end": 13.0,
+      "kind": "CUT",
+      "shot": "кожа сверху: келоидный рубец, пластина ложится",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "keloid",
+        "skinStep": "idle",
+        "land": true
+      },
+      "titles": [
+        {
+          "text": "Келоидный рубец",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "I6",
+      "start": 13.0,
+      "end": 15.5,
+      "kind": "CUT",
+      "shot": "кожа сверху: растяжки, пластина ложится",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "stria",
+        "skinStep": "idle",
+        "land": true
+      },
+      "titles": [
+        {
+          "text": "Растяжки",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "I7",
+      "start": 15.5,
+      "end": 18.5,
+      "kind": "CUT",
+      "shot": "пластина на зажившем рубце",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "idle",
+        "land": true
+      },
+      "footnote": "Дети, беременность — сначала к врачу",
+      "titles": [
+        {
+          "text": "Только на зажившую\nкожу",
+          "at": 0,
+          "lead": 0,
+          "footnote": true
+        }
+      ]
+    },
+    {
+      "id": "I8",
+      "start": 18.5,
+      "end": 22.0,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Отправьте тому,\nкому это нужно"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3,
+        "mood": "light",
+        "chords": [
+          "F",
+          "C"
+        ]
+      },
+      {
+        "start": 3,
+        "end": 15.5,
+        "mood": "resolve",
+        "chords": [
+          "C",
+          "G",
+          "Am",
+          "F",
+          "C"
+        ]
+      },
+      {
+        "start": 15.5,
+        "end": 18.5,
+        "mood": "hold",
+        "chords": [
+          "Dm"
+        ]
+      },
+      {
+        "start": 18.5,
+        "end": 22,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "chime"
+      },
+      {
+        "t": 4.0,
+        "kind": "land"
+      },
+      {
+        "t": 6.5,
+        "kind": "land"
+      },
+      {
+        "t": 9.0,
+        "kind": "land"
+      },
+      {
+        "t": 11.5,
+        "kind": "land"
+      },
+      {
+        "t": 14.0,
+        "kind": "land"
+      },
+      {
+        "t": 18.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}

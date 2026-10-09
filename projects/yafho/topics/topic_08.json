@@ -1,0 +1,190 @@
+{
+  "title": "Yafho-Silicare — тема 08 «Цифры исследований»",
+  "plan": "projects/yafho/TOPICS_v1.md#08",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 19.5,
+  "backdrop": "linen",
+  "cover_at": 2.0,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_08.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "N1",
+      "start": 0,
+      "end": 4,
+      "kind": "CUT",
+      "shot": "кожа сверху: рубец после операции без ухода",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "idle",
+        "skinState": "hyper"
+      },
+      "stat": {
+        "value": "39–68 %",
+        "label": "гипертрофический рубец\nпосле операций",
+        "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158",
+        "position": "hero",
+        "delay": 0.2
+      },
+      "titles": []
+    },
+    {
+      "id": "N2",
+      "start": 4,
+      "end": 8,
+      "kind": "CUT",
+      "shot": "кожа сверху: рубец после ожога без ухода",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "burn",
+        "skinStep": "idle",
+        "skinState": "hyper"
+      },
+      "stat": {
+        "value": "33–91 %",
+        "label": "гипертрофический рубец\nпосле ожогов",
+        "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158",
+        "position": "hero",
+        "delay": 0.2
+      },
+      "titles": []
+    },
+    {
+      "id": "N3",
+      "start": 8,
+      "end": 12,
+      "kind": "CUT",
+      "shot": "кожа сверху: сравнение через 6 мес",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "compare",
+        "progressFrom": 1,
+        "progressTo": 1
+      },
+      "stat": {
+        "value": "≈ в 2 раза",
+        "label": "ниже риск\nпатологического рубца",
+        "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158 · RR 0,41",
+        "position": "hero",
+        "delay": 0.4
+      },
+      "titles": []
+    },
+    {
+      "id": "N4",
+      "start": 12,
+      "end": 16,
+      "kind": "CUT",
+      "shot": "кожа сверху: пластина на рубце",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "reveal": false,
+        "skinFrom": "hyper"
+      },
+      "stat": {
+        "value": "Первая линия",
+        "label": "«золотой стандарт» неинвазивной\nтерапии рубцов",
+        "source": "Monstrey S. et al. Updated Scar Management Practical Guidelines. J Plast Reconstr Aesthet Surg, 2014",
+        "position": "hero",
+        "delay": 0.4
+      },
+      "titles": []
+    },
+    {
+      "id": "N5",
+      "start": 16,
+      "end": 19.5,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Отправьте тому,\nу кого свежий шов"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 8,
+        "mood": "tension",
+        "chords": [
+          "Am",
+          "Dm",
+          "Am",
+          "E"
+        ]
+      },
+      {
+        "start": 8,
+        "end": 16,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G",
+          "C",
+          "G"
+        ]
+      },
+      {
+        "start": 16,
+        "end": 19.5,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0.2,
+        "kind": "impact"
+      },
+      {
+        "t": 4.2,
+        "kind": "click"
+      },
+      {
+        "t": 8.4,
+        "kind": "chime"
+      },
+      {
+        "t": 12.4,
+        "kind": "click"
+      },
+      {
+        "t": 16,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}

@@ -25,6 +25,9 @@ export const AudienceChips: React.FC<AudienceChipsProps> = ({ title = "Это п
           opacity: t,
           transform: `translateY(${(1 - t) * 24}px)`,
           marginBottom: fs * 0.9,
+          whiteSpace: "pre-line",
+          textAlign: "center",
+          lineHeight: 1.15,
         }}
       >
         {title}

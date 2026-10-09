@@ -1,0 +1,139 @@
+{
+  "title": "Yafho-Silicare — тема 06 «Подбор размера»",
+  "plan": "projects/yafho/TOPICS_v1.md#06",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 12,
+  "backdrop": "linen",
+  "cover_at": 7.5,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_06.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "Z1",
+      "start": 0,
+      "end": 3.5,
+      "kind": "CUT",
+      "shot": "кожа сверху: контур +1 см",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "measure"
+      },
+      "titles": [
+        {
+          "text": "Какой размер\nнужен вам?",
+          "at": 0,
+          "lead": 0.1
+        }
+      ]
+    },
+    {
+      "id": "Z2",
+      "start": 3.5,
+      "end": 8.5,
+      "kind": "CUT",
+      "shot": "size_guide: 4 пластины на зоны (размеры сверить с упаковкой)",
+      "cut": {
+        "type": "size_guide"
+      },
+      "titles": [
+        {
+          "text": "Рубец + 1 см\nсо всех сторон",
+          "at": 0
+        }
+      ]
+    },
+    {
+      "id": "Z3",
+      "start": 8.5,
+      "end": 12,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Сохраните\nтаблицу размеров"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 3.5,
+        "end": 8.5,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am"
+        ]
+      },
+      {
+        "start": 8.5,
+        "end": 12,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "chime"
+      },
+      {
+        "t": 4.0,
+        "kind": "land"
+      },
+      {
+        "t": 4.5,
+        "kind": "land"
+      },
+      {
+        "t": 5.0,
+        "kind": "land"
+      },
+      {
+        "t": 5.5,
+        "kind": "land"
+      },
+      {
+        "t": 8.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}

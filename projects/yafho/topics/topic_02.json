@@ -1,0 +1,193 @@
+{
+  "title": "Yafho-Silicare — тема 02 «Механизм»",
+  "plan": "projects/yafho/TOPICS_v1.md#02",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 19,
+  "backdrop": "linen",
+  "cover_at": 2.5,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_02.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "M1",
+      "start": 0,
+      "end": 3.5,
+      "kind": "CUT",
+      "shot": "3D: валик рубца растёт, стрелка ↑",
+      "cut": {
+        "type": "skin_cross_section_3d",
+        "phase": "untreated",
+        "progressFrom": 0,
+        "progressTo": 1
+      },
+      "titles": [
+        {
+          "text": "Рана зажила.\nПочему рубец растёт?",
+          "at": 0,
+          "lead": 0.1
+        }
+      ]
+    },
+    {
+      "id": "M2",
+      "start": 3.5,
+      "end": 7,
+      "kind": "3D",
+      "phase3d": "drying",
+      "shot": "3D: влага уходит",
+      "titles": [
+        {
+          "text": "Кожа теряет\nвлагу",
+          "at": 0
+        }
+      ],
+      "timeline": {
+        "from": 0.45,
+        "to": 0.55
+      }
+    },
+    {
+      "id": "M3",
+      "start": 7,
+      "end": 10.5,
+      "kind": "3D",
+      "phase3d": "alarm",
+      "shot": "3D: сигнал ↑, лишний коллаген",
+      "titles": [
+        {
+          "text": "Лишний коллаген —\nплотный рубец",
+          "at": 0
+        }
+      ],
+      "timeline": {
+        "from": 0.55,
+        "to": 0.62
+      }
+    },
+    {
+      "id": "M4",
+      "start": 10.5,
+      "end": 15.5,
+      "kind": "3D",
+      "phase3d": "seal",
+      "shot": "3D: пластина, влага ↑, сигнал ↓",
+      "titles": [
+        {
+          "text": "Силикон\nдержит влагу",
+          "at": 0
+        },
+        {
+          "text": "Сигнал ↓ —\nколлаген ровнее",
+          "at": 0.5
+        }
+      ],
+      "timeline": {
+        "from": 0.42,
+        "to": 0.6,
+        "highlightWindow": true
+      }
+    },
+    {
+      "id": "M5",
+      "start": 15.5,
+      "end": 19,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Отправьте тому,\nу кого свежий шов"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3.5,
+        "mood": "impact",
+        "chords": [
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 3.5,
+        "end": 7,
+        "mood": "tension",
+        "chords": [
+          "Am",
+          "Dm"
+        ]
+      },
+      {
+        "start": 7,
+        "end": 10.5,
+        "mood": "alarm",
+        "chords": [
+          "Esus",
+          "E"
+        ]
+      },
+      {
+        "start": 10.5,
+        "end": 15.5,
+        "mood": "resolve",
+        "chords": [
+          "C",
+          "G",
+          "F"
+        ]
+      },
+      {
+        "start": 15.5,
+        "end": 19,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "impact"
+      },
+      {
+        "t": 10.5,
+        "kind": "chime"
+      },
+      {
+        "t": 12.0,
+        "kind": "land"
+      },
+      {
+        "t": 15.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}

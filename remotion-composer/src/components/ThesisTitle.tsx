@@ -13,7 +13,7 @@ export interface ThesisTitleProps {
 }
 
 // "1 · Очистить" → step badge + text
-const STEP_RE = /^(\d+)\s*·\s*(.+)$/;
+const STEP_RE = /^(\d+)\s*·\s*([\s\S]+)$/;
 
 /**
  * Large thesis title (≤ 6 words, ≥ 64px at 1080 wide) — the only copy channel

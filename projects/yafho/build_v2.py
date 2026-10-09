@@ -166,6 +166,13 @@ def build_animatic(data: dict, mode: str = "animatic", fmt: dict | None = None) 
                 cut.update(source=f"{PUBLIC_REL}/{png.name}", animation="gentle", introFade=False)
             else:
                 cut.update(type="scar_compare", progressFrom=a, progressTo=b, introFade=False)
+        elif kind == "CUT":
+            # any registered cut type, props straight from the scene file (skin_demo, size_guide, …)
+            cut.update(s["cut"])
+            if "introFade" not in s["cut"]:
+                cut["introFade"] = False
+            if cut.get("type") == "skin_cross_section_3d":
+                cut.update((fmt or {}).get("cut3d", {}))
         elif kind == "CHIPS":
             cut.update(type="blank")
             ch = s["chips"]
@@ -176,6 +183,8 @@ def build_animatic(data: dict, mode: str = "animatic", fmt: dict | None = None) 
                        qr=qr_matrix("https://instagram.com/sil.icare"), qrCaption="instagram.com/sil.icare")
             if s.get("cta"):
                 cut["cta"] = s["cta"]
+            if s.get("patch3d"):
+                cut["patch3d"] = True
         else:  # new 3D scene, not built yet → sketch card
             cut.update(type="text_card", text=f"[эскиз] {s['shot']}", fontSize=42,
                        color="#0F2440", backgroundColor="#ECE6DD")
@@ -200,10 +209,15 @@ def build_animatic(data: dict, mode: str = "animatic", fmt: dict | None = None) 
             st = s["stat"]
             overlays.append({"type": "stat_badge", "value": st["value"], "label": st["label"], "source": st["source"],
                              "position": (fmt or {}).get("stat_position", st.get("position", "upper")),
-                             "in_seconds": s["start"] + 1.5, "out_seconds": s["end"]})
+                             "in_seconds": s["start"] + st.get("delay", 1.5), "out_seconds": s["end"]})
         if s.get("margin"):
             m = s["margin"] if isinstance(s["margin"], dict) else {}
             overlays.append({"type": "margin_overlay", "label": "+1 см", "in_seconds": s["start"] + 0.3, "out_seconds": s["end"], **m})
+        for ov in s.get("overlays", []):  # raw overlays, times relative to the scene
+            o = {k: v for k, v in ov.items() if k not in ("in", "out")}
+            o["in_seconds"] = round(s["start"] + ov.get("in", 0), 2)
+            o["out_seconds"] = round(s["start"] + ov["out"], 2) if "out" in ov else s["end"]
+            overlays.append(o)
         if mode == "animatic":
             overlays.append({"type": "animatic_note", "label": f"{s['id']} · {fmt_t(s['start'])}–{fmt_t(s['end'])} · {kind}",
                              "text": s.get("notes"), "in_seconds": s["start"], "out_seconds": s["end"]})
@@ -228,6 +242,19 @@ def build_animatic(data: dict, mode: str = "animatic", fmt: dict | None = None) 
         if bd:
             props["backdrop"] = {"image": bd}
     return {"props": props}
+
+
+def ensure_skin(data: dict) -> None:
+    """Generate the procedural skin close-ups once if a scene uses skin_demo."""
+    if any(s.get("cut", {}).get("type") == "skin_demo" for s in data["scenes"]):
+        subprocess.run([sys.executable, str(PROJECT / "make_skin.py")], check=True)
+
+
+def cover(video: Path, data: dict, dest: Path) -> None:
+    """Post picture (TZ §3: every theme = video + picture): one frame at `cover_at` seconds."""
+    t = float(data.get("cover_at", 2.0))
+    subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{t:.2f}", "-i", str(video), "-frames:v", "1", str(dest)],
+                   check=True)
 
 
 def build_card(data: dict, key: str, fmt: dict) -> dict:
@@ -319,6 +346,7 @@ def main() -> None:
     data = json.loads(data_path.read_text(encoding="utf-8"))
     configure(data_path, data)
     OUT.mkdir(parents=True, exist_ok=True)
+    ensure_skin(data)
 
     if args.cards:
         for key in [f.strip() for f in args.formats.split(",") if f.strip()]:
@@ -334,11 +362,12 @@ def main() -> None:
             fmt = data["formats"][key]
             print(f"final {key}: building scenes")
             built = build_animatic(data, mode="final", fmt=fmt)
-            (OUT / f"final_props_{key}.json").write_text(json.dumps(built["props"], ensure_ascii=False, indent=2), encoding="utf-8")
+            (OUT / f"final_props_{NAME}_{key}.json").write_text(json.dumps(built["props"], ensure_ascii=False, indent=2), encoding="utf-8")
             video = OUT / f"{NAME}_{key}.mp4"
             print(f"final {key}: rendering ({fmt['profile']})")
             render(built["props"], video, fmt["profile"])
             contact_sheet(video, data["scenes"], OUT / f"{NAME}_{key}_sheet.png")
+            cover(video, data, OUT / f"{NAME}_{key}_cover.png")
             print(f"→ {video.relative_to(ROOT)}")
         return
 

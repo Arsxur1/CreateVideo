@@ -1,0 +1,174 @@
+{
+  "title": "Yafho-Silicare — тема 07 «Мифы и ошибки»",
+  "plan": "projects/yafho/TOPICS_v1.md#07",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 17.0,
+  "backdrop": "linen",
+  "cover_at": 5.2,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_07.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "E1",
+      "start": 0,
+      "end": 3,
+      "kind": "CUT",
+      "shot": "кожа сверху: плотный красный рубец (нет результата)",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "idle",
+        "skinState": "hyper"
+      },
+      "titles": [
+        {
+          "text": "3 ошибки —\nи нет результата",
+          "at": 0,
+          "lead": 0.1
+        }
+      ]
+    },
+    {
+      "id": "E2",
+      "start": 3.0,
+      "end": 6.5,
+      "kind": "CUT",
+      "shot": "✗ Клеить на корку → ✓ Только на закрытую кожу",
+      "cut": {
+        "type": "myth_fact",
+        "myth": "Клеить\nна корку",
+        "fact": "Только на\nзакрытую кожу",
+        "counter": "1 / 3"
+      },
+      "titles": []
+    },
+    {
+      "id": "E3",
+      "start": 6.5,
+      "end": 10.0,
+      "kind": "CUT",
+      "shot": "✗ Пару часов в день → ✓ 12–23 ч в сутки",
+      "cut": {
+        "type": "myth_fact",
+        "myth": "Пару часов\nв день",
+        "fact": "12–23 ч\nв сутки",
+        "counter": "2 / 3"
+      },
+      "titles": []
+    },
+    {
+      "id": "E4",
+      "start": 10.0,
+      "end": 13.5,
+      "kind": "CUT",
+      "shot": "✗ Носить, не промывая → ✓ Промыть, чередовать две",
+      "cut": {
+        "type": "myth_fact",
+        "myth": "Носить,\nне промывая",
+        "fact": "Промыть,\nчередовать две",
+        "counter": "3 / 3"
+      },
+      "titles": []
+    },
+    {
+      "id": "E5",
+      "start": 13.5,
+      "end": 17.0,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Сохраните\nпамятку"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3,
+        "mood": "tension",
+        "chords": [
+          "Am",
+          "Dm"
+        ]
+      },
+      {
+        "start": 3,
+        "end": 13.5,
+        "mood": "resolve",
+        "chords": [
+          "C",
+          "G",
+          "F"
+        ]
+      },
+      {
+        "start": 13.5,
+        "end": 17,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "impact"
+      },
+      {
+        "t": 3.8,
+        "kind": "click"
+      },
+      {
+        "t": 7.3,
+        "kind": "click"
+      },
+      {
+        "t": 10.8,
+        "kind": "click"
+      },
+      {
+        "t": 4.1,
+        "kind": "chime"
+      },
+      {
+        "t": 7.6,
+        "kind": "chime"
+      },
+      {
+        "t": 11.1,
+        "kind": "chime"
+      },
+      {
+        "t": 13.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  }
+}
