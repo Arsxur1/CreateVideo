@@ -343,15 +343,20 @@ export const SkinSwatch: React.FC<SkinSwatchProps> = ({
     base = from;
   }
 
+  // A tall, narrow card (16:9 side panel) scales the photo by its height; a wide sheet
+  // (C-section 15 cm) would then overrun the sides, so the card gets shorter instead.
+  const maxH = (0.9 * cardW * IMG_PX) / (IMG_PX_CM * Math.max(1, z) * geo.sheet[0]);
+  const singleH = Math.round(Math.min(areaH, Math.max(cardW, maxH)));
+
   return (
     <AbsoluteFill style={{ opacity: intro }}>
-      <SkinCard x={left} y={top} w={cardW} h={Math.round(areaH)} shape={shape} zoom={z} target={target} mix={mix} base={base}>
+      <SkinCard x={left} y={top + (areaH - singleH) / 2} w={cardW} h={singleH} shape={shape} zoom={z} target={target} mix={mix} base={base}>
         {({ cx, cy, ppc }) => {
           const sw = geo.sheet[0] * ppc;
           const shh = geo.sheet[1] * ppc;
           const bw = geo.box[0] * ppc;
           const bh = geo.box[1] * ppc;
-          const cardH = Math.round(areaH);
+          const cardH = singleH;
 
           if (step === "effect") {
             const landP = land ? T(0, 0.12) : 1;
