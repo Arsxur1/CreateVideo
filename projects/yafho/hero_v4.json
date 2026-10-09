@@ -1,0 +1,536 @@
+{
+  "title": "Yafho-Silicare — hero v4 «Один рубец — два исхода» (без заглушек)",
+  "concept": "projects/yafho/CONCEPT_v3.md",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/v4",
+  "public_dir": "yafho-v4",
+  "duration": 52,
+  "backdrop": "linen",
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_ambient_v3.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 2.0
+  },
+  "scenes": [
+    {
+      "id": "V01",
+      "start": 0,
+      "end": 4,
+      "kind": "COMPARE",
+      "progress": [
+        0,
+        1
+      ],
+      "shot": "3D-сравнение «без ухода / с силиконом», 0 → 6 мес за 4 с",
+      "titles": [
+        {
+          "text": "Один рубец.\nДва исхода.",
+          "at": 0,
+          "lead": 0.1
+        }
+      ]
+    },
+    {
+      "id": "V02",
+      "start": 4,
+      "end": 7.5,
+      "kind": "COMPARE",
+      "progress": [
+        1,
+        1
+      ],
+      "shot": "сравнение замирает на 6 мес",
+      "titles": [
+        {
+          "text": "Разницу решают\nпервые месяцы",
+          "at": 0
+        }
+      ]
+    },
+    {
+      "id": "V03",
+      "start": 7.5,
+      "end": 11.5,
+      "kind": "CHIPS",
+      "shot": "фон бренда, плашки аудиторий",
+      "chips": {
+        "title": "Это про вас, если:",
+        "items": [
+          "После кесарева",
+          "После операции",
+          "После ожога",
+          "Растяжки"
+        ]
+      },
+      "titles": []
+    },
+    {
+      "id": "V04",
+      "start": 11.5,
+      "end": 17.5,
+      "kind": "3D",
+      "phase3d": "drying",
+      "shot": "3D: молодая кожа теряет влагу",
+      "titles": [
+        {
+          "text": "Молодой рубец\nтеряет влагу",
+          "at": 0
+        }
+      ],
+      "timeline": {
+        "from": 0.45,
+        "to": 0.55
+      }
+    },
+    {
+      "id": "V05",
+      "start": 17.5,
+      "end": 24,
+      "kind": "3D",
+      "phase3d": "alarm",
+      "shot": "3D: тревога, лишний коллаген, валик растёт",
+      "titles": [
+        {
+          "text": "Кожа бьёт\nтревогу",
+          "at": 0
+        },
+        {
+          "text": "Лишний коллаген —\nплотный рубец",
+          "at": 0.5
+        }
+      ],
+      "timeline": {
+        "from": 0.55,
+        "to": 0.62
+      }
+    },
+    {
+      "id": "V06",
+      "start": 24,
+      "end": 28,
+      "kind": "CUT",
+      "kling": "H04",
+      "shot": "3D: пластина парит над кожей, гнётся и ложится на рубец (вместо Kling H04)",
+      "titles": [
+        {
+          "text": "Yafho-Silicare ·\nмедицинский силикон",
+          "at": 0
+        }
+      ],
+      "cut": {
+        "type": "patch_3d",
+        "motion": "flex",
+        "centerY": 0.34,
+        "size": 0.42
+      }
+    },
+    {
+      "id": "V07",
+      "start": 28,
+      "end": 35,
+      "kind": "3D",
+      "phase3d": "seal",
+      "shot": "3D: пластина ложится, влага остаётся, волокна выравниваются",
+      "titles": [
+        {
+          "text": "Силикон\nдержит влагу",
+          "at": 0
+        },
+        {
+          "text": "Сигнал ↓ —\nколлаген ровнее",
+          "at": 0.5
+        }
+      ],
+      "timeline": {
+        "from": 0.42,
+        "to": 0.6,
+        "highlightWindow": true
+      }
+    },
+    {
+      "id": "V08",
+      "start": 35,
+      "end": 40,
+      "kind": "COMPARE",
+      "progress": [
+        1,
+        1
+      ],
+      "shot": "эффект: сравнение + крупная цифра",
+      "stat": {
+        "value": "≈ в 2 раза",
+        "label": "ниже риск\nпатологического рубца",
+        "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158 · RR 0,41",
+        "position": "hero"
+      },
+      "titles": []
+    },
+    {
+      "id": "V09a",
+      "start": 40,
+      "end": 42.5,
+      "kind": "CUT",
+      "kling": "H05",
+      "shot": "кожа сверху: салфетка, капли исчезают (вместо H05)",
+      "titles": [
+        {
+          "text": "1 · Очистить",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "clean"
+      }
+    },
+    {
+      "id": "V09b",
+      "start": 42.5,
+      "end": 45,
+      "kind": "CUT",
+      "kling": "H06",
+      "shot": "кожа сверху: контур +1 см (вместо H06)",
+      "titles": [
+        {
+          "text": "2 · +1 см за край",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "measure"
+      }
+    },
+    {
+      "id": "V09c",
+      "start": 45,
+      "end": 47.5,
+      "kind": "CUT",
+      "kling": "H07",
+      "shot": "кожа сверху: часы до 23 ч, рукав (вместо H07)",
+      "titles": [
+        {
+          "text": "3 · 12–23 ч в сутки",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "wear"
+      }
+    },
+    {
+      "id": "V10",
+      "start": 47.5,
+      "end": 52,
+      "kind": "C",
+      "shot": "эндкард: призыв, QR, @sil.icare",
+      "cta": "Начните, пока\nрубец молодой",
+      "titles": [],
+      "patch3d": true
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 4,
+        "mood": "impact",
+        "chords": [
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 4,
+        "end": 7.5,
+        "mood": "hold",
+        "chords": [
+          "Dm"
+        ]
+      },
+      {
+        "start": 7.5,
+        "end": 11.5,
+        "mood": "light",
+        "chords": [
+          "F",
+          "C"
+        ]
+      },
+      {
+        "start": 11.5,
+        "end": 17.5,
+        "mood": "tension",
+        "chords": [
+          "Am",
+          "Dm"
+        ]
+      },
+      {
+        "start": 17.5,
+        "end": 24,
+        "mood": "alarm",
+        "chords": [
+          "Esus",
+          "E"
+        ]
+      },
+      {
+        "start": 24,
+        "end": 35,
+        "mood": "resolve",
+        "chords": [
+          "C",
+          "G",
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 35,
+        "end": 40,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 40,
+        "end": 47.5,
+        "mood": "resolve",
+        "chords": [
+          "C",
+          "G",
+          "F"
+        ]
+      },
+      {
+        "start": 47.5,
+        "end": 52,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0.0,
+        "kind": "impact"
+      },
+      {
+        "t": 7.3,
+        "kind": "whoosh"
+      },
+      {
+        "t": 24.0,
+        "kind": "chime"
+      },
+      {
+        "t": 30.2,
+        "kind": "land"
+      },
+      {
+        "t": 35.0,
+        "kind": "click"
+      },
+      {
+        "t": 47.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  },
+  "cards": {
+    "AUD_K": {
+      "duration": 3.5,
+      "kling": "P02",
+      "shot": "Kling P02: заживший горизонтальный рубец после кесарева (ТЗ, тема 03)",
+      "title": "Шов после кесарева\nменяется ещё месяцы",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "idle",
+        "land": true,
+        "soften": true
+      }
+    },
+    "AUD_O": {
+      "duration": 3.5,
+      "kling": "P01",
+      "shot": "Kling P01: заживший рубец на предплечье после операции (ТЗ, тема 03)",
+      "title": "Рубец после операции\nещё формируется",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "idle",
+        "land": true,
+        "soften": true
+      }
+    },
+    "AUD_B": {
+      "duration": 3.5,
+      "kling": "P03",
+      "shot": "Kling P03: заживший ожог на тыльной стороне кисти (ТЗ, тема 03)",
+      "title": "Ожог зажил —\nрубец ещё растёт",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "burn",
+        "skinStep": "idle",
+        "land": true,
+        "soften": true
+      }
+    }
+  },
+  "cuts": {
+    "K": {
+      "name": "После кесарева",
+      "windows": [
+        [
+          "V01",
+          0,
+          4
+        ],
+        {
+          "card": "AUD_K"
+        },
+        [
+          "V07",
+          3.5,
+          7
+        ],
+        [
+          "V08",
+          0,
+          2.6
+        ],
+        [
+          "V10",
+          0,
+          2.6
+        ]
+      ]
+    },
+    "O": {
+      "name": "После операции",
+      "windows": [
+        [
+          "V01",
+          0,
+          4
+        ],
+        {
+          "card": "AUD_O"
+        },
+        [
+          "V07",
+          3.5,
+          7
+        ],
+        [
+          "V08",
+          0,
+          2.6
+        ],
+        [
+          "V10",
+          0,
+          2.6
+        ]
+      ]
+    },
+    "B": {
+      "name": "После ожога",
+      "windows": [
+        [
+          "V01",
+          0,
+          4
+        ],
+        {
+          "card": "AUD_B"
+        },
+        [
+          "V07",
+          3.5,
+          7
+        ],
+        [
+          "V08",
+          0,
+          2.6
+        ],
+        [
+          "V10",
+          0,
+          2.6
+        ]
+      ]
+    },
+    "G": {
+      "name": "Общая",
+      "windows": [
+        [
+          "V01",
+          0,
+          4
+        ],
+        [
+          "V03",
+          0,
+          3.5
+        ],
+        [
+          "V07",
+          3.5,
+          7
+        ],
+        [
+          "V08",
+          0,
+          2.6
+        ],
+        [
+          "V10",
+          0,
+          2.6
+        ]
+      ]
+    }
+  },
+  "note": "v4 = v3 + кодовые кадры вместо заглушек Kling (H04–H07, P01–P03). Когда клипы появятся, верните kind R."
+}

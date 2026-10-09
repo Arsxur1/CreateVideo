@@ -265,7 +265,12 @@ def build_card(data: dict, key: str, fmt: dict) -> dict:
     dur = card["duration"]
     cut: dict = {"id": key, "source": "", "in_seconds": 0, "out_seconds": dur}
     clip = KLING / f"{card['kling']}.mp4"
-    if clip.exists():
+    if card.get("cut") and not clip.exists():
+        # drawn stand-in (e.g. skin_demo with the audience's own scar) until the Kling shot arrives
+        cut.update(card["cut"])
+        cut.setdefault("introFade", False)
+        cut.update(fmt.get("cut_overrides", {}).get(cut.get("type"), {}))
+    elif clip.exists():
         PUBLIC.mkdir(parents=True, exist_ok=True)
         shutil.copy2(clip, PUBLIC / clip.name)
         cut["source"] = f"{PUBLIC_REL}/{clip.name}"

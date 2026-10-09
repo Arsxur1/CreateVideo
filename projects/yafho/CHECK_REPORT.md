@@ -5,6 +5,7 @@
 | Файл | Титров | Ошибок | Предупреждений |
 |---|---|---|---|
 | `hero_v3.json` | 11 | 0 | 4 |
+| `hero_v4.json` | 11 | 0 | 0 |
 | `topics/topic_01.json` | 4 | 0 | 0 |
 | `topics/topic_02.json` | 6 | 0 | 0 |
 | `topics/topic_03.json` | 6 | 0 | 0 |
