@@ -44,6 +44,11 @@ A={
  'f2':('Карусель','Итоги #ПисьмоШраму (заполнить работами)','✍️ UGC','v6_campaign/f2_shablon_itogi_pismo_shramu','v6_campaign/f2_shablon_itogi_pismo_shramu/slide1.png',''),
  'g1':('Reel','«Линейка Yafho за 30 секунд»','📦 B2B','v6_campaign/g1_katalog_za_30_sekund','v6_campaign/g1_katalog_za_30_sekund/cover.png',''),
  'ol':('Карусель','«Одна линия — 6 отделений»','📦 B2B','v5_platform/carousel_odna_liniya','v5_platform/carousel_odna_liniya/slide1.png',''),
+ 't1':('Reel','ТЕСТ №1 «Киви-тест»: пластырь и волоски','🧪 Тест','v20_effect/t1_kiwi_test','v20_effect/t1_kiwi_test/cover.png',''),
+ 't2':('Reel','ТЕСТ №2 «Новые туфли»: мозоль','🧪 Тест','v20_effect/t2_novye_tufli','v20_effect/t2_novye_tufli/cover.png',''),
+ 't3':('Reel','ТЕСТ №3 «Пусть подышит» — миф','🧪 Тест','v20_effect/t3_mif_podyshat','v20_effect/t3_mif_podyshat/cover.png',''),
+ 't4':('Reel','ТЕСТ №4 «Мама, только не отрывай!»','🧪 Тест','v20_effect/t4_mama_ne_otryvai','v20_effect/t4_mama_ne_otryvai/cover.png',''),
+ 't5':('Reel','ТЕСТ №5 «Красный квадрат» (MARSI)','🧪 Тест','v20_effect/t5_krasnyi_kvadrat','v20_effect/t5_krasnyi_kvadrat/cover.png',''),
  'pk':('Пост','Постер «Твоя кожа помнит всё»','Манифест','v7_cinematic/posters/poster_kozha_pomnit_vsyo.png','v7_cinematic/posters/poster_kozha_pomnit_vsyo.png',''),
  'p3':('Пост','Постер «03:47»','🤱 Акушерство','v7_cinematic/posters/poster_0347_pismo_shramu.png','v7_cinematic/posters/poster_0347_pismo_shramu.png',''),
 }
@@ -59,7 +64,8 @@ WEEKS=[ # 7 слотов Пн..Вс; None = пауза
  ('Неделя 4 · Хирургия и медсёстры',['k5','e5','d1','d2','c7','l1','f1']),
  ('Неделя 5 · B2B: клиники и дистрибьюторы',['e6','l6','ol','g1','c14','l3','f2']),
  ('Неделя 6 · Манифест-2 и продукты',['s1','l4','s3','c3','c21','l5','pk']),
- ('Неделя 7 · Повтор победителей A/B',['k3',None,'p3',None,None,'c30',None]),
+ ('Неделя 7 · ТЕСТ YAFHO: эффект своими глазами',['k3','t1','p3','t3',None,'c30',None]),
+ ('Неделя 8 · ТЕСТ YAFHO: продолжение',['t5',None,'t2',None,'t4',None,None]),
 ]
 rows=[]
 for w,(title,slots) in enumerate(WEEKS):

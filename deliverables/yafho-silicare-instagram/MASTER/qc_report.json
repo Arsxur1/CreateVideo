@@ -290,7 +290,7 @@
   "audio": "aac",
   "lufs": -15.5,
   "tp": -2.3,
-  "kb": 5758,
+  "kb": 5763,
   "date": "2026-11-09"
  },
  {
@@ -404,5 +404,75 @@
   "tp": -3.8,
   "kb": 1307,
   "date": "2026-11-23"
+ },
+ {
+  "file": "v20_effect/t1_kiwi_test/t1_kiwi_test.mp4",
+  "w": 1080,
+  "h": 1920,
+  "codec": "h264",
+  "pix": "yuv420p",
+  "fps": "30/1",
+  "dur": 18.4,
+  "audio": "aac",
+  "lufs": -17.2,
+  "tp": -3.2,
+  "kb": 4635,
+  "date": "2026-11-24"
+ },
+ {
+  "file": "v20_effect/t3_mif_podyshat/t3_mif_podyshat.mp4",
+  "w": 1080,
+  "h": 1920,
+  "codec": "h264",
+  "pix": "yuv420p",
+  "fps": "30/1",
+  "dur": 17.6,
+  "audio": "aac",
+  "lufs": -16.5,
+  "tp": -3.6,
+  "kb": 2462,
+  "date": "2026-11-26"
+ },
+ {
+  "file": "v20_effect/t5_krasnyi_kvadrat/t5_krasnyi_kvadrat.mp4",
+  "w": 1080,
+  "h": 1920,
+  "codec": "h264",
+  "pix": "yuv420p",
+  "fps": "30/1",
+  "dur": 18.4,
+  "audio": "aac",
+  "lufs": -17.2,
+  "tp": -2.2,
+  "kb": 3592,
+  "date": "2026-11-30"
+ },
+ {
+  "file": "v20_effect/t2_novye_tufli/t2_novye_tufli.mp4",
+  "w": 1080,
+  "h": 1920,
+  "codec": "h264",
+  "pix": "yuv420p",
+  "fps": "30/1",
+  "dur": 18.4,
+  "audio": "aac",
+  "lufs": -17.2,
+  "tp": -3.2,
+  "kb": 3022,
+  "date": "2026-12-02"
+ },
+ {
+  "file": "v20_effect/t4_mama_ne_otryvai/t4_mama_ne_otryvai.mp4",
+  "w": 1080,
+  "h": 1920,
+  "codec": "h264",
+  "pix": "yuv420p",
+  "fps": "30/1",
+  "dur": 18.4,
+  "audio": "aac",
+  "lufs": -17.2,
+  "tp": -3.2,
+  "kb": 3441,
+  "date": "2026-12-04"
  }
 ]
