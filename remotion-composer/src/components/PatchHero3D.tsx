@@ -193,7 +193,7 @@ export const PatchHero3D: React.FC<PatchHero3DProps> = ({ centerY = 0.36, size =
   const visH = SHEET_L / size; // world cm across the frame height (at the target)
   const dist = visH / 2 / Math.tan(((fov / 2) * Math.PI) / 180) * 0.62;
   const elev = onSkin ? 0.95 : 1.25; // radians above the surface
-  const shiftZ = (centerY - 0.5) * visH * 0.55;
+  const shiftZ = (0.5 - centerY) * visH * 0.9; // target nearer the camera → action higher on screen
   const target: [number, number, number] = [0, 0, shiftZ];
   const camPos: [number, number, number] = [0, Math.sin(elev) * dist, shiftZ + Math.cos(elev) * dist];
 
