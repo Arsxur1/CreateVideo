@@ -8,6 +8,12 @@ if (process.env.REMOTION_BROWSER_EXECUTABLE) {
   Config.setBrowserExecutable(process.env.REMOTION_BROWSER_EXECUTABLE);
 }
 
+// Opt-in longer delayRender / first-frame timeout (ms), e.g. REMOTION_TIMEOUT_MS=180000 for
+// heavy WebGL scenes on a busy CPU (default 30 s).
+if (process.env.REMOTION_TIMEOUT_MS) {
+  Config.setDelayRenderTimeoutInMilliseconds(Number(process.env.REMOTION_TIMEOUT_MS));
+}
+
 // Opt-in OpenGL backend for WebGL / Three.js scenes, e.g. REMOTION_GL=angle.
 if (process.env.REMOTION_GL) {
   Config.setChromiumOpenGlRenderer(process.env.REMOTION_GL as "angle" | "swangle" | "egl" | "swiftshader" | "vulkan" | "angle-egl");
