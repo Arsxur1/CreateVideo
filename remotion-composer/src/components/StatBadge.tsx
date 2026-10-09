@@ -7,7 +7,7 @@ export interface StatBadgeProps {
   label: string;
   /** Required: every study figure carries its source (TZ 0.1). */
   source: string;
-  position?: "upper" | "middle" | "lower" | "top" | "hero";
+  position?: "upper" | "middle" | "lower" | "top" | "hero" | "hero_low";
   /** Inside the 16:9 text panel: sits under the title, full panel width. */
   inPanel?: boolean;
 }
@@ -17,12 +17,20 @@ export const StatBadge: React.FC<StatBadgeProps> = ({ value, label, source, posi
   const frame = useCurrentFrame();
   const { width, height } = useCanvas();
   const { opacity, translateY } = useFadeSlide(frame, 6);
-  const fs = inPanel ? (position === "hero" ? 34 : 26) : Math.round(width * (position === "top" ? 0.026 : 0.03));
-  if (position === "hero" && !inPanel) {
+  const isHero = position === "hero" || position === "hero_low";
+  const fs = inPanel ? (isHero ? 34 : 26) : Math.round(width * (position === "top" ? 0.026 : 0.03));
+  if (isHero && !inPanel) {
     // The effect figure as the frame's headline.
     const hs = Math.round(width * 0.05);
     return (
-      <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", paddingBottom: height * 0.12, pointerEvents: "none" }}>
+      <AbsoluteFill
+        style={{
+          alignItems: "center",
+          justifyContent: position === "hero_low" ? "flex-end" : "center",
+          paddingBottom: height * (position === "hero_low" ? 0.05 : 0.12),
+          pointerEvents: "none",
+        }}
+      >
         <div
           style={{
             width: width * 0.86,

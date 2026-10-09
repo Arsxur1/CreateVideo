@@ -25,13 +25,15 @@
         "type": "skin_demo",
         "skinShape": "csection",
         "skinStep": "idle",
-        "skinState": "hyper"
+        "skinState": "hyper",
+        "areaTop": 0.035,
+        "areaBottom": 0.5
       },
       "stat": {
         "value": "39–68 %",
         "label": "гипертрофический рубец\nпосле операций",
         "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158",
-        "position": "hero",
+        "position": "hero_low",
         "delay": 0.2
       },
       "titles": []
@@ -46,13 +48,15 @@
         "type": "skin_demo",
         "skinShape": "burn",
         "skinStep": "idle",
-        "skinState": "hyper"
+        "skinState": "hyper",
+        "areaTop": 0.035,
+        "areaBottom": 0.5
       },
       "stat": {
         "value": "33–91 %",
         "label": "гипертрофический рубец\nпосле ожогов",
         "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158",
-        "position": "hero",
+        "position": "hero_low",
         "delay": 0.2
       },
       "titles": []
@@ -68,13 +72,15 @@
         "skinShape": "csection",
         "skinStep": "compare",
         "progressFrom": 1,
-        "progressTo": 1
+        "progressTo": 1,
+        "areaTop": 0.035,
+        "areaBottom": 0.5
       },
       "stat": {
         "value": "≈ в 2 раза",
         "label": "ниже риск\nпатологического рубца",
         "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158 · RR 0,41",
-        "position": "hero",
+        "position": "hero_low",
         "delay": 0.4
       },
       "titles": []
@@ -91,13 +97,15 @@
         "skinStep": "effect",
         "months": 6,
         "reveal": false,
-        "skinFrom": "hyper"
+        "skinFrom": "hyper",
+        "areaTop": 0.035,
+        "areaBottom": 0.5
       },
       "stat": {
         "value": "Первая линия",
         "label": "«золотой стандарт» неинвазивной\nтерапии рубцов",
         "source": "Monstrey S. et al. Updated Scar Management Practical Guidelines. J Plast Reconstr Aesthet Surg, 2014",
-        "position": "hero",
+        "position": "hero_low",
         "delay": 0.4
       },
       "titles": []
