@@ -96,7 +96,8 @@
         "type": "skin_demo",
         "skinShape": "line",
         "skinStep": "wear"
-      }
+      },
+      "kling": "H09"
     },
     {
       "id": "A5",

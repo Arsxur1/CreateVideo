@@ -86,7 +86,8 @@
         "skinStep": "idle",
         "land": true,
         "soften": true
-      }
+      },
+      "kling": "H11"
     },
     {
       "id": "N4",

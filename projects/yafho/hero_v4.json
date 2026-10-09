@@ -205,7 +205,8 @@
         "type": "skin_demo",
         "skinShape": "line",
         "skinStep": "measure"
-      }
+      },
+      "kling_margin": true
     },
     {
       "id": "V09c",

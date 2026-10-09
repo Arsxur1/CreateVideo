@@ -135,6 +135,11 @@ def build_animatic(data: dict, mode: str = "animatic", fmt: dict | None = None) 
     for s in data["scenes"]:
         cut: dict = {"id": s["id"], "source": "", "in_seconds": s["start"], "out_seconds": s["end"]}
         kind = s["kind"]
+        # drawn scene with a Kling id: the real clip replaces the drawing as soon as it is dropped in
+        if kind == "CUT" and s.get("kling") and (KLING / f"{s['kling']}.mp4").exists():
+            kind = "R"
+            if s.get("kling_margin"):
+                s = {**s, "margin": s.get("margin") or True}  # default scar box
         is_3d = kind.startswith("3D") and "phase3d" in s
         if kind == "R":
             clip = KLING / f"{s['kling']}.mp4"

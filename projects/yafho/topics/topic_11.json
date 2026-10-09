@@ -32,7 +32,8 @@
         "type": "skin_demo",
         "skinShape": "line",
         "skinStep": "wear"
-      }
+      },
+      "kling": "H09"
     },
     {
       "id": "D2",
@@ -62,7 +63,8 @@
         "type": "skin_demo",
         "skinShape": "line",
         "skinStep": "rinse"
-      }
+      },
+      "kling": "H10"
     },
     {
       "id": "D4",
