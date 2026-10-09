@@ -258,5 +258,28 @@
       "profile": "instagram_portrait",
       "layout": "full"
     }
+  },
+  "cut_prefix": "topic_04_story",
+  "cuts": {
+    "S": {
+      "name": "Работает, если клеить правильно",
+      "windows": [
+        [
+          "T1",
+          0,
+          3
+        ],
+        [
+          "T3",
+          0,
+          3
+        ],
+        [
+          "T7",
+          0,
+          2.6
+        ]
+      ]
+    }
   }
 }

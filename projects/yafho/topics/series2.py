@@ -41,6 +41,17 @@ def end_card(sid: str, start: float, end: float, cta: str) -> dict:
     return scene(sid, start, end, "эндкард", cta=cta)
 
 
+# 6–10 s stories (9:16) cut from the rendered video by make_cuts.py: hook + effect + end card
+STORIES = {
+    "10": {"name": "Швы сняли", "windows": [["S1", 0, 3], ["S2", 1.5, 5], ["S5", 0, 2.6]]},
+    "11": {"name": "12–23 ч реально", "windows": [["D1", 0, 3.5], ["D2", 7.5, 10], ["D5", 0, 2.6]]},
+    "12": {"name": "Не клейте, если", "windows": [["N1", 0.3, 4.8], ["N4", 0, 2.6]]},
+    "13": {"name": "Видно под одеждой?", "windows": [["Q1", 0.3, 3.5], ["Q6", 0, 2.6]]},
+}
+for _n in ("14", "15", "16", "17"):
+    STORIES[_n] = {"name": "Два исхода", "windows": [["A1", 0, 4], ["A5", 0, 3], ["A6", 0, 2.6]]}
+
+
 def write(num: str, name: str, scenes: list[dict], score: dict, cover_at: float) -> None:
     d = {
         "title": f"Yafho-Silicare — тема {num} «{name}»",
@@ -56,6 +67,8 @@ def write(num: str, name: str, scenes: list[dict], score: dict, cover_at: float)
         "scenes": scenes,
         "score": score,
         "formats": copy.deepcopy(FORMATS),
+        "cut_prefix": f"topic_{num}_story",
+        "cuts": {"S": STORIES[num]},
     }
     (HERE / f"topic_{num}.json").write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"topic_{num}.json · {d['duration']} s · «{name}»")

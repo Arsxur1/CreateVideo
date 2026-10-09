@@ -9,7 +9,7 @@ chosen so every title is already on screen and held ≥ 2.5 s. Windows are
 joined with short cross-dissolves; the soundtrack is the last N seconds of
 the hero music so every cut lands on the same end chord as the end card.
 
-Output: output/yafho/v2/cut_<A|B|C>_<fmt>.mp4
+Output: output/yafho/v2/cut_<A|B|C>_<fmt>.mp4 (topics: <cut_prefix>_<key>_<fmt>.mp4)
 """
 
 from __future__ import annotations
@@ -111,8 +111,9 @@ def main() -> None:
         if not video.exists():
             print(f"skip {fmt}: {video.relative_to(ROOT)} not rendered yet")
             continue
+        prefix = data.get("cut_prefix", "cut")  # topics: "topic_NN_story" so cut files never collide
         for key, cut in cuts.items():
-            dest = out_dir / f"cut_{key}_{fmt}.mp4"
+            dest = out_dir / f"{prefix}_{key}_{fmt}.mp4"
             length = build_cut(video, music, data, cut["windows"], dest, out_dir, fmt)
             print(f"{dest.relative_to(ROOT)} · {length:.1f} s · «{cut['name']}»")
 
