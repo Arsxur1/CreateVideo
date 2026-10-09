@@ -4,7 +4,7 @@
   "brand": "Yafho-Silicare",
   "output_dir": "output/yafho/topics",
   "public_dir": "yafho-topics",
-  "duration": 19,
+  "duration": 22,
   "backdrop": "linen",
   "cover_at": 2.5,
   "audio": "no voice — titles + arrows + music",
@@ -97,7 +97,28 @@
     {
       "id": "M5",
       "start": 15.5,
-      "end": 19,
+      "end": 18.5,
+      "kind": "CUT",
+      "shot": "эффект на коже: под пластиной рубец мягче, площе, светлее",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      },
+      "titles": [
+        {
+          "text": "Рубец мягче,\nплоще, светлее",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "M6",
+      "start": 18.5,
+      "end": 22,
       "kind": "C",
       "shot": "эндкард",
       "titles": [],
@@ -146,7 +167,16 @@
       },
       {
         "start": 15.5,
-        "end": 19,
+        "end": 18.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 18.5,
+        "end": 22,
         "mood": "end",
         "chords": [
           "Cadd9"
@@ -168,6 +198,10 @@
       },
       {
         "t": 15.5,
+        "kind": "click"
+      },
+      {
+        "t": 18.5,
         "kind": "chime"
       }
     ]
