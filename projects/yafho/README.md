@@ -44,6 +44,9 @@ bash projects/yafho/build_topics.sh 9x16,16x9,4x5          # все формат
 bash projects/yafho/build_topics.sh 9x16,16x9,4x5 04 05    # выбранные темы
 ```
 Результат — `output/yafho/topics/`: `topic_<NN>_<формат>.mp4`, контактный лист `_sheet.png` и картинка-пост `_cover.png`.
+Карусели 4:5 (слайды из готовых роликов 4:5): `python projects/yafho/make_carousel.py` → `output/yafho/carousels/topic_NN/slide_NN.png` + `preview.png`.
+Проверка перед публикацией (ТЗ §5): `python projects/yafho/check_rules.py` → `CHECK_REPORT.md` (титры ≤ 6 слов и ≥ 2,5 с, запрещённые обещания, источники цифр, контраст).
+Hero v4 (hero v3 без заглушек Kling): `python projects/yafho/build_v2.py --data projects/yafho/hero_v4.json --final` → `output/yafho/v4/`.
 Сторис 6–10 с: `python projects/yafho/make_cuts.py --data projects/yafho/topics/topic_NN.json --formats 9x16` → `topic_NN_story_S_9x16.mp4`.
 Музыка каждой темы — `assets/music/yafho_topic_<NN>.wav` (`make_music.py --data topics/topic_<NN>.json`).
 Кожа сверху (`skin_demo`) рисуется кодом: `make_skin.py` генерирует фото-текстуры кожи с рубцами один раз (≈ 1,5 мин), сборка вызывает его сама.
