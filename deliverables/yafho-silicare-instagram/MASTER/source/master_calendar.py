@@ -49,6 +49,11 @@ A={
  't3':('Reel','ТЕСТ №3 «Пусть подышит» — миф','🧪 Тест','v20_effect/t3_mif_podyshat','v20_effect/t3_mif_podyshat/cover.png',''),
  't4':('Reel','ТЕСТ №4 «Мама, только не отрывай!»','🧪 Тест','v20_effect/t4_mama_ne_otryvai','v20_effect/t4_mama_ne_otryvai/cover.png',''),
  't5':('Reel','ТЕСТ №5 «Красный квадрат» (MARSI)','🧪 Тест','v20_effect/t5_krasnyi_kvadrat','v20_effect/t5_krasnyi_kvadrat/cover.png',''),
+ 't6':('Reel','ТЕСТ №6 «Помидор-тест»: тонкая кожа','🧪 Тест','v20_effect/t6_pomidor_test','v20_effect/t6_pomidor_test/cover.png',''),
+ 't7':('Reel','ТЕСТ №7 «Воздушный шарик»: натянутая кожа','🧪 Тест','v20_effect/t7_sharik','v20_effect/t7_sharik/cover.png',''),
+ 't8':('Reel','ТЕСТ №8 «Что остаётся на пластыре?»','🧪 Тест','v20_effect/t8_chto_na_plastyre','v20_effect/t8_chto_na_plastyre/cover.png',''),
+ 't9':('Reel','ТЕСТ №9 «Банан: 8 часов» — пролежни','🧪 Тест','v20_effect/t9_banan_8_chasov','v20_effect/t9_banan_8_chasov/cover.png',''),
+ 't10':('Reel','ТЕСТ №10 «Как правильно снимать пластырь»','🧪 Тест','v20_effect/t10_kak_snimat','v20_effect/t10_kak_snimat/cover.png',''),
  'pk':('Пост','Постер «Твоя кожа помнит всё»','Манифест','v7_cinematic/posters/poster_kozha_pomnit_vsyo.png','v7_cinematic/posters/poster_kozha_pomnit_vsyo.png',''),
  'p3':('Пост','Постер «03:47»','🤱 Акушерство','v7_cinematic/posters/poster_0347_pismo_shramu.png','v7_cinematic/posters/poster_0347_pismo_shramu.png',''),
 }
@@ -66,6 +71,8 @@ WEEKS=[ # 7 слотов Пн..Вс; None = пауза
  ('Неделя 6 · Манифест-2 и продукты',['s1','l4','s3','c3','c21','l5','pk']),
  ('Неделя 7 · ТЕСТ YAFHO: эффект своими глазами',['k3','t1','p3','t3',None,'c30',None]),
  ('Неделя 8 · ТЕСТ YAFHO: продолжение',['t5',None,'t2',None,'t4',None,None]),
+ ('Неделя 9 · ТЕСТ YAFHO: тонкая и натянутая кожа',['t6',None,'t8',None,'t7',None,None]),
+ ('Неделя 10 · ТЕСТ YAFHO: пролежни и техника',['t9',None,'t10',None,None,None,None]),
 ]
 rows=[]
 for w,(title,slots) in enumerate(WEEKS):
