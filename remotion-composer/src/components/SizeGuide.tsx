@@ -66,7 +66,7 @@ export const SizeGuide: React.FC<SizeGuideProps> = ({ items = DEFAULT_ITEMS }) =
   const cellH = (gridH - gap * (rows - 1)) / rows;
 
   return (
-    <AbsoluteFill style={{ background: YAFHO.offWhite }}>
+    <AbsoluteFill>
       {items.map((it, i) => {
         const col = i % cols;
         const row = Math.floor(i / cols);

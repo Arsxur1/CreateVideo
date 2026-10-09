@@ -147,7 +147,7 @@ export const ThesisTitle: React.FC<ThesisTitleProps> = ({
                 style={{
                   fontFamily: YAFHO.sans,
                   fontWeight: 500,
-                  fontSize: Math.round(size * 0.34),
+                  fontSize: Math.round(size * 0.44),
                   lineHeight: 1.3,
                   marginTop: size * 0.25,
                   textAlign: "center",

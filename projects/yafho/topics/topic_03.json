@@ -43,7 +43,8 @@
         "type": "skin_demo",
         "skinShape": "line",
         "skinStep": "idle",
-        "land": true
+        "land": true,
+        "soften": true
       },
       "titles": [
         {
@@ -63,7 +64,8 @@
         "type": "skin_demo",
         "skinShape": "csection",
         "skinStep": "idle",
-        "land": true
+        "land": true,
+        "soften": true
       },
       "titles": [
         {
@@ -83,7 +85,8 @@
         "type": "skin_demo",
         "skinShape": "burn",
         "skinStep": "idle",
-        "land": true
+        "land": true,
+        "soften": true
       },
       "titles": [
         {
@@ -103,7 +106,8 @@
         "type": "skin_demo",
         "skinShape": "keloid",
         "skinStep": "idle",
-        "land": true
+        "land": true,
+        "soften": true
       },
       "titles": [
         {
@@ -123,7 +127,8 @@
         "type": "skin_demo",
         "skinShape": "stria",
         "skinStep": "idle",
-        "land": true
+        "land": true,
+        "soften": true
       },
       "titles": [
         {
@@ -148,7 +153,7 @@
       "footnote": "Дети, беременность — сначала к врачу",
       "titles": [
         {
-          "text": "Только на зажившую\nкожу",
+          "text": "Только на\nзажившую кожу",
           "at": 0,
           "lead": 0,
           "footnote": true

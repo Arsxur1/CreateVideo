@@ -17,6 +17,8 @@ export interface SkinSwatchProps {
   reveal?: boolean;
   /** idle: the sheet lands on the scar. */
   land?: boolean;
+  /** idle + land: after landing the scar turns softer and paler under the sheet. */
+  soften?: boolean;
   /** idle: which scar state is shown. */
   state?: ScarState;
   /** effect: the starting scar (hyper = red, raised — the most visible change). */
@@ -235,6 +237,7 @@ export const SkinSwatch: React.FC<SkinSwatchProps> = ({
   months = 6,
   reveal = true,
   land = false,
+  soften = false,
   state = "fresh",
   from = "fresh",
   areaTop = 0.035,
@@ -329,6 +332,10 @@ export const SkinSwatch: React.FC<SkinSwatchProps> = ({
   let target: ScarState = state;
   let mix = 0;
   let base: ScarState = step === "idle" ? state : "fresh";
+  if (step === "idle" && land && soften) {
+    target = "soft";
+    mix = T(0.55, 0.97);
+  }
   if (step === "effect") {
     target = "soft";
     mix = progressFrom + (progressTo - progressFrom) * T(0.06, reveal ? 0.6 : 0.8);

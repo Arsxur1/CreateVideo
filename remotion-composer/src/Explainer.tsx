@@ -313,6 +313,7 @@ interface Cut {
   months?: number;
   reveal?: boolean;
   land?: boolean;
+  soften?: boolean;
   zoom?: number;
   /** skin_demo / result_curve / scar_compare: vertical band the cards occupy (fractions of the canvas). */
   areaTop?: number;
@@ -814,6 +815,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         months={cut.months}
         reveal={cut.reveal}
         land={cut.land}
+        soften={cut.soften}
         zoom={cut.zoom}
         introFade={cut.introFade}
         areaTop={cut.areaTop}
