@@ -102,8 +102,8 @@
         "areaBottom": 0.5
       },
       "stat": {
-        "value": "Первая линия",
-        "label": "«золотой стандарт» неинвазивной\nтерапии рубцов",
+        "value": "1-я линия",
+        "label": "«золотой стандарт»\nнеинвазивной терапии рубцов",
         "source": "Monstrey S. et al. Updated Scar Management Practical Guidelines. J Plast Reconstr Aesthet Surg, 2014",
         "position": "hero_low",
         "delay": 0.4
