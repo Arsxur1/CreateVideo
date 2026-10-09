@@ -33,14 +33,15 @@ export interface SkinSwatchProps {
 }
 
 // Mirrors projects/yafho/make_skin.py: images are 1600 px square, 60 px per cm, scar centred.
+// Boxes are the measured scar bounds (cm); every sheet leaves ≥ 1 cm on each side.
 const IMG_PX = 1600;
 const IMG_PX_CM = 60;
 const SHAPES: Record<SkinShape, { box: [number, number]; sheet: [number, number]; zoom: number }> = {
-  line: { box: [0.6, 10], sheet: [4, 13], zoom: 1 },
-  csection: { box: [12, 1.2], sheet: [15, 5], zoom: 1 },
-  burn: { box: [7, 9], sheet: [10, 15], zoom: 0.95 },
-  keloid: { box: [2.2, 1.5], sheet: [4, 4], zoom: 2.2 },
-  stria: { box: [3.4, 9], sheet: [10, 15], zoom: 1 },
+  line: { box: [0.9, 10], sheet: [4, 13], zoom: 1 },
+  csection: { box: [12, 1.0], sheet: [15, 5], zoom: 1 },
+  burn: { box: [6.6, 9.2], sheet: [10, 15], zoom: 0.95 },
+  keloid: { box: [2.4, 1.7], sheet: [4, 4], zoom: 2.2 },
+  stria: { box: [3.8, 8.8], sheet: [10, 15], zoom: 1 },
 };
 
 /** Quadratic curve from p0 via c to p1, cut at t (so an end marker sits on the drawn tip). */

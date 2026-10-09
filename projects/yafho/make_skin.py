@@ -41,11 +41,11 @@ STATES = {
 }
 # scar boxes in cm (w, h) — mirrored in SkinSwatch.tsx
 SHAPES = {
-    "line": (0.6, 10.0),
-    "csection": (12.0, 1.2),
-    "burn": (7.0, 9.0),
-    "keloid": (2.2, 1.5),
-    "stria": (3.4, 9.0),
+    "line": (0.9, 10.0),
+    "csection": (12.0, 1.0),
+    "burn": (6.6, 9.2),
+    "keloid": (2.4, 1.7),
+    "stria": (3.8, 8.8),
 }
 
 
@@ -185,9 +185,9 @@ def scar_mask(shape: str, rng: np.random.Generator) -> tuple[np.ndarray, np.ndar
         img = Image.new("L", (N, N), 0)
         d = ImageDraw.Draw(img)
         for _ in range(26):
-            x = rng.normal(0, 1.6) * PX_CM
-            y = rng.normal(0, 2.2) * PX_CM
-            r = rng.uniform(0.8, 1.7) * PX_CM
+            x = float(np.clip(rng.normal(0, 1.1), -2.0, 2.0)) * PX_CM
+            y = float(np.clip(rng.normal(0, 1.7), -3.4, 3.4)) * PX_CM
+            r = rng.uniform(0.7, 1.3) * PX_CM
             d.ellipse([C + x - r, C + y - r, C + x + r, C + y + r], fill=255)
         m = blur(np.asarray(img, np.float32) / 255.0, 14)
         edge = 0.5 + 0.12 * noise(rng, 18)
