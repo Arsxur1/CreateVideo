@@ -61,7 +61,7 @@ export const EndCard: React.FC<EndCardProps> = ({
     >
       {patch3d && (
         <AbsoluteFill style={{ opacity: 0.3 * ease(frame, 0, 0.6 * fps) }}>
-          <PatchHero3D motion="spin" centerY={0.5} size={0.66} wallShadow={false} />
+          <PatchHero3D motion="spin" centerY={0.5} size={0.3} wallShadow={false} />
         </AbsoluteFill>
       )}
       <div style={step(0)}>

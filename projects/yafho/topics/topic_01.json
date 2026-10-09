@@ -4,7 +4,7 @@
   "brand": "Yafho-Silicare",
   "output_dir": "output/yafho/topics",
   "public_dir": "yafho-topics",
-  "duration": 13,
+  "duration": 16,
   "backdrop": "linen",
   "cover_at": 2.4,
   "audio": "no voice — titles + arrows + music",
@@ -21,7 +21,7 @@
       "end": 3.5,
       "kind": "CUT",
       "kling": "H04",
-      "shot": "3D-пластина: поворот, изгиб, пружинит",
+      "shot": "3D: пластина парит над кожей, гнётся, пружинит и ложится на рубец",
       "cut": {
         "type": "patch_3d",
         "motion": "flex",
@@ -78,7 +78,28 @@
     {
       "id": "P4",
       "start": 9.5,
-      "end": 13,
+      "end": 12.5,
+      "kind": "CUT",
+      "shot": "эффект: под пластиной рубец мягче и светлее",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      },
+      "titles": [
+        {
+          "text": "Рубец мягче\nи светлее",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "P5",
+      "start": 12.5,
+      "end": 16,
       "kind": "C",
       "shot": "эндкард",
       "titles": [],
@@ -109,7 +130,16 @@
       },
       {
         "start": 9.5,
-        "end": 13,
+        "end": 12.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 12.5,
+        "end": 16,
         "mood": "end",
         "chords": [
           "Cadd9"
@@ -122,6 +152,10 @@
         "kind": "chime"
       },
       {
+        "t": 2.6,
+        "kind": "land"
+      },
+      {
         "t": 4.8,
         "kind": "land"
       },
@@ -131,6 +165,10 @@
       },
       {
         "t": 9.5,
+        "kind": "click"
+      },
+      {
+        "t": 12.5,
         "kind": "chime"
       }
     ]
