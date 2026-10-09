@@ -173,6 +173,8 @@ def build_animatic(data: dict, mode: str = "animatic", fmt: dict | None = None) 
                 cut["introFade"] = False
             if cut.get("type") == "skin_cross_section_3d":
                 cut.update((fmt or {}).get("cut3d", {}))
+            # per-format tweaks by cut type, e.g. taller cards in the 16:9 side panel
+            cut.update((fmt or {}).get("cut_overrides", {}).get(cut.get("type"), {}))
         elif kind == "CHIPS":
             cut.update(type="blank")
             ch = s["chips"]

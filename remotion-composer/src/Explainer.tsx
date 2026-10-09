@@ -314,6 +314,9 @@ interface Cut {
   reveal?: boolean;
   land?: boolean;
   zoom?: number;
+  /** skin_demo / result_curve / scar_compare: vertical band the cards occupy (fractions of the canvas). */
+  areaTop?: number;
+  areaBottom?: number;
   // Result timing curve (type: "result_curve")
   milestones?: ResultMilestone[];
   // Myth → fact card (type: "myth_fact")
@@ -789,7 +792,15 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
     return <AbsoluteFill />;
   }
   if (cut.type === "scar_compare") {
-    return <ScarCompare progressFrom={cut.progressFrom} progressTo={cut.progressTo} introFade={cut.introFade} />;
+    return (
+      <ScarCompare
+        progressFrom={cut.progressFrom}
+        progressTo={cut.progressTo}
+        introFade={cut.introFade}
+        areaTop={cut.areaTop}
+        areaBottom={cut.areaBottom}
+      />
+    );
   }
   if (cut.type === "skin_demo") {
     return (
@@ -805,6 +816,8 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
         land={cut.land}
         zoom={cut.zoom}
         introFade={cut.introFade}
+        areaTop={cut.areaTop}
+        areaBottom={cut.areaBottom}
       />
     );
   }
@@ -812,7 +825,7 @@ const SceneRenderer: React.FC<{ cut: Cut; theme: ThemeConfig }> = ({ cut, theme 
     return <PatchHero3D motion={cut.motion} centerY={cut.centerY} size={cut.size} introFade={cut.introFade} />;
   }
   if (cut.type === "result_curve") {
-    return <ResultCurve months={cut.months} milestones={cut.milestones} />;
+    return <ResultCurve months={cut.months} milestones={cut.milestones} areaTop={cut.areaTop} areaBottom={cut.areaBottom} />;
   }
   if (cut.type === "myth_fact" && cut.myth && cut.fact) {
     return <MythFact myth={cut.myth} fact={cut.fact} counter={cut.counter} />;

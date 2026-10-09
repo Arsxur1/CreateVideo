@@ -176,7 +176,17 @@
     },
     "16x9": {
       "profile": "youtube_landscape",
-      "layout": "split"
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
     },
     "4x5": {
       "profile": "instagram_portrait",

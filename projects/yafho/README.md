@@ -10,6 +10,8 @@
 | `SCRIPT_hero_v2.md` | сценарий hero v2 «Окно перестройки» — длинная версия (YouTube, врачи) |
 | `hero_v2.json` | данные сцен: тайминг, титры, 3D-фазы, шкала, стрелки, форматы — **источник правды для сборки** |
 | `KLING_SHOTS_v2.md` | ТЗ на 6 реальных кадров Kling (H01, H04–H08) |
+| `TOPICS_v1.md` | **серия тем 01–09 (ТЗ §3)**: крючок, смысл, охват и раскадровка каждого ролика |
+| `topics/topic_NN.json` | данные сцен каждой темы (тот же формат, что `hero_v3.json`) |
 | `CREDITS.md` | музыка, шрифты, лицензии |
 
 ## Что положить
@@ -32,6 +34,17 @@ python projects/yafho/make_cuts.py --data projects/yafho/hero_v3.json           
 Результат — `output/yafho/v3/`: `hero_v3_<формат>.mp4`, `cut_<K|O|B|G>_<формат>.mp4`.
 
 **Фон бренда.** Положите картинку с сайта Yafho в `assets/brand/backdrop.png` (или `backdrop_1080x1920.png`, `backdrop_1920x1080.png`, `backdrop_1080x1350.png` под каждый формат) — сборка возьмёт её вместо сгенерированного льна.
+
+## Сборка серии тем 01–09
+```bash
+bash projects/yafho/build_topics.sh                        # все темы, 9:16
+bash projects/yafho/build_topics.sh 9x16,16x9,4x5          # все форматы
+bash projects/yafho/build_topics.sh 9x16,16x9,4x5 04 05    # выбранные темы
+```
+Результат — `output/yafho/topics/`: `topic_<NN>_<формат>.mp4`, контактный лист `_sheet.png` и картинка-пост `_cover.png`.
+Музыка каждой темы — `assets/music/yafho_topic_<NN>.wav` (`make_music.py --data topics/topic_<NN>.json`).
+Кожа сверху (`skin_demo`) рисуется кодом: `make_skin.py` генерирует фото-текстуры кожи с рубцами один раз (≈ 1,5 мин), сборка вызывает его сама.
+Кадры Kling для тем не обязательны: каждый шаг уже нарисован. Чтобы поставить реальный кадр вместо рисунка, замените у сцены `"kind": "CUT"` на `"kind": "R"` и `"kling": "H05"` (файл в `assets/kling/`).
 
 ## Сборка hero v2
 ```bash
