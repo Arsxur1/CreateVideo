@@ -4,7 +4,7 @@
   "brand": "Yafho-Silicare",
   "output_dir": "output/yafho/topics",
   "public_dir": "yafho-topics",
-  "duration": 20,
+  "duration": 23,
   "backdrop": "linen",
   "cover_at": 11.5,
   "audio": "no voice — titles + arrows + music",
@@ -67,7 +67,28 @@
     {
       "id": "D4",
       "start": 16.5,
-      "end": 20,
+      "end": 19.5,
+      "kind": "CUT",
+      "shot": "эффект под пластиной (ТЗ: регулярность = результат)",
+      "titles": [
+        {
+          "text": "Регулярность =\nрезультат",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      }
+    },
+    {
+      "id": "D5",
+      "start": 19.5,
+      "end": 23,
       "kind": "C",
       "shot": "эндкард",
       "titles": [],
@@ -108,7 +129,16 @@
       },
       {
         "start": 16.5,
-        "end": 20,
+        "end": 19.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 19.5,
+        "end": 23,
         "mood": "end",
         "chords": [
           "Cadd9"
@@ -138,6 +168,10 @@
       },
       {
         "t": 16.5,
+        "kind": "chime"
+      },
+      {
+        "t": 19.5,
         "kind": "chime"
       }
     ]
