@@ -66,7 +66,7 @@ def write_png(path: Path, img: np.ndarray) -> None:
 
 def main() -> None:
     OUT.mkdir(parents=True, exist_ok=True)
-    for w, h in [(1080, 1920), (1920, 1080), (1080, 1350)]:
+    for w, h in [(1080, 1920), (1920, 1080), (1080, 1350), (1080, 1080)]:
         p = OUT / f"backdrop_linen_{w}x{h}.png"
         write_png(p, linen(w, h))
         print(p.relative_to(PROJECT.parent.parent))

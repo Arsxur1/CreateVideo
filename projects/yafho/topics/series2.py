@@ -18,6 +18,7 @@ FORMATS = {
              "cut_overrides": {"skin_demo": {"areaTop": 0.035, "areaBottom": 0.965},
                                "result_curve": {"areaTop": 0.035, "areaBottom": 0.965}}},
     "4x5": {"profile": "instagram_portrait", "layout": "full", "cut3d": {"centerY": 0.42, "fitFrac": 0.9}},
+    "1x1": {"profile": "instagram_feed", "layout": "full", "cut3d": {"centerY": 0.4, "fitFrac": 0.85}},  # Telegram
 }
 
 

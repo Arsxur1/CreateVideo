@@ -11,11 +11,13 @@ export const AudienceChips: React.FC<AudienceChipsProps> = ({ title = "Это п
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const { width, height } = useCanvas();
-  const fs = Math.round(width * 0.052);
+  // height-aware so five chips still fit a square (Telegram 1:1) frame; 9:16 and 4:5 unchanged
+  const fs = Math.round(Math.min(width * 0.052, height * 0.042));
+  const square = height < width * 1.1;
   const out = 1 - ease(frame, durationInFrames - 0.4 * fps, durationInFrames);
   const t = ease(frame, 0, 0.4 * fps);
   return (
-    <AbsoluteFill style={{ alignItems: "center", paddingTop: height * 0.22, opacity: out }}>
+    <AbsoluteFill style={{ alignItems: "center", paddingTop: height * (square ? 0.1 : 0.22), opacity: out }}>
       <div
         style={{
           fontFamily: YAFHO.sans,

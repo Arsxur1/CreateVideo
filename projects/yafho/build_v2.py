@@ -64,6 +64,10 @@ def backdrop_for(data: dict, size: tuple[int, int]) -> str | None:
     return None
 
 
+PROFILE_SIZE = {"instagram_reels": (1080, 1920), "youtube_landscape": (1920, 1080),
+                "instagram_portrait": (1080, 1350), "instagram_feed": (1080, 1080)}  # feed = Telegram 1:1
+
+
 def fmt_t(t: float) -> str:
     return f"{int(t // 60)}:{t % 60:04.1f}".replace(".0", "")
 
@@ -98,7 +102,7 @@ def render_still(scene: dict, dest: Path) -> None:
 
 def render_compare_still(progress: float, profile: str, data: dict) -> Path:
     """Render the comparison cards at a fixed progress once per canvas size, on the same brand backdrop."""
-    w, h = (1080, 1350) if profile == "instagram_portrait" else (1080, 1920)
+    w, h = PROFILE_SIZE.get(profile, (1080, 1920))
     bd = backdrop_for(data, (w, h))
     tag = Path(bd).stem if bd else "plain"
     dest = PUBLIC / f"compare_{progress:g}_{w}x{h}_{tag}_arrows.png"
@@ -243,8 +247,7 @@ def build_animatic(data: dict, mode: str = "animatic", fmt: dict | None = None) 
                                    "fadeOutSeconds": music.get("fadeOutSeconds", 2.0)}
     if fmt:
         props["layout"] = fmt.get("layout", "full")
-        size = {"instagram_reels": (1080, 1920), "youtube_landscape": (1920, 1080),
-                "instagram_portrait": (1080, 1350)}.get(fmt.get("profile", ""), (1080, 1920))
+        size = PROFILE_SIZE.get(fmt.get("profile", ""), (1080, 1920))
         bd = backdrop_for(data, size)
         if bd:
             props["backdrop"] = {"image": bd}
@@ -288,8 +291,7 @@ def build_card(data: dict, key: str, fmt: dict) -> dict:
         "overlays": [{"type": "thesis", "text": card["title"], "variant": "dark", "in_seconds": 0.1, "out_seconds": dur}],
         "audio": {}, "layout": fmt.get("layout", "full"),
     }
-    size = {"instagram_reels": (1080, 1920), "youtube_landscape": (1920, 1080),
-            "instagram_portrait": (1080, 1350)}.get(fmt.get("profile", ""), (1080, 1920))
+    size = PROFILE_SIZE.get(fmt.get("profile", ""), (1080, 1920))
     bd = backdrop_for(data, size)
     if bd:
         props["backdrop"] = {"image": bd}

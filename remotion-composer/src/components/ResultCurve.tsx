@@ -49,10 +49,12 @@ export const ResultCurve: React.FC<ResultCurveProps> = ({
   const { width, height } = useCanvas();
   const t = frame / Math.max(1, durationInFrames - 1);
   const draw = ease(t, 0.08, 0.72);
-  const fs = Math.round(width * 0.034);
+  const fs0 = Math.round(width * 0.034);
 
   const cardW = Math.round(width * 0.92);
   const cardH = Math.round(height * (areaBottom - areaTop));
+  // the milestone list must fit under the plot on short cards (Telegram 1:1); 9:16, 4:5, 16:9 unchanged
+  const fs = Math.round(Math.min(fs0, cardH * 0.042));
   const left = (width - cardW) / 2;
   const top = height * areaTop;
 

@@ -274,6 +274,14 @@
         "centerY": 0.42,
         "fitFrac": 0.9
       }
+    },
+    "1x1": {
+      "profile": "instagram_feed",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.4,
+        "fitFrac": 0.85
+      }
     }
   },
   "cut_prefix": "topic_03_story",

@@ -9,7 +9,7 @@
 # Output: output/yafho/topics/topic_<NN>_<fmt>.mp4 (+ _sheet.png contact sheet, _cover.png post picture).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
-FORMATS="${1:-9x16}"
+FORMATS="${1:-9x16}"  # 9x16 · 16x9 · 4x5 · 1x1 (Telegram)
 shift || true
 TOPICS="${*:-04 02 05 03 06 07 08 01 09}"
 for n in $TOPICS; do

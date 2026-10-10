@@ -260,6 +260,14 @@
     "4x5": {
       "profile": "instagram_portrait",
       "layout": "full"
+    },
+    "1x1": {
+      "profile": "instagram_feed",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.4,
+        "fitFrac": 0.85
+      }
     }
   },
   "cut_prefix": "topic_04_story",
