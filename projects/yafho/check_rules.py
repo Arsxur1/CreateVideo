@@ -123,6 +123,7 @@ def main() -> None:
     args = ap.parse_args()
     files = [p for p in [PROJECT / "hero_v3.json", PROJECT / "hero_v4.json"] if p.exists()]
     files += sorted((PROJECT / "topics").glob("topic_*.json"))
+    files += sorted((PROJECT / "hooks").glob("topic_*_hook*.json"))  # A/B hook variants
     all_err: list[str] = []
     all_warn: list[str] = []
     rows = []

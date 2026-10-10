@@ -23,6 +23,18 @@
 | `topics/topic_15.json` | 6 | 0 | 0 |
 | `topics/topic_16.json` | 6 | 0 | 0 |
 | `topics/topic_17.json` | 6 | 0 | 0 |
+| `hooks/topic_04_hookB.json` | 7 | 0 | 0 |
+| `hooks/topic_04_hookC.json` | 7 | 0 | 0 |
+| `hooks/topic_05_hookB.json` | 3 | 0 | 0 |
+| `hooks/topic_05_hookC.json` | 3 | 0 | 0 |
+| `hooks/topic_14_hookB.json` | 6 | 0 | 0 |
+| `hooks/topic_14_hookC.json` | 6 | 0 | 0 |
+| `hooks/topic_15_hookB.json` | 6 | 0 | 0 |
+| `hooks/topic_15_hookC.json` | 6 | 0 | 0 |
+| `hooks/topic_16_hookB.json` | 6 | 0 | 0 |
+| `hooks/topic_16_hookC.json` | 6 | 0 | 0 |
+| `hooks/topic_17_hookB.json` | 6 | 0 | 0 |
+| `hooks/topic_17_hookC.json` | 6 | 0 | 0 |
 
 **Итого: ошибок 0, предупреждений 4.**
 

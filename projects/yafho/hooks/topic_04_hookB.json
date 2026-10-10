@@ -1,0 +1,252 @@
+{
+  "title": "Yafho-Silicare — тема 04 «Как наклеить — крючок B»",
+  "plan": "projects/yafho/TOPICS_v1.md#04",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/hooks",
+  "public_dir": "yafho-hooks",
+  "duration": 24,
+  "backdrop": "linen",
+  "cover_at": 2.0,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_04.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "T1",
+      "start": 0,
+      "end": 3,
+      "kind": "CUT",
+      "shot": "крючок B: крючок-эффект: под пластиной рубец бледнеет, 0 → 6 мес, пластина снимается",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      },
+      "titles": [
+        {
+          "text": "Пластина не помогла?\nПроверьте 5 шагов",
+          "at": 0,
+          "lead": 0.1
+        }
+      ]
+    },
+    {
+      "id": "T2",
+      "start": 3,
+      "end": 6,
+      "kind": "CUT",
+      "kling": "H05",
+      "shot": "салфетка протирает кожу, капли исчезают",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "clean"
+      },
+      "titles": [
+        {
+          "text": "1 · Чистая,\nсухая кожа",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "T3",
+      "start": 6,
+      "end": 9,
+      "kind": "CUT",
+      "kling": "H06",
+      "shot": "контур растёт от рубца на +1 см, стрелки ↔",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "measure"
+      },
+      "titles": [
+        {
+          "text": "2 · +1 см\nза край",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "kling_margin": true
+    },
+    {
+      "id": "T4",
+      "start": 9,
+      "end": 12,
+      "kind": "CUT",
+      "kling": "H07",
+      "shot": "пластина опускается и разглаживается от центра",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "apply"
+      },
+      "titles": [
+        {
+          "text": "3 · Наклеить\nбез складок",
+          "at": 0,
+          "lead": 0
+        }
+      ]
+    },
+    {
+      "id": "T5",
+      "start": 12,
+      "end": 17.5,
+      "kind": "CUT",
+      "shot": "часы 0 → 23 ч, окно 12–23 ч; рукав закрывает пластину",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "wear"
+      },
+      "titles": [
+        {
+          "text": "4 · 12–23 ч\nв сутки",
+          "at": 0,
+          "lead": 0
+        },
+        {
+          "text": "Под одеждой\nне видно",
+          "at": 0.52
+        }
+      ],
+      "kling": "H09"
+    },
+    {
+      "id": "T6",
+      "start": 17.5,
+      "end": 20.5,
+      "kind": "CUT",
+      "shot": "пластина A снимается и промывается, пластина B ложится",
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "rinse"
+      },
+      "titles": [
+        {
+          "text": "5 · Промыть,\nчередовать две",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "kling": "H10"
+    },
+    {
+      "id": "T7",
+      "start": 20.5,
+      "end": 24,
+      "kind": "C",
+      "shot": "эндкард",
+      "cta": "Сохраните,\nчтобы не забыть",
+      "titles": []
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 3,
+        "end": 12,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am"
+        ]
+      },
+      {
+        "start": 12,
+        "end": 17.5,
+        "mood": "resolve",
+        "chords": [
+          "F",
+          "C"
+        ]
+      },
+      {
+        "start": 17.5,
+        "end": 20.5,
+        "mood": "light",
+        "chords": [
+          "G"
+        ]
+      },
+      {
+        "start": 20.5,
+        "end": 24,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0.0,
+        "kind": "chime"
+      },
+      {
+        "t": 3.0,
+        "kind": "click"
+      },
+      {
+        "t": 6.0,
+        "kind": "click"
+      },
+      {
+        "t": 9.0,
+        "kind": "click"
+      },
+      {
+        "t": 10.65,
+        "kind": "land"
+      },
+      {
+        "t": 12.0,
+        "kind": "click"
+      },
+      {
+        "t": 15.0,
+        "kind": "whoosh"
+      },
+      {
+        "t": 17.5,
+        "kind": "click"
+      },
+      {
+        "t": 20.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full"
+    }
+  },
+  "hook_of": "topic_04"
+}

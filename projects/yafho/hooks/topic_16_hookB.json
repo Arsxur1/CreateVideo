@@ -1,0 +1,223 @@
+{
+  "title": "Yafho-Silicare — тема 16 «После ожога — крючок B»",
+  "plan": "projects/yafho/TOPICS_v2.md#16",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/hooks",
+  "public_dir": "yafho-hooks",
+  "duration": 21.5,
+  "backdrop": "linen",
+  "cover_at": 2.0,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_16.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "A1",
+      "start": 0,
+      "end": 4,
+      "kind": "CUT",
+      "shot": "крючок B: кожа сверху: после ожога, без ухода / с силиконом, 0 → 6 мес",
+      "titles": [
+        {
+          "text": "Ожог зажил,\nа рубец растёт?",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "burn",
+        "skinStep": "compare",
+        "progressFrom": 0,
+        "progressTo": 1
+      }
+    },
+    {
+      "id": "A2",
+      "start": 4,
+      "end": 7,
+      "kind": "CUT",
+      "shot": "контур +1 см, пластина 10×15 (сверить с упаковкой)",
+      "titles": [
+        {
+          "text": "Пластина 10×15 —\n+1 см за край",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "burn",
+        "skinStep": "measure"
+      }
+    },
+    {
+      "id": "A3",
+      "start": 7,
+      "end": 10,
+      "kind": "CUT",
+      "shot": "пластина ложится",
+      "titles": [
+        {
+          "text": "Когда кожа\nполностью закрылась",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "burn",
+        "skinStep": "apply"
+      }
+    },
+    {
+      "id": "A4",
+      "start": 10,
+      "end": 15,
+      "kind": "CUT",
+      "shot": "часы 0 → 23 ч, рукав (по 2,5 с на титр)",
+      "titles": [
+        {
+          "text": "12–23 ч\nв сутки",
+          "at": 0,
+          "lead": 0
+        },
+        {
+          "text": "Под одеждой\nне видно",
+          "at": 0.5,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "burn",
+        "skinStep": "wear"
+      }
+    },
+    {
+      "id": "A5",
+      "start": 15,
+      "end": 18,
+      "kind": "CUT",
+      "shot": "эффект под пластиной",
+      "titles": [
+        {
+          "text": "Через 3–6 мес —\nмягче, ровнее",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "burn",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      }
+    },
+    {
+      "id": "A6",
+      "start": 18,
+      "end": 21.5,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Отправьте тому,\nкому это нужно"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 4,
+        "mood": "impact",
+        "chords": [
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 4,
+        "end": 15,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 15,
+        "end": 18,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 18,
+        "end": 21.5,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "impact"
+      },
+      {
+        "t": 4,
+        "kind": "click"
+      },
+      {
+        "t": 7,
+        "kind": "click"
+      },
+      {
+        "t": 8.6,
+        "kind": "land"
+      },
+      {
+        "t": 10,
+        "kind": "click"
+      },
+      {
+        "t": 12.9,
+        "kind": "whoosh"
+      },
+      {
+        "t": 15,
+        "kind": "chime"
+      },
+      {
+        "t": 18,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  },
+  "hook_of": "topic_16"
+}
