@@ -47,6 +47,9 @@ bash projects/yafho/build_topics.sh 9x16,16x9,4x5 04 05    # выбранные 
 Результат — `output/yafho/topics/`: `topic_<NN>_<формат>.mp4`, контактный лист `_sheet.png` и картинка-пост `_cover.png`.
 Длинный гид 16:9 для YouTube / сайта (монтаж готовых роликов, главы + таймкоды): `python projects/yafho/make_longform.py` → `output/yafho/longform/guide_16x9.mp4` + `chapters.txt`.
 Страница-портфель (все 9:16, сторис, карусели, план): `python projects/yafho/make_portfolio.py` → `output/yafho/portfolio/index.html`.
+Субтитры .srt для YouTube / VK (из титров, тот же тайминг): `python projects/yafho/make_srt.py` → `output/yafho/subtitles/`.
+Обложки YouTube 1280×720: `python projects/yafho/make_thumbs.py` → `output/yafho/thumbs/` (у гида — отдельная крупная обложка).
+Telegram 1:1 (1080×1080): `bash projects/yafho/build_topics.sh 1x1` и `build_v2.py --data hero_v4.json --final --formats 1x1`.
 Опись готового: `python projects/yafho/make_index.py` → `DELIVERABLES.md`.
 Карусели 4:5 (слайды из готовых роликов 4:5): `python projects/yafho/make_carousel.py` → `output/yafho/carousels/topic_NN/slide_NN.png` + `preview.png`.
 Проверка перед публикацией (ТЗ §5): `python projects/yafho/check_rules.py` → `CHECK_REPORT.md` (титры ≤ 6 слов и ≥ 2,5 с, запрещённые обещания, источники цифр, контраст).
