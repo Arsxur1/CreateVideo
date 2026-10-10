@@ -38,6 +38,15 @@ python projects/yafho/make_cuts.py --data projects/yafho/hero_v3.json           
 
 **Фон бренда.** Положите картинку с сайта Yafho в `assets/brand/backdrop.png` (или `backdrop_1080x1920.png`, `backdrop_1920x1080.png`, `backdrop_1080x1350.png` под каждый формат) — сборка возьмёт её вместо сгенерированного льна.
 
+## Пересобрать всё одной командой
+
+Когда придут фон сайта, логотип, размеры с упаковки или клипы Kling:
+```bash
+bash projects/yafho/build_all.sh --quick   # только 9:16, ≈ 2 ч — проверить
+bash projects/yafho/build_all.sh           # все форматы и всё производное, ≈ 8–10 ч
+```
+Скрипт сначала запускает `check_rules.py --strict` и останавливается, если правила ТЗ §5 нарушены.
+
 ## Сборка серии тем 01–09
 ```bash
 bash projects/yafho/build_topics.sh                        # все темы, 9:16
