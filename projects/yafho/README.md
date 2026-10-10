@@ -37,7 +37,10 @@ python projects/yafho/make_cuts.py --data projects/yafho/hero_v3.json           
 ```
 Результат — `output/yafho/v3/`: `hero_v3_<формат>.mp4`, `cut_<K|O|B|G>_<формат>.mp4`.
 
-**Фон бренда.** Положите картинку с сайта Yafho в `assets/brand/backdrop.png` (или `backdrop_1080x1920.png`, `backdrop_1920x1080.png`, `backdrop_1080x1350.png` под каждый формат) — сборка возьмёт её вместо сгенерированного льна.
+**Фон бренда.** Положите картинку с сайта Yafho в `assets/brand/backdrop.png` (или `backdrop_1080x1920.png`, `backdrop_1920x1080.png`, `backdrop_1080x1350.png`, `backdrop_1080x1080.png` под каждый формат) — сборка возьмёт её вместо сгенерированного фона.
+Пока сайта нет, есть 4 фона в палитре бренда (`make_backdrop.py`, сравнение — `output/yafho/backdrops_board.png`):
+`linen` — тёплый лён (сейчас во всех роликах), `clinic` — белый медицинский лист с сеткой точек, `sand` — бежевая бумага, `sheets` — светлый фон с контурами силиконовых пластин.
+Выбрать для всех роликов: `"backdrop": "sheets"` в файлах сцен, или для одной сборки `YAFHO_BACKDROP=sheets bash projects/yafho/build_all.sh`.
 
 ## Пересобрать всё одной командой
 

@@ -54,6 +54,7 @@ def backdrop_for(data: dict, size: tuple[int, int]) -> str | None:
     kind = data.get("backdrop")
     if not kind:
         return None
+    kind = os.environ.get("YAFHO_BACKDROP", kind)  # try another brand backdrop without editing the scene files
     brand = PROJECT / "assets" / "brand"
     w, h = size
     for cand in (brand / f"backdrop_{w}x{h}.png", brand / "backdrop.png", brand / f"backdrop_{kind}_{w}x{h}.png"):
