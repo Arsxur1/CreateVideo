@@ -32,7 +32,24 @@
 | 16 | После ожога | 21.5 с | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — |
 | 17 | Растяжки | 21.5 с | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | — |
 
-Всего видеофайлов: **198** (974 МБ).
+## A/B-крючки для таргета (AB_TESTS.md)
+
+| Вариант | 9:16 | 4:5 |
+|---|---|---|
+| topic_04_hookB | ✓ | ✓ |
+| topic_04_hookC | ✓ | ✓ |
+| topic_05_hookB | ✓ | ✓ |
+| topic_05_hookC | ✓ | ✓ |
+| topic_14_hookB | ✓ | ✓ |
+| topic_14_hookC | ✓ | ✓ |
+| topic_15_hookB | ✓ | ✓ |
+| topic_15_hookC | ✓ | ✓ |
+| topic_16_hookB | ✓ | ✓ |
+| topic_16_hookC | ✓ | ✓ |
+| topic_17_hookB | ✓ | ✓ |
+| topic_17_hookC | ✓ | ✓ |
+
+Всего видеофайлов: **222** (1098 МБ).
 
 Гид 16:9: `output/yafho/longform/guide_16x9.mp4` + `chapters.txt`. Субтитры: `output/yafho/subtitles/`. Обложки YouTube: `output/yafho/thumbs/`.
 

@@ -60,6 +60,12 @@ def main() -> None:
                      f"{f'{slides} слайдов' if slides else '—'} |")
     lines.append("")
 
+    hooks = sorted((OUT / "hooks").glob("topic_*_hook*_9x16.mp4")) if (OUT / "hooks").exists() else []
+    if hooks:
+        lines += ["## A/B-крючки для таргета (AB_TESTS.md)", "",
+                  "| Вариант | 9:16 | 4:5 |", "|---|---|---|",
+                  *[f"| {h.stem.replace('_9x16', '')} | ✓ | {mark(h.with_name(h.name.replace('_9x16', '_4x5')))} |" for h in hooks], ""]
+
     vids = list(OUT.rglob("*.mp4"))
     size = sum(p.stat().st_size for p in vids) / 1e6
     lines += [f"Всего видеофайлов: **{len(vids)}** ({size:.0f} МБ).", "",
