@@ -59,6 +59,8 @@ export const DayClock: React.FC<DayClockProps> = ({
   const R = D / 2 - 30;
   const cx = D / 2;
   const cy = D / 2;
+  // text inside the dial scales with the dial (small on a square Telegram frame); 9:16 unchanged
+  const df = Math.min(fs, D * 0.057);
   const ang = (h: number) => (h / 24) * 2 * Math.PI - Math.PI / 2;
   const pt = (h: number, r = R) => [cx + r * Math.cos(ang(h)), cy + r * Math.sin(ang(h))];
   const arc = (a: number, b: number, r = R) => {
@@ -84,7 +86,7 @@ export const DayClock: React.FC<DayClockProps> = ({
           {[0, 6, 12, 18].map((h) => {
             const [x, y] = pt(h, R - 74);
             return (
-              <text key={h} x={x} y={y + fs * 0.32} textAnchor="middle" fontFamily={YAFHO.mono} fontWeight={700} fontSize={fs * 0.8} fill={YAFHO.navy} fillOpacity={0.6}>
+              <text key={h} x={x} y={y + df * 0.32} textAnchor="middle" fontFamily={YAFHO.mono} fontWeight={700} fontSize={df * 0.8} fill={YAFHO.navy} fillOpacity={0.6}>
                 {h}
               </text>
             );
@@ -137,10 +139,10 @@ export const DayClock: React.FC<DayClockProps> = ({
             color: YAFHO.navy,
           }}
         >
-          <div style={{ fontSize: fs * 1.6, opacity: 1 - done, marginTop: D * 0.22, background: "rgba(255,255,255,0.9)", borderRadius: 12, padding: "0 10px" }}>{fmtH(now)}</div>
+          <div style={{ fontSize: df * 1.6, opacity: 1 - done, marginTop: D * 0.36, background: "rgba(255,255,255,0.9)", borderRadius: 12, padding: "0 10px" }}>{fmtH(now)}</div>
           <div style={{ position: "absolute", textAlign: "center", opacity: done }}>
-            <div style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: fs * 2.4, lineHeight: 1 }}>{summary}</div>
-            <div style={{ fontFamily: YAFHO.sans, fontWeight: 500, fontSize: fs * 0.9, color: YAFHO.muted, marginTop: fs * 0.3 }}>{summaryNote}</div>
+            <div style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: df * 2.4, lineHeight: 1 }}>{summary}</div>
+            <div style={{ fontFamily: YAFHO.sans, fontWeight: 500, fontSize: df * 0.9, color: YAFHO.muted, marginTop: df * 0.3 }}>{summaryNote}</div>
           </div>
         </div>
       </div>
