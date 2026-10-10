@@ -133,6 +133,23 @@ def main() -> None:
     page = TEMPLATE.replace("{{HERO_SRC}}", hsrc).replace("{{HERO_POSTER}}", hposter).replace("{{HERO_LEN}}", f"{hdur:.0f}")
     page = page.replace("{{SERIES}}", "\n".join(sections)).replace("{{CAROUSELS}}", "\n".join(car))
     page = page.replace("{{HERO_NAME}}", "hero v4" if "v4" in str(hero) else "hero v3")
+    guide = SRC / "longform" / "guide_16x9.mp4"
+    if guide.exists():
+        gmp4 = MEDIA / "guide.mp4"
+        if not gmp4.exists() or gmp4.stat().st_mtime < guide.stat().st_mtime:
+            run("-i", str(guide), "-vf", "scale=960:-2", "-c:v", "libx264", "-crf", "28", "-preset", "medium",
+                "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "96k", "-movflags", "+faststart", str(gmp4))
+        thumb = SRC / "thumbs" / "guide_16x9.jpg"
+        poster = MEDIA / "guide.jpg"
+        if thumb.exists():
+            run("-i", str(thumb), "-vf", "scale=960:-2", "-q:v", "4", str(poster))
+        else:
+            run("-ss", "50", "-i", str(guide), "-frames:v", "1", "-vf", "scale=960:-2", "-q:v", "4", str(poster))
+        chapters = (SRC / "longform" / "chapters.txt").read_text(encoding="utf-8").strip()
+        secs = seconds(guide)
+        page = (page.replace("{{GUIDE_SRC}}", "media/guide.mp4").replace("{{GUIDE_POSTER}}", "media/guide.jpg")
+                .replace("{{GUIDE_LEN}}", f"{int(secs // 60)}:{int(secs % 60):02d}")
+                .replace("{{GUIDE_CHAPTERS}}", html.escape(chapters)))
     (OUT / "index.html").write_text(page, encoding="utf-8")
     size = sum(p.stat().st_size for p in MEDIA.iterdir()) / 1e6
     print(f"{(OUT / 'index.html').relative_to(ROOT)} · media {len(list(MEDIA.iterdir()))} files · {size:.0f} MB")
@@ -185,6 +202,10 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 26px; margin: 0 0
 .hook { margin: 0; font-weight: 700 }
 .what, .who { margin: 4px 0 0; color: var(--muted); font-size: 14px }
 .who { font-family: var(--mono); font-size: 12px }
+.guide { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 24px; align-items: start }
+.guide video { width: 100%; aspect-ratio: 16 / 9; border-radius: 14px; background: var(--sunk); display: block }
+.chap { font-family: var(--mono); font-size: 13px; line-height: 1.6; background: var(--sunk); border-radius: 10px; padding: 12px 14px; margin: 8px 0; white-space: pre-wrap; overflow-x: auto }
+@media (max-width: 760px) { .guide { grid-template-columns: 1fr } }
 .cars { display: grid; gap: 18px }
 .car { margin: 0; min-width: 0 }
 .strip { overflow-x: auto; border-radius: 12px; background: var(--sunk) }
@@ -213,7 +234,7 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px }
       <div class="rule"></div>
       <p style="margin-top:16px">Главный ролик и 17 тем: эффект в каждом ролике, крючок в первые три секунды, без голоса — крупные титры и стрелки. Факты только из паспорта продукта, под каждой цифрой — источник.</p>
       <ul class="facts">
-        <li>18 роликов × 9:16 · 16:9 · 4:5</li><li>16 сторис 6–9 с</li><li>9 каруселей 4:5</li><li>контент-план на 4 недели</li>
+        <li>18 роликов × 9:16 · 16:9 · 4:5 · 1:1 Telegram</li><li>гид 16:9 · 4 мин</li><li>16 сторис 6–9 с</li><li>9 каруселей 4:5</li><li>субтитры .srt</li><li>контент-план на 4 недели</li>
       </ul>
     </div>
     <div class="hero-clip">
@@ -226,6 +247,19 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px }
 <main>
   <div class="wrap">
     {{SERIES}}
+
+    <section>
+      <h2>Гид для YouTube и сайта</h2>
+      <div class="guide">
+        <video controls preload="none" playsinline poster="{{GUIDE_POSTER}}" src="{{GUIDE_SRC}}" aria-label="Гид по силиконовым пластинам"></video>
+        <div class="meta">
+          <p class="hook">Гид по силиконовым пластинам · {{GUIDE_LEN}}</p>
+          <p class="what">Главный ролик и 10 глав из тем серии, одна концовка. Таймкоды глав для описания на YouTube:</p>
+          <pre class="chap">{{GUIDE_CHAPTERS}}</pre>
+          <p class="who">Субтитры .srt и обложка 1280×720 — в папках subtitles/ и thumbs/.</p>
+        </div>
+      </div>
+    </section>
 
     <section>
       <h2>Карусели для ленты</h2>
@@ -269,7 +303,7 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px }
     </section>
   </div>
 </main>
-<footer><div class="wrap">Видео в 720p для просмотра; исходники 1080p и форматы 16:9 / 4:5 — в папке проекта <span style="font-family:var(--mono)">output/yafho/</span>.</div></footer>
+<footer><div class="wrap">Видео в 720p для просмотра; исходники 1080p и форматы 16:9 / 4:5 / 1:1 — в папке проекта <span style="font-family:var(--mono)">output/yafho/</span>.</div></footer>
 """
 
 if __name__ == "__main__":
