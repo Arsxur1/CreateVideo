@@ -57,7 +57,7 @@
 | topic_20_hookB | ✓ | ✓ |
 | topic_20_hookC | ✓ | ✓ |
 
-Всего видеофайлов: **260** (1257 МБ).
+Всего видеофайлов: **260** (1258 МБ).
 
 Гид 16:9: `output/yafho/longform/guide_16x9.mp4` + `chapters.txt`. Субтитры: `output/yafho/subtitles/`. Обложки YouTube: `output/yafho/thumbs/`.
 
