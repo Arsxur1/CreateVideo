@@ -38,7 +38,6 @@ export const ScarCompare: React.FC<ScarCompareProps> = ({
   const { width, height } = useCanvas();
 
   const p = progressFrom + (progressTo - progressFrom) * (frame / Math.max(1, durationInFrames - 1));
-  const m = Math.round(p * months);
   const intro = introFade ? ease(frame, 0, 0.4 * fps) : 1;
 
   const gap = height * 0.05;
@@ -152,7 +151,7 @@ export const ScarCompare: React.FC<ScarCompareProps> = ({
             fontSize: fs * 1.05,
           }}
         >
-          <span>{`${m} мес`}</span>
+          <span>0 мес</span>
           <span style={{ width: width * 0.22, height: 8, borderRadius: 4, background: "rgba(255,255,255,0.25)", overflow: "hidden" }}>
             <span style={{ display: "block", height: "100%", width: `${interpolate(p, [0, 1], [0, 100])}%`, background: YAFHO.orange }} />
           </span>

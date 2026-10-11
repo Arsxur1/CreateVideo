@@ -4,7 +4,7 @@
 #   bash projects/yafho/build_all.sh            # all videos in 9x16,16x9,4x5,1x1 + every derived file
 #   bash projects/yafho/build_all.sh --quick    # 9:16 only (check before the long run)
 #
-# Order: assets → topics → hero v4 → cuts / stories / carousels → long guide →
+# Order: assets → topics → hero v4 → cuts / stories / carousels → hook variants → long guide →
 # subtitles / thumbnails → portfolio page → inventory → rule check.
 # Full run ≈ 8–10 h on 4 CPU (3D scenes ≈ 50 s CPU per second of video); --quick ≈ 2 h.
 #
@@ -44,6 +44,10 @@ for f in $Y/topics/topic_*.json; do
   grep -q '"cuts"' "$f" && python $Y/make_cuts.py --data "$f" --formats 9x16
 done
 [[ "$FORMATS" == *4x5* ]] && python $Y/make_carousel.py
+
+step "A/B hook variants (9:16 + 4:5)"
+python $Y/make_hooks.py
+bash $Y/build_hooks.sh
 
 if [[ "$FORMATS" == *16x9* ]]; then
   step "long guide 16:9, thumbnails"

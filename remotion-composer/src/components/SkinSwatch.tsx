@@ -164,7 +164,7 @@ const MonthPill: React.FC<{ p: number; months: number; fs: number; width: number
       fontSize: fs * 1.05,
     }}
   >
-    <span>{`${Math.round(p * months)} мес`}</span>
+    <span>0 мес</span>
     <span style={{ width: width * 0.22, height: 8, borderRadius: 4, background: "rgba(255,255,255,0.25)", overflow: "hidden" }}>
       <span style={{ display: "block", height: "100%", width: `${p * 100}%`, background: YAFHO.teal }} />
     </span>
