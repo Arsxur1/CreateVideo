@@ -15,7 +15,7 @@ AB={'m1_manifest_cinematic':'m1_manifest','m2_pismo_shramu_cinematic':'m2_pismo'
 for c in cap:
     r=cal[c['date']]; p=c['file']; slug=os.path.basename(p.rstrip('/')).replace('.png','')
     d=f"{OUT}/{c['date']}_{slug}"; os.makedirs(d,exist_ok=True)
-    media=sorted(glob.glob(p+'/*.mp4')) or sorted(glob.glob(p+'/slide*.png'),key=lambda s:int(re.findall(r'\d+',os.path.basename(s))[0])) or [p]
+    media=sorted(glob.glob(p+'/*.mp4')) or sorted(glob.glob(p+'/slide*.png'),key=lambda s:int(re.findall(r'\d+',os.path.basename(s))[0])) or sorted(glob.glob(p+'/*.png')) or [p]
     txt=[f"{r['weekday']} {c['date']} · {r['format']} · {r['title']}",'',f"media: {', '.join(media)}",'','=== ПОДПИСЬ ===',c['caption'],'','=== ПЕРВЫЙ КОММЕНТАРИЙ ===',c['first_comment'] or '—','','=== ALT-ТЕКСТ ===',c['alt_text']]
     if 'c2_overlei' in p: txt+=['','=== КАК СОБРАТЬ ВЫПУСК ===','1. Снять 7 с видео рубца: тот же ракурс и свет, что в прошлых выпусках, без ретуши (письменное согласие пациентки).','2. В CapCut/InShot положить PNG-оверлей поверх видео на всю длину (у оверлея прозрачный фон).','3. Экспорт 1080×1920, 30 к/с. Подпись — выше, в блоке «ПОДПИСЬ».']
     if c['check']: txt+=['','=== ⚠ ПРОВЕРИТЬ ДО ПУБЛИКАЦИИ ===',c['check']]
