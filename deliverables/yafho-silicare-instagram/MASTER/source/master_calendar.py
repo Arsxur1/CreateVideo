@@ -59,8 +59,8 @@ A={
  't13':('Reel','ТЕСТ №13 «Пластырь на колене: 10 приседаний»','🧪 Тест','v20_effect/t13_na_sgibe','v20_effect/t13_na_sgibe/cover.png',''),
  't14':('Reel','ТЕСТ №14 «Ожог от противня»: мифы vs 20 минут воды','🧪 Тест','v20_effect/t14_ozhog','v20_effect/t14_ozhog/cover.png',''),
  't15':('Reel','ТЕСТ №15 «Шрам: 12 недель за 6 секунд»','🧪 Тест','v20_effect/t15_shram_12_nedel','v20_effect/t15_shram_12_nedel/cover.png',''),
- 'sci':('Reel','«Наука ухода»: зачем нужна правильная повязка (55 с) 📌 закрепить','🔬 Наука','v23_science/nauka_uhoda_reel','v23_science/nauka_uhoda_reel/cover.png',''),
- 'scc':('Карусель','«Наука ухода»: 8 постеров с исследованиями и 5 вопросами врачу','🔬 Наука','v23_science/posters','v23_science/posters/nauka_01.png',''),
+ 'sci':('Reel','«5 фактов о повязках» — наука ухода (49 с) 📌 закрепить','🔬 Наука','v24_facts/nauka_fakty_reel','v24_facts/nauka_fakty_reel/cover.png',''),
+ 'scc':('Карусель','«5 фактов о повязках»: 9 слайдов с источниками и чек-листом','🔬 Наука','v24_facts/posters','v24_facts/posters/fact_01.png',''),
  'pk':('Пост','Постер «Твоя кожа помнит всё»','Манифест','v7_cinematic/posters/poster_kozha_pomnit_vsyo.png','v7_cinematic/posters/poster_kozha_pomnit_vsyo.png',''),
  'p3':('Пост','Постер «03:47»','🤱 Акушерство','v7_cinematic/posters/poster_0347_pismo_shramu.png','v7_cinematic/posters/poster_0347_pismo_shramu.png',''),
 }

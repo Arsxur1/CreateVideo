@@ -1,9 +1,9 @@
-Вс 2026-12-06 · Карусель · «Наука ухода»: 8 постеров с исследованиями и 5 вопросами врачу
+Вс 2026-12-06 · Карусель · «5 фактов о повязках»: 9 слайдов с источниками и чек-листом
 
-media: v23_science/posters/nauka_01.png, v23_science/posters/nauka_02.png, v23_science/posters/nauka_03.png, v23_science/posters/nauka_04.png, v23_science/posters/nauka_05.png, v23_science/posters/nauka_06.png, v23_science/posters/nauka_07.png, v23_science/posters/nauka_08.png
+media: v24_facts/posters/fact_01.png, v24_facts/posters/fact_02.png, v24_facts/posters/fact_03.png, v24_facts/posters/fact_04.png, v24_facts/posters/fact_05.png, v24_facts/posters/fact_06.png, v24_facts/posters/fact_07.png, v24_facts/posters/fact_08.png, v24_facts/posters/fact_09.png
 
 === ПОДПИСЬ ===
-Наука ухода: 8 слайдов, которые стоит сохранить 📌
+5 фактов о повязках, которые стоит знать до выписки 📌
 
 Почему правильная повязка — часть лечения, а не «просто пластырь». Каждая цифра — с источником и честной пометкой, насколько уверены учёные.
 
@@ -23,4 +23,4 @@ media: v23_science/posters/nauka_01.png, v23_science/posters/nauka_02.png, v23_s
 Перешлите тому, кто сейчас восстанавливается после операции 🤍
 
 === ALT-ТЕКСТ ===
-Карусель из 8 инфографик: 4 функции повязки с графиками и источниками, ограничения, тревожные признаки, 5 вопросов врачу, список литературы.
+Карусель из 9 слайдов в стиле «факты»: 5 фактов с огромными цифрами и источниками, тревожные признаки, 5 вопросов врачу, список литературы.
