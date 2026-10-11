@@ -121,9 +121,11 @@ def render_still(scene: dict, dest: Path) -> None:
     props_path.unlink()
 
 
-def render_compare_still(progress: float, profile: str, data: dict) -> Path:
-    """Render the comparison cards at a fixed progress once per canvas size, on the same brand backdrop."""
-    w, h = PROFILE_SIZE.get(profile, (1080, 1920))
+def render_compare_still(progress: float, profile: str, data: dict, split: bool = False) -> Path:
+    """Render the comparison cards at a fixed progress once per canvas size, on the same brand backdrop.
+
+    In split layout (16:9) scenes play in a 9:16 panel, so the still is drawn for that panel."""
+    w, h = (1080, 1920) if split else PROFILE_SIZE.get(profile, (1080, 1920))
     bd = backdrop_for(data, (w, h))
     tag = Path(bd).stem if bd else "plain"
     # cache key: backdrop file + the components drawing the cards, so a new backdrop or a fix re-renders the still
@@ -199,7 +201,8 @@ def build_animatic(data: dict, mode: str = "animatic", fmt: dict | None = None) 
             a, b = s.get("progress", [0, 1])
             if mode == "final" and a == b:
                 # frozen comparison: one rendered frame + gentle push instead of two live WebGL scenes
-                png = render_compare_still(b, (fmt or {}).get("profile", "instagram_reels"), data)
+                png = render_compare_still(b, (fmt or {}).get("profile", "instagram_reels"), data,
+                                           split=(fmt or {}).get("layout") == "split")
                 cut.update(source=f"{PUBLIC_REL}/{png.name}", animation="gentle", introFade=False)
             else:
                 cut.update(type="scar_compare", progressFrom=a, progressTo=b, introFade=False)
