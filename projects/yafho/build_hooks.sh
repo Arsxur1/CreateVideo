@@ -6,7 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 python projects/yafho/make_hooks.py >/dev/null
-TOPICS="${*:-04 05 14 15 16 17}"
+TOPICS="${*:-04 05 14 15 16 17 18 20}"
 for n in $TOPICS; do
   for v in B C; do
     f="projects/yafho/hooks/topic_${n}_hook${v}.json"

@@ -1,0 +1,267 @@
+{
+  "title": "Yafho-Silicare — тема 18 «Келоидный рубец»",
+  "plan": "projects/yafho/TOPICS_v3.md#18",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 21.5,
+  "backdrop": "linen",
+  "cover_at": 3.0,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_18.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "A1",
+      "start": 0,
+      "end": 4,
+      "kind": "CUT",
+      "shot": "кожа сверху: келоидный рубец, без ухода / с силиконом, 0 → 6 мес",
+      "titles": [
+        {
+          "text": "Келоидный рубец:\nдва исхода",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "keloid",
+        "skinStep": "compare",
+        "progressFrom": 0,
+        "progressTo": 1
+      }
+    },
+    {
+      "id": "A2",
+      "start": 4,
+      "end": 7,
+      "kind": "CUT",
+      "shot": "контур +1 см со всех сторон",
+      "titles": [
+        {
+          "text": "Пластина на 1 см\nшире рубца",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "keloid",
+        "skinStep": "measure"
+      }
+    },
+    {
+      "id": "A3",
+      "start": 7,
+      "end": 10,
+      "kind": "CUT",
+      "shot": "пластина ложится",
+      "titles": [
+        {
+          "text": "Только на\nзажившую кожу",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "keloid",
+        "skinStep": "apply"
+      }
+    },
+    {
+      "id": "A4",
+      "start": 10,
+      "end": 15,
+      "kind": "CUT",
+      "shot": "часы 0 → 23 ч, рукав (по 2,5 с на титр)",
+      "titles": [
+        {
+          "text": "12–23 ч\nв сутки",
+          "at": 0,
+          "lead": 0
+        },
+        {
+          "text": "Под одеждой\nне видно",
+          "at": 0.5,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "keloid",
+        "skinStep": "wear"
+      }
+    },
+    {
+      "id": "A5",
+      "start": 15,
+      "end": 18,
+      "kind": "CUT",
+      "shot": "эффект под пластиной",
+      "titles": [
+        {
+          "text": "Через 3–6 мес —\nмягче, ровнее",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "keloid",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      }
+    },
+    {
+      "id": "A6",
+      "start": 18,
+      "end": 21.5,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Отправьте тому,\nкому это нужно"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 4,
+        "mood": "impact",
+        "chords": [
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 4,
+        "end": 15,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 15,
+        "end": 18,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 18,
+        "end": 21.5,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "impact"
+      },
+      {
+        "t": 4,
+        "kind": "click"
+      },
+      {
+        "t": 7,
+        "kind": "click"
+      },
+      {
+        "t": 8.6,
+        "kind": "land"
+      },
+      {
+        "t": 10,
+        "kind": "click"
+      },
+      {
+        "t": 12.9,
+        "kind": "whoosh"
+      },
+      {
+        "t": 15,
+        "kind": "chime"
+      },
+      {
+        "t": 18,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    },
+    "1x1": {
+      "profile": "instagram_feed",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.4,
+        "fitFrac": 0.85
+      }
+    }
+  },
+  "cut_prefix": "topic_18_story",
+  "cuts": {
+    "S": {
+      "name": "Два исхода",
+      "windows": [
+        [
+          "A1",
+          0,
+          4
+        ],
+        [
+          "A5",
+          0,
+          3
+        ],
+        [
+          "A6",
+          0,
+          2.6
+        ]
+      ]
+    }
+  }
+}

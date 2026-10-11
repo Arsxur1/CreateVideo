@@ -18,7 +18,7 @@ from pathlib import Path
 PROJECT = Path(__file__).resolve().parent
 OUT = PROJECT / "hooks"
 
-SKIN_SHAPE = {"04": "line", "05": "line", "14": "csection", "15": "line", "16": "burn", "17": "stria"}
+SKIN_SHAPE = {"04": "line", "05": "line", "14": "csection", "15": "line", "16": "burn", "17": "stria", "18": "keloid", "20": "line"}
 
 # topic → {variant: (title, visual)}; visual: None = keep, "effect" = sheet on a dense scar fading, "compare" = two outcomes
 HOOKS: dict[str, dict[str, tuple[str, str | None]]] = {
@@ -34,6 +34,10 @@ HOOKS: dict[str, dict[str, tuple[str, str | None]]] = {
            "C": ("Начните, как только\nкожа закрылась", "effect")},
     "17": {"B": ("Растяжки свежие\nи заметные?", None),
            "C": ("3–6 месяцев —\nсветлее, ровнее", "effect")},
+    "18": {"B": ("Келоид плотный\nи заметный?", None),
+           "C": ("3–6 месяцев —\nмягче, ровнее", "effect")},
+    "20": {"B": ("Боитесь закрыть\nрубец пластиной?", None),
+           "C": ("Кислород проходит,\nвлага остаётся", "effect")},
 }
 
 

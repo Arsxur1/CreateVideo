@@ -7,40 +7,12 @@ Facts come only from the product passport (TZ §0). Titles ≤ 6 words.
 
 from __future__ import annotations
 
-import copy
-import json
+import sys
 from pathlib import Path
 
-HERE = Path(__file__).resolve().parent
-FORMATS = {
-    "9x16": {"profile": "instagram_reels", "layout": "full"},
-    "16x9": {"profile": "youtube_landscape", "layout": "split",
-             "cut_overrides": {"skin_demo": {"areaTop": 0.035, "areaBottom": 0.965},
-                               "result_curve": {"areaTop": 0.035, "areaBottom": 0.965}}},
-    "4x5": {"profile": "instagram_portrait", "layout": "full", "cut3d": {"centerY": 0.42, "fitFrac": 0.9}},
-    "1x1": {"profile": "instagram_feed", "layout": "full", "cut3d": {"centerY": 0.4, "fitFrac": 0.85}},  # Telegram
-}
-
-
-def skin(shape: str, step: str, **kw) -> dict:
-    return {"type": "skin_demo", "skinShape": shape, "skinStep": step, **kw}
-
-
-def scene(sid: str, start: float, end: float, shot: str, cut: dict | None = None, titles=(), **kw) -> dict:
-    s = {"id": sid, "start": start, "end": end, "kind": "CUT" if cut else "C", "shot": shot, "titles": list(titles)}
-    if cut:
-        s["cut"] = cut
-    s.update(kw)
-    return s
-
-
-def title(text: str, at: float = 0, lead: float = 0, **kw) -> dict:
-    return {"text": text, "at": at, "lead": lead, **kw}
-
-
-def end_card(sid: str, start: float, end: float, cta: str) -> dict:
-    return scene(sid, start, end, "эндкард", cta=cta)
-
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from series_lib import acc, end_card, scene, seg, skin, title  # noqa: E402
+from series_lib import write as _write  # noqa: E402
 
 # 6–10 s stories (9:16) cut from the rendered video by make_cuts.py: hook + effect + end card
 STORIES = {
@@ -54,33 +26,7 @@ for _n in ("14", "15", "16", "17"):
 
 
 def write(num: str, name: str, scenes: list[dict], score: dict, cover_at: float) -> None:
-    d = {
-        "title": f"Yafho-Silicare — тема {num} «{name}»",
-        "plan": f"projects/yafho/TOPICS_v2.md#{num}",
-        "brand": "Yafho-Silicare",
-        "output_dir": "output/yafho/topics",
-        "public_dir": "yafho-topics",
-        "duration": scenes[-1]["end"],
-        "backdrop": "linen",
-        "cover_at": cover_at,
-        "audio": "no voice — titles + arrows + music",
-        "music": {"file": f"yafho_topic_{num}.wav", "volume": 1.0, "fadeInSeconds": 0.05, "fadeOutSeconds": 1.5},
-        "scenes": scenes,
-        "score": score,
-        "formats": copy.deepcopy(FORMATS),
-        "cut_prefix": f"topic_{num}_story",
-        "cuts": {"S": STORIES[num]},
-    }
-    (HERE / f"topic_{num}.json").write_text(json.dumps(d, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    print(f"topic_{num}.json · {d['duration']} s · «{name}»")
-
-
-def seg(start, end, mood, *chords):
-    return {"start": start, "end": end, "mood": mood, "chords": list(chords)}
-
-
-def acc(t, kind):
-    return {"t": t, "kind": kind}
+    _write(num, name, scenes, score, cover_at, STORIES[num], "TOPICS_v2.md")
 
 
 # ---------------------------------------------------------------- 10 Когда начинать

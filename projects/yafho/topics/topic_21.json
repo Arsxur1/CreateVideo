@@ -1,0 +1,279 @@
+{
+  "title": "Yafho-Silicare — тема 21 «Врачу: памятка»",
+  "plan": "projects/yafho/TOPICS_v3.md#21",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 24,
+  "backdrop": "linen",
+  "cover_at": 14.5,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_21.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "V1",
+      "start": 0,
+      "end": 4,
+      "kind": "CHIPS",
+      "shot": "показания (паспорт)",
+      "chips": {
+        "title": "Кому рекомендовать\nсиликон?",
+        "items": [
+          "Гипертрофический рубец",
+          "Келоидный рубец",
+          "После операций, кесарева",
+          "После ожогов",
+          "Стрии",
+          "После косметологических процедур"
+        ]
+      },
+      "titles": []
+    },
+    {
+      "id": "V2",
+      "start": 4,
+      "end": 8.5,
+      "kind": "CUT",
+      "shot": "чек-лист ✓ (паспорт: старт, ношение)",
+      "titles": [],
+      "cut": {
+        "type": "check_list",
+        "title": "Схема:",
+        "checkItems": [
+          {
+            "text": "Сразу после снятия швов"
+          },
+          {
+            "text": "+1 см за край рубца"
+          },
+          {
+            "text": "12–23 ч в сутки"
+          },
+          {
+            "text": "Промывать, чередовать две"
+          }
+        ]
+      }
+    },
+    {
+      "id": "V3",
+      "start": 8.5,
+      "end": 12.5,
+      "kind": "CUT",
+      "shot": "чек-лист ✗ / ! (паспорт: нельзя)",
+      "titles": [],
+      "cut": {
+        "type": "check_list",
+        "title": "Не применять:",
+        "checkItems": [
+          {
+            "text": "Открытая рана, корки",
+            "kind": "no"
+          },
+          {
+            "text": "Инфекция",
+            "kind": "no"
+          },
+          {
+            "text": "Аллергия на силикон",
+            "kind": "no"
+          },
+          {
+            "text": "Дети, беременность:\nпо решению врача",
+            "kind": "info"
+          }
+        ]
+      }
+    },
+    {
+      "id": "V4",
+      "start": 12.5,
+      "end": 16.5,
+      "kind": "CUT",
+      "shot": "кожа сверху: сравнение через 6 мес",
+      "titles": [],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "compare",
+        "progressFrom": 1,
+        "progressTo": 1,
+        "areaTop": 0.035,
+        "areaBottom": 0.5
+      },
+      "stat": {
+        "value": "≈ в 2 раза",
+        "label": "ниже риск\nпатологического рубца",
+        "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158 · RR 0,41",
+        "position": "hero_low",
+        "delay": 0.4
+      }
+    },
+    {
+      "id": "V5",
+      "start": 16.5,
+      "end": 20.5,
+      "kind": "CUT",
+      "shot": "кожа сверху: пластина на рубце",
+      "titles": [],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "reveal": false,
+        "skinFrom": "hyper",
+        "areaTop": 0.035,
+        "areaBottom": 0.5
+      },
+      "stat": {
+        "value": "1-я линия",
+        "label": "«золотой стандарт»\nнеинвазивной терапии рубцов",
+        "source": "Monstrey S. et al. Updated Scar Management Practical Guidelines. J Plast Reconstr Aesthet Surg, 2014",
+        "position": "hero_low",
+        "delay": 0.4
+      }
+    },
+    {
+      "id": "V6",
+      "start": 20.5,
+      "end": 24,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Отправьте\nпациенту"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 4,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G"
+        ]
+      },
+      {
+        "start": 4,
+        "end": 12.5,
+        "mood": "light",
+        "chords": [
+          "Am",
+          "F",
+          "C"
+        ]
+      },
+      {
+        "start": 12.5,
+        "end": 20.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G",
+          "C"
+        ]
+      },
+      {
+        "start": 20.5,
+        "end": 24,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "chime"
+      },
+      {
+        "t": 4,
+        "kind": "click"
+      },
+      {
+        "t": 8.5,
+        "kind": "click"
+      },
+      {
+        "t": 12.9,
+        "kind": "chime"
+      },
+      {
+        "t": 16.9,
+        "kind": "chime"
+      },
+      {
+        "t": 20.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    },
+    "1x1": {
+      "profile": "instagram_feed",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.4,
+        "fitFrac": 0.85
+      }
+    }
+  },
+  "cut_prefix": "topic_21_story",
+  "cuts": {
+    "S": {
+      "name": "Врачу",
+      "windows": [
+        [
+          "V1",
+          0.3,
+          4
+        ],
+        [
+          "V4",
+          0.6,
+          4
+        ],
+        [
+          "V6",
+          0,
+          2.6
+        ]
+      ]
+    }
+  }
+}

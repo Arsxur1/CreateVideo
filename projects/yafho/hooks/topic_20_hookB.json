@@ -1,0 +1,202 @@
+{
+  "title": "Yafho-Silicare — тема 20 «Кожа дышит? — крючок B»",
+  "plan": "projects/yafho/TOPICS_v3.md#20",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/hooks",
+  "public_dir": "yafho-hooks",
+  "duration": 19,
+  "backdrop": "linen",
+  "cover_at": 2.0,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_20.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "B1",
+      "start": 0,
+      "end": 3.5,
+      "kind": "CUT",
+      "shot": "крючок B: пластина ложится на рубец",
+      "titles": [
+        {
+          "text": "Боитесь закрыть\nрубец пластиной?",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "idle",
+        "land": true
+      }
+    },
+    {
+      "id": "B2",
+      "start": 3.5,
+      "end": 7,
+      "kind": "CUT",
+      "shot": "✗ миф → ✓ паспорт: кислород проходит",
+      "titles": [],
+      "cut": {
+        "type": "myth_fact",
+        "myth": "Кожа под пластиной\nне дышит",
+        "fact": "Кислород\nпроходит"
+      }
+    },
+    {
+      "id": "B3",
+      "start": 7,
+      "end": 12.5,
+      "kind": "3D",
+      "phase3d": "seal",
+      "shot": "кожа в разрезе: пластина держит влагу, сигналы замедляются",
+      "titles": [
+        {
+          "text": "Влага остаётся\nв рубце",
+          "at": 0,
+          "lead": 0.1
+        },
+        {
+          "text": "Сигнал ↓ —\nколлаген ровнее",
+          "at": 0.5,
+          "lead": 0
+        }
+      ],
+      "timeline": {
+        "from": 0.42,
+        "to": 0.6,
+        "highlightWindow": true
+      }
+    },
+    {
+      "id": "B4",
+      "start": 12.5,
+      "end": 15.5,
+      "kind": "CUT",
+      "shot": "эффект под пластиной",
+      "titles": [
+        {
+          "text": "Мягче, светлее,\nровнее",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      }
+    },
+    {
+      "id": "B5",
+      "start": 15.5,
+      "end": 19,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Отправьте тому,\nкто сомневается"
+    }
+  ],
+  "score": {
+    "bpm": 88,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3.5,
+        "mood": "impact",
+        "chords": [
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 3.5,
+        "end": 7,
+        "mood": "hold",
+        "chords": [
+          "Dm",
+          "Am"
+        ]
+      },
+      {
+        "start": 7,
+        "end": 12.5,
+        "mood": "resolve",
+        "chords": [
+          "C",
+          "G",
+          "F"
+        ]
+      },
+      {
+        "start": 12.5,
+        "end": 15.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 15.5,
+        "end": 19,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "impact"
+      },
+      {
+        "t": 1.4,
+        "kind": "land"
+      },
+      {
+        "t": 3.5,
+        "kind": "click"
+      },
+      {
+        "t": 5.2,
+        "kind": "chime"
+      },
+      {
+        "t": 7,
+        "kind": "whoosh"
+      },
+      {
+        "t": 12.5,
+        "kind": "chime"
+      },
+      {
+        "t": 15.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    }
+  },
+  "hook_of": "topic_20"
+}
