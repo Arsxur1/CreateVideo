@@ -1101,8 +1101,13 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
   const layout = props.layout === "split" ? "split" : "full";
   const visibleOverlays = (overlays ?? []).filter((o) => !o.layouts || o.layouts.includes(layout));
   // In split layout thesis titles leave the video panel for the side panel.
-  const panelOverlays = layout === "split" && props.splitPanel !== "center" ? visibleOverlays.filter((o) => o.type === "thesis" || o.type === "healing_timeline" || o.type === "stat_badge") : [];
-  const canvasOverlays = visibleOverlays.filter((o) => !panelOverlays.includes(o));
+  const sidePanel = layout === "split" && props.splitPanel !== "center";
+  const panelOverlays = sidePanel ? visibleOverlays.filter((o) => o.type === "thesis" || o.type === "healing_timeline" || o.type === "stat_badge") : [];
+  // Text-only scenes (check lists, myth → fact, audience chips) need width, not a tall
+  // close-up: in split layout they leave the 9:16 panel for a centred square canvas.
+  const isWideCut = (cut: Cut) => sidePanel && (cut.type === "check_list" || cut.type === "myth_fact");
+  const wideOverlays = sidePanel ? visibleOverlays.filter((o) => o.type === "audience_chips") : [];
+  const canvasOverlays = visibleOverlays.filter((o) => !panelOverlays.includes(o) && !wideOverlays.includes(o));
 
   const renderOverlay = (overlay: Overlay, i: number, inPanel = false) => {
     const from = Math.round(overlay.in_seconds * fps);
@@ -1130,7 +1135,7 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
   const scenes = (
     <>
       {/* Layer 1: Visual scenes */}
-      {cuts.filter((cut) => !isBleed(cut)).map((cut) => {
+      {cuts.filter((cut) => !isBleed(cut) && !isWideCut(cut)).map((cut) => {
         const from = Math.round(cut.in_seconds * fps);
         const duration = Math.round((cut.out_seconds - cut.in_seconds) * fps);
 
@@ -1181,6 +1186,16 @@ export const Explainer: React.FC<ExplainerProps> = (props) => {
               <CanvasContext.Provider value={{ width: 1080, height: 1920 }}>{scenes}</CanvasContext.Provider>
             </div>
           </div>
+          {(cuts.some(isWideCut) || wideOverlays.length > 0) && (
+            <div style={{ position: "absolute", left: (width - height) / 2, top: 0, width: height, height, overflow: "hidden" }}>
+              <div style={{ position: "relative", width: 1080, height: 1080, transform: `scale(${height / 1080})`, transformOrigin: "0 0" }}>
+                <CanvasContext.Provider value={{ width: 1080, height: 1080 }}>
+                  {cuts.filter(isWideCut).map(renderCut)}
+                  {wideOverlays.map((overlay, i) => renderOverlay(overlay, 1000 + i))}
+                </CanvasContext.Provider>
+              </div>
+            </div>
+          )}
           {panelOverlays.length > 0 && (
             <div style={{ position: "absolute", left: textLeft, right: Math.round(width * 0.06), top: 0, bottom: 0 }}>
               {panelOverlays.map((overlay, i) => renderOverlay(overlay, i, true))}

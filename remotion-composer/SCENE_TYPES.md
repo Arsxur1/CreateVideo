@@ -68,7 +68,7 @@ Any overlay may set `layouts: ["full"]` or `["split"]` to render only in that la
 
 | Prop | Purpose |
 |---|---|
-| `layout: "split"` | 16:9 frame: scenes render in a 9:16 panel (left, or `splitPanel: "center"`), `thesis` overlays in a text panel on the right |
+| `layout: "split"` | 16:9 frame: scenes render in a 9:16 panel (left, or `splitPanel: "center"`), `thesis` overlays in a text panel on the right. Text-only scenes — `check_list`, `myth_fact` cuts and `audience_chips` overlays — render instead in a centred 1080×1080 square canvas (full frame height), so a check list reads like a slide |
 | `backdrop` | `{image}` or `{color}` behind every scene that does not paint its own background (brand look) |
 | `durationSeconds` | Exact length instead of last cut + 1s |
 | `width`, `height` | Override frame size (the CLI `--width/--height` also work) |
