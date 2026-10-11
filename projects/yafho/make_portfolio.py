@@ -44,11 +44,13 @@ ABOUT = {
     "18": ("Таргет: келоидный рубец", "правило +1 см, только на зажившую кожу"),
     "19": ("Таргет: после косметологии", "когда кожа полностью закрылась"),
     "20": ("Кто боится «закрыть» кожу", "кислород проходит, влага остаётся"),
+    "22": ("Кто спрашивает «зачем пластина?»", "наука простыми словами: почему растёт, как работает, насколько помогает, уход дома"),
     "21": ("Врачи", "показания, схема, «нельзя» и две цифры с источниками — финал «Отправьте пациенту»"),
 }
 SERIES = [("Серия 1 · темы ТЗ", ["04", "02", "05", "03", "06", "07", "08", "01"]),
           ("Серия 2 · практика и аудитории", ["10", "11", "12", "13", "14", "15", "16", "17"]),
-          ("Серия 3 · келоид, косметология, «кожа дышит?», врачам", ["18", "19", "20", "21"])]
+          ("Серия 3 · келоид, косметология, «кожа дышит?», врачам", ["18", "19", "20", "21"]),
+          ("Наука простыми словами", ["22"])]
 CAROUSELS = ["04", "03", "07", "13", "08", "21", "10", "11", "12", "20", "06"]
 
 
@@ -176,8 +178,22 @@ def main() -> None:
             car.append(f'<figure class="car"><div class="strip"><img src="media/{jpg.name}" alt="Карусель «{html.escape(name)}», {slides} слайдов" loading="lazy"></div>'
                        f'<figcaption>{n} · {html.escape(name)} · {slides} слайдов</figcaption></figure>')
 
+    posters = []
+    for i, (page_id, name) in enumerate([("why", "Почему рубец растёт"), ("how", "Как работает силикон"),
+                                         ("howmuch", "Насколько это помогает"), ("care", "Памятка ухода")], 1):
+        png = SRC / "posters" / f"poster_{page_id}_4x5.png"
+        if png.exists():
+            jpg = MEDIA / f"poster_{page_id}.jpg"
+            run("-i", str(png), "-q:v", "3", str(jpg))
+            posters.append(f'<figure class="poster"><img src="media/{jpg.name}" alt="Постер {i} из 4: {html.escape(name)}" loading="lazy">'
+                           f'<figcaption>{i} · {html.escape(name)}</figcaption></figure>')
+
     page = TEMPLATE.replace("{{HERO_SRC}}", hsrc).replace("{{HERO_POSTER}}", hposter).replace("{{HERO_LEN}}", f"{hdur:.0f}")
     page = page.replace("{{SERIES}}", "\n".join(sections)).replace("{{CAROUSELS}}", "\n".join(car))
+    if posters:
+        page = page.replace("{{POSTERS}}", "\n".join(posters)).replace("<!--POSTERS-->", "").replace("<!--/POSTERS-->", "")
+    else:
+        page = re.sub(r"<!--POSTERS-->.*?<!--/POSTERS-->", "", page, flags=re.S)
     page = page.replace("{{HERO_NAME}}", "hero v4" if "v4" in str(hero) else "hero v3")
     guide = SRC / "longform" / "guide_16x9.mp4"
     if guide.exists():
@@ -258,6 +274,10 @@ h2 { font-family: var(--display); font-weight: 800; font-size: 26px; margin: 0 0
 .chap { font-family: var(--mono); font-size: 13px; line-height: 1.6; background: var(--sunk); border-radius: 10px; padding: 12px 14px; margin: 8px 0; white-space: pre-wrap; overflow-x: auto }
 @media (max-width: 760px) { .guide { grid-template-columns: 1fr } }
 .cars { display: grid; gap: 18px }
+.posters { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px; margin-top: 12px }
+.poster { margin: 0; min-width: 0 }
+.poster img { display: block; width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--line) }
+.poster figcaption { font-family: var(--mono); font-size: 12px; color: var(--muted); margin-top: 6px }
 .car { margin: 0; min-width: 0 }
 .strip { overflow-x: auto; border-radius: 12px; background: var(--sunk) }
 .strip img { display: block; height: 220px; width: auto; max-width: none }
@@ -283,7 +303,7 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px }
       <div class="brand"><b>Yafho</b><span>-Silicare</span> · @sil.icare</div>
       <h1>Видео-портфель: силиконовые пластины для рубцов</h1>
       <div class="rule"></div>
-      <p style="margin-top:16px">Главный ролик и 21 тема: эффект в каждом ролике, крючок в первые три секунды, без голоса — крупные титры и стрелки. Факты только из паспорта продукта, под каждой цифрой — источник.</p>
+      <p style="margin-top:16px">Главный ролик и 22 темы: эффект в каждом ролике, крючок в первые три секунды, без голоса — крупные титры и стрелки. Факты только из паспорта продукта, под каждой цифрой — источник.</p>
       <ul class="facts">
         {{FACTS}}
       </ul>
@@ -313,6 +333,14 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px }
       </div>
     </section>
     <!--/GUIDE-->
+
+    <!--POSTERS-->
+    <section>
+      <h2>Постеры «Наука простыми словами»</h2>
+      <p class="what">Зачем пластина и насколько помогает — для пациента, который спрашивает, а подробностей об уходе ему никто не дал. 4:5 — карусель в ленте; A4 (300 dpi) и PDF для печати в клинике — в папке posters/. Страница 4 — памятка на руки.</p>
+      <div class="posters">{{POSTERS}}</div>
+    </section>
+    <!--/POSTERS-->
 
     <section>
       <h2>Карусели для ленты</h2>

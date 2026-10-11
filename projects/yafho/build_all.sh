@@ -24,13 +24,14 @@ python $Y/make_backdrop.py
 python $Y/make_skin.py
 python $Y/topics/series2.py
 python $Y/topics/series3.py
+python $Y/topics/series4.py
 for f in $Y/hero_v4.json $Y/topics/topic_*.json; do python $Y/make_music.py --data "$f"; done
 
 step "rules check before rendering"
 python $Y/check_rules.py --strict
 
-step "topics 01–21 · $FORMATS"
-bash $Y/build_topics.sh "$FORMATS" 04 02 05 03 06 07 08 01 09 10 11 12 13 14 15 16 17 18 19 20 21
+step "topics 01–22 · $FORMATS"
+bash $Y/build_topics.sh "$FORMATS" 04 02 05 03 06 07 08 01 09 10 11 12 13 14 15 16 17 18 19 20 21 22
 
 step "hero v4 · $FORMATS"
 for fmt in ${FORMATS//,/ }; do
@@ -44,6 +45,9 @@ for f in $Y/topics/topic_*.json; do
   grep -q '"cuts"' "$f" && python $Y/make_cuts.py --data "$f" --formats 9x16
 done
 [[ "$FORMATS" == *4x5* ]] && python $Y/make_carousel.py
+
+step "science posters (A4 + 4:5)"
+python $Y/make_posters.py
 
 step "A/B hook variants (9:16 + 4:5)"
 python $Y/make_hooks.py
