@@ -9,11 +9,14 @@ posters are JPEG frames at each topic's `cover_at`. Rebuild after re-rendering.
 from __future__ import annotations
 
 import html
+import re
+import sys
 import json
 import subprocess
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent
+sys.path.insert(0, str(PROJECT))
 ROOT = PROJECT.parent.parent
 SRC = ROOT / "output" / "yafho"
 OUT = SRC / "portfolio"
@@ -97,6 +100,44 @@ def card(num: str, data: dict, src: str, poster: str, dur: float, story: str | N
       </article>"""
 
 
+def facts() -> str:
+    """Counts from the files that actually exist (nothing hard-coded)."""
+    t = SRC / "topics"
+    names = {"9x16": "9:16", "16x9": "16:9", "4x5": "4:5", "1x1": "1:1 Telegram"}
+    main_video = re.compile(r"topic_\d\d_(9x16|16x9|4x5|1x1)\.mp4$")  # not the stories (topic_NN_story_S_…)
+    vids = [p for p in t.glob("topic_*.mp4") if main_video.match(p.name)]
+    videos = len({p.name[:8] for p in vids}) + int((SRC / "v4" / "hero_v4_9x16.mp4").exists())
+    fmts = [label for k, label in names.items() if any(p.name.endswith(f"_{k}.mp4") for p in vids)]
+    items = [f"{videos} роликов × {' · '.join(fmts)}"]
+    guide = SRC / "longform" / "guide_16x9.mp4"
+    if guide.exists():
+        items.append(f"гид 16:9 · {round(seconds(guide) / 60)} мин")
+    stories = len(list(t.glob("topic_*_story_S_9x16.mp4")))
+    if stories:
+        items.append(f"{stories} сторис 6–9 с")
+    cars = [d for d in (SRC / "carousels").glob("topic_*") if list(d.glob("slide_*.png"))] if (SRC / "carousels").exists() else []
+    if cars:
+        items.append(f"{len(cars)} каруселей 4:5")
+    if list((SRC / "subtitles").glob("*.srt")) if (SRC / "subtitles").exists() else []:
+        items.append("субтитры .srt")
+    hooks = len(list((SRC / "hooks").glob("*_9x16.mp4"))) if (SRC / "hooks").exists() else 0
+    if hooks:
+        items.append(f"{hooks} A/B-крючков")
+    items.append("контент-план на 4 недели")
+    return "".join(f"<li>{html.escape(x)}</li>" for x in items)
+
+
+def check_line() -> str:
+    """The real result of check_rules.py, not a fixed claim."""
+    import check_rules as cr
+
+    files = [p for p in [PROJECT / "hero_v4.json"] if p.exists()] + sorted((PROJECT / "topics").glob("topic_*.json"))
+    errors = sum(len(cr.check_file(f)[0]) for f in files)
+    if errors:
+        return f'<span style="color:var(--accent);font-weight:700">Проверка скриптом: ошибок {errors}</span> — см. CHECK_REPORT.md.'
+    return f'<span class="ok">Проверено скриптом:</span> 0 ошибок в {len(files)} сценариях.'
+
+
 def main() -> None:
     MEDIA.mkdir(parents=True, exist_ok=True)
     sections = []
@@ -150,12 +191,17 @@ def main() -> None:
         page = (page.replace("{{GUIDE_SRC}}", "media/guide.mp4").replace("{{GUIDE_POSTER}}", "media/guide.jpg")
                 .replace("{{GUIDE_LEN}}", f"{int(secs // 60)}:{int(secs % 60):02d}")
                 .replace("{{GUIDE_CHAPTERS}}", html.escape(chapters)))
+    else:  # no long guide built (e.g. build_all.sh --quick): drop the section instead of leaving placeholders
+        page = re.sub(r"\s*<!--GUIDE-->.*?<!--/GUIDE-->", "", page, flags=re.S)
+    page = page.replace("{{FACTS}}", facts()).replace("{{CHECK}}", check_line())
     (OUT / "index.html").write_text(page, encoding="utf-8")
     size = sum(p.stat().st_size for p in MEDIA.iterdir()) / 1e6
     print(f"{(OUT / 'index.html').relative_to(ROOT)} · media {len(list(MEDIA.iterdir()))} files · {size:.0f} MB")
 
 
-TEMPLATE = """<title>Портфель Yafho-Silicare</title>
+TEMPLATE = """<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Портфель Yafho-Silicare</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
 <style>
@@ -234,7 +280,7 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px }
       <div class="rule"></div>
       <p style="margin-top:16px">Главный ролик и 17 тем: эффект в каждом ролике, крючок в первые три секунды, без голоса — крупные титры и стрелки. Факты только из паспорта продукта, под каждой цифрой — источник.</p>
       <ul class="facts">
-        <li>18 роликов × 9:16 · 16:9 · 4:5 · 1:1 Telegram</li><li>гид 16:9 · 4 мин</li><li>16 сторис 6–9 с</li><li>9 каруселей 4:5</li><li>субтитры .srt</li><li>контент-план на 4 недели</li>
+        {{FACTS}}
       </ul>
     </div>
     <div class="hero-clip">
@@ -248,6 +294,7 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px }
   <div class="wrap">
     {{SERIES}}
 
+    <!--GUIDE-->
     <section>
       <h2>Гид для YouTube и сайта</h2>
       <div class="guide">
@@ -260,6 +307,7 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px }
         </div>
       </div>
     </section>
+    <!--/GUIDE-->
 
     <section>
       <h2>Карусели для ленты</h2>
@@ -288,7 +336,7 @@ footer { color: var(--muted); font-size: 13px; padding-block: 0 40px }
           <li>Эффект «до → после» — схема с плашкой «схема», не фото пациента.</li>
           <li>Титр ≤ 6 слов и ≥ 2,5 с на экране; текст с контрастом ≥ 4,5:1.</li>
           <li>Нет лиц, ран и крови. Логотип и текст — только из кода.</li>
-          <li><span class="ok">Проверено скриптом:</span> 0 ошибок по всем сценариям.</li>
+          <li>{{CHECK}}</li>
         </ul>
       </div>
       <div class="panel">

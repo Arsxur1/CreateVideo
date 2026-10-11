@@ -4,8 +4,8 @@
 
 | Файл | Титров | Ошибок | Предупреждений |
 |---|---|---|---|
-| `hero_v3.json` | 11 | 0 | 4 |
-| `hero_v4.json` | 11 | 0 | 0 |
+| `hero_v3.json` | 14 | 0 | 7 |
+| `hero_v4.json` | 14 | 0 | 0 |
 | `topics/topic_01.json` | 4 | 0 | 0 |
 | `topics/topic_02.json` | 6 | 0 | 0 |
 | `topics/topic_03.json` | 6 | 0 | 0 |
@@ -36,7 +36,7 @@
 | `hooks/topic_17_hookB.json` | 6 | 0 | 0 |
 | `hooks/topic_17_hookC.json` | 6 | 0 | 0 |
 
-**Итого: ошибок 0, предупреждений 4.**
+**Итого: ошибок 0, предупреждений 7.**
 
 ## Предупреждения
 
@@ -44,6 +44,9 @@
 - hero_v3/V09a: заглушка «нужен H05» (нет assets/kling/H05.mp4)
 - hero_v3/V09b: заглушка «нужен H06» (нет assets/kling/H06.mp4)
 - hero_v3/V09c: заглушка «нужен H07» (нет assets/kling/H07.mp4)
+- hero_v3/card AUD_K: заглушка «нужен P02» (нет assets/kling/P02.mp4)
+- hero_v3/card AUD_O: заглушка «нужен P01» (нет assets/kling/P01.mp4)
+- hero_v3/card AUD_B: заглушка «нужен P03» (нет assets/kling/P03.mp4)
 
 ## Вручную (код не проверит)
 

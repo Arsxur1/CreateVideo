@@ -54,10 +54,13 @@ def backdrop_for(data: dict, size: tuple[int, int]) -> str | None:
     kind = data.get("backdrop")
     if not kind:
         return None
-    kind = os.environ.get("YAFHO_BACKDROP", kind)  # try another brand backdrop without editing the scene files
+    forced = os.environ.get("YAFHO_BACKDROP")  # try another brand backdrop without editing the scene files
+    kind = forced or kind
     brand = PROJECT / "assets" / "brand"
     w, h = size
-    for cand in (brand / f"backdrop_{w}x{h}.png", brand / "backdrop.png", brand / f"backdrop_{kind}_{w}x{h}.png"):
+    site = [brand / f"backdrop_{w}x{h}.png", brand / "backdrop.png"]  # client's site art wins unless a kind is forced
+    generated = [brand / f"backdrop_{kind}_{w}x{h}.png"]
+    for cand in (generated + site if forced else site + generated):
         if cand.exists():
             PUBLIC.mkdir(parents=True, exist_ok=True)
             shutil.copy2(cand, PUBLIC / cand.name)
@@ -67,6 +70,23 @@ def backdrop_for(data: dict, size: tuple[int, int]) -> str | None:
 
 PROFILE_SIZE = {"instagram_reels": (1080, 1920), "youtube_landscape": (1920, 1080),
                 "instagram_portrait": (1080, 1350), "instagram_feed": (1080, 1080)}  # feed = Telegram 1:1
+
+
+TITLE_LEAD = 0.3  # default delay of a scene's first title after the cut
+
+
+def title_windows(scene: dict) -> list[tuple[float, float, dict]]:
+    """(in, out, title) in absolute seconds: each title holds until the next one or the scene end.
+    The single source of title timing for the build, the subtitles (make_srt) and the checks (check_rules)."""
+    titles = scene.get("titles", [])
+    a, b = scene["start"], scene["end"]
+    dur = b - a
+    out = []
+    for i, t in enumerate(titles):
+        t_in = a + t["at"] * dur + (t.get("lead", TITLE_LEAD) if t["at"] == 0 else 0)
+        t_out = a + titles[i + 1]["at"] * dur if i + 1 < len(titles) else b
+        out.append((t_in, t_out, t))
+    return out
 
 
 def fmt_t(t: float) -> str:
@@ -106,7 +126,14 @@ def render_compare_still(progress: float, profile: str, data: dict) -> Path:
     w, h = PROFILE_SIZE.get(profile, (1080, 1920))
     bd = backdrop_for(data, (w, h))
     tag = Path(bd).stem if bd else "plain"
-    dest = PUBLIC / f"compare_{progress:g}_{w}x{h}_{tag}_arrows.png"
+    # cache key: backdrop file + the components drawing the cards, so a new backdrop or a fix re-renders the still
+    import hashlib
+    comp = COMPOSER / "src" / "components"
+    key = hashlib.sha1()
+    for f in ([PUBLIC.parent / bd] if bd else []) + [comp / "ScarCompare.tsx", comp / "SkinCrossSection3D.tsx"]:
+        if f.exists():
+            key.update(f.read_bytes())
+    dest = PUBLIC / f"compare_{progress:g}_{w}x{h}_{tag}_{key.hexdigest()[:8]}.png"
     if dest.exists():
         return dest
     PUBLIC.mkdir(parents=True, exist_ok=True)
@@ -206,11 +233,7 @@ def build_animatic(data: dict, mode: str = "animatic", fmt: dict | None = None) 
         prev_3d = is_3d
 
         # title sequence: each title holds until the next one (or the cut end)
-        titles = s.get("titles", [])
-        dur = s["end"] - s["start"]
-        for i, t in enumerate(titles):
-            t_in = s["start"] + t["at"] * dur + (t.get("lead", 0.3) if t["at"] == 0 else 0)
-            t_out = s["start"] + titles[i + 1]["at"] * dur if i + 1 < len(titles) else s["end"]
+        for t_in, t_out, t in title_windows(s):
             ov = {"type": "thesis", "text": t["text"], "variant": "dark", "in_seconds": round(t_in, 2), "out_seconds": round(t_out, 2)}
             if t.get("footnote") and s.get("footnote"):
                 ov["subtitle"] = s["footnote"]

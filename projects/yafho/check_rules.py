@@ -21,6 +21,8 @@ import sys
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent
+sys.path.insert(0, str(PROJECT))
+from build_v2 import title_windows  # noqa: E402
 KLING = PROJECT / "assets" / "kling"
 FORBIDDEN = [r"убер[её]т", r"100\s*%", r"навсегда", r"гарант", r"излеч", r"полностью исчез", r"SiliSkin"]
 MAX_WORDS = 6
@@ -66,6 +68,7 @@ def texts_of(scene: dict) -> list[str]:
         out += [scene["stat"]["value"], scene["stat"]["label"]]
     if scene.get("chips"):
         out += [scene["chips"].get("title", ""), *scene["chips"]["items"]]
+    out += [o.get("text", "") for o in scene.get("overlays", []) if o.get("text")]  # raw scene overlays
     cut = scene.get("cut", {})
     for key in ("myth", "fact", "title", "checkNote"):
         if cut.get(key):
@@ -81,15 +84,11 @@ def check_file(path: Path) -> tuple[list[str], list[str], int]:
     n_titles = 0
     for s in data["scenes"]:
         sid = f"{path.stem}/{s['id']}"
-        dur = s["end"] - s["start"]
-        titles = s.get("titles", [])
-        for i, t in enumerate(titles):
+        for t_in, t_out, t in title_windows(s):  # same timing as build_v2
             n_titles += 1
             w = words(t["text"])
             if w > MAX_WORDS:
                 errors.append(f"{sid}: титр «{t['text'].replace(chr(10), ' ')}» — {w} слов (> {MAX_WORDS})")
-            t_in = t["at"] * dur + (t.get("lead", 0.3) if t["at"] == 0 else 0)
-            t_out = titles[i + 1]["at"] * dur if i + 1 < len(titles) else dur
             if t_out - t_in < MIN_HOLD - 1e-6:
                 errors.append(f"{sid}: титр «{t['text'].replace(chr(10), ' ')}» держится {t_out - t_in:.2f} с (< {MIN_HOLD})")
         for txt in texts_of(s):
@@ -101,18 +100,31 @@ def check_file(path: Path) -> tuple[list[str], list[str], int]:
         clip = s.get("kling") if s.get("kind") == "R" else None
         if clip and not (KLING / f"{clip}.mp4").exists():
             warnings.append(f"{sid}: заглушка «нужен {clip}» (нет assets/kling/{clip}.mp4)")
+    # audience cards of the 15 s cuts (rendered by build_v2.build_card)
+    for key, card in data.get("cards", {}).items():
+        cid = f"{path.stem}/card {key}"
+        n_titles += 1
+        w = words(card["title"])
+        if w > MAX_WORDS:
+            errors.append(f"{cid}: титр «{card['title'].replace(chr(10), ' ')}» — {w} слов (> {MAX_WORDS})")
+        for pat in FORBIDDEN:
+            if re.search(pat, card["title"], re.IGNORECASE):
+                errors.append(f"{cid}: запрещённая формулировка /{pat}/ в «{card['title'].replace(chr(10), ' ')}»")
+        if not card.get("cut") and not (KLING / f"{card['kling']}.mp4").exists():
+            warnings.append(f"{cid}: заглушка «нужен {card['kling']}» (нет assets/kling/{card['kling']}.mp4)")
     if data.get("brand", "Yafho-Silicare") != "Yafho-Silicare":
         errors.append(f"{path.stem}: бренд «{data.get('brand')}» вместо Yafho-Silicare")
     return errors, warnings, n_titles
 
 
 def check_markdown(path: Path) -> list[str]:
+    """Every line is checked. Only on rule lines (they say what NOT to write) the «quoted» examples are ignored."""
     errors = []
+    negation = re.compile(r"Никаких|Нельзя|Не писать|не писать|Только «|запрещ", re.IGNORECASE)
     for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if line.lstrip().startswith(("**Правила", "- Только", "> ")) or "Никаких" in line:
-            continue  # the rule lines themselves quote the forbidden words
+        text = re.sub(r"«[^»]*»", "", line) if negation.search(line) else line
         for pat in FORBIDDEN:
-            if re.search(pat, line, re.IGNORECASE):
+            if re.search(pat, text, re.IGNORECASE):
                 errors.append(f"{path.name}:{n}: запрещённая формулировка /{pat}/")
     return errors
 
@@ -132,9 +144,9 @@ def main() -> None:
         all_err += e
         all_warn += w
         rows.append(f"| `{f.relative_to(PROJECT)}` | {n} | {len(e)} | {len(w)} |")
-    plan = PROJECT / "CONTENT_PLAN.md"
-    if plan.exists():
-        all_err += check_markdown(plan)
+    for md in ("CONTENT_PLAN.md", "AB_TESTS.md"):
+        if (PROJECT / md).exists():
+            all_err += check_markdown(PROJECT / md)
 
     report = ["# Проверка перед публикацией (ТЗ §5)", "",
               "Сгенерировано `check_rules.py`. Правила: титр ≤ 6 слов и ≥ 2,5 с; нет «уберёт / 100% / навсегда / гарантия»; "

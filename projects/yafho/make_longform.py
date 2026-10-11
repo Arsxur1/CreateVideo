@@ -5,7 +5,7 @@
 Edited from the rendered 16:9 videos (no new facts): hero v4 as the intro, then the
 topic videos as chapters — each without its own end card — separated by 2.5 s
 chapter cards (rendered once in Remotion with a soft score), and one end card at
-the very end. chapters.txt holds YouTube chapter timestamps for the description.
+the very end. chapters.txt holds YouTube chapter timestamps for the description (each ≥ 10 s, first at 0:00).
 """
 
 from __future__ import annotations
@@ -123,7 +123,8 @@ def main() -> None:
         data = json.loads((PROJECT / "topics" / f"topic_{n}.json").read_text(encoding="utf-8"))
         add(cards, i * CARD, (i + 1) * CARD, f"card{i + 1}", title)
         add(ROOT / "output" / "yafho" / "topics" / f"topic_{n}_16x9.mp4", 0, body_end(data), f"t{n}")
-    add(hero, hero_body, hero_data["duration"], "end", "Начните, пока рубец молодой")
+    # no chapter mark for the end card: YouTube drops ALL chapters if any is shorter than 10 s
+    add(hero, hero_body, hero_data["duration"], "end")
 
     lst = OUT / "_list.txt"
     lst.write_text("".join(f"file '{p.name}'\n" for p in parts), encoding="utf-8")
@@ -133,6 +134,10 @@ def main() -> None:
     for p in parts:
         p.unlink()
     lst.unlink()
+    ends = [s for s, _ in marks[1:]] + [t]
+    short = [m for (s, m), e in zip(marks, ends) if e - s < 10]
+    if short:
+        raise SystemExit(f"YouTube chapters must be ≥ 10 s: {short}")
     chapters = "\n".join(f"{stamp(s)} {m}" for s, m in marks)
     (OUT / "chapters.txt").write_text(chapters + "\n", encoding="utf-8")
     print(f"{dest.relative_to(ROOT)} · {stamp(t)} · {len(CHAPTERS)} глав\n{chapters}")

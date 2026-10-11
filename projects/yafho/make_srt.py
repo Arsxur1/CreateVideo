@@ -20,6 +20,7 @@ PROJECT = Path(__file__).resolve().parent
 ROOT = PROJECT.parent.parent
 OUT = ROOT / "output" / "yafho" / "subtitles"
 sys.path.insert(0, str(PROJECT))
+from build_v2 import title_windows  # noqa: E402  same timing as the build
 
 
 def flat(text: str) -> str:
@@ -31,11 +32,7 @@ def cues(data: dict) -> list[tuple[float, float, str]]:
     out: list[tuple[float, float, str]] = []
     for s in data["scenes"]:
         a, b = s["start"], s["end"]
-        dur = b - a
-        titles = s.get("titles", [])
-        for i, t in enumerate(titles):
-            t_in = a + t["at"] * dur + (t.get("lead", 0.3) if t["at"] == 0 else 0)
-            t_out = a + titles[i + 1]["at"] * dur if i + 1 < len(titles) else b
+        for t_in, t_out, t in title_windows(s):
             text = flat(t["text"])
             if t.get("footnote") and s.get("footnote"):
                 text += f" ({s['footnote']})"
