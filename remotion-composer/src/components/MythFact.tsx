@@ -72,7 +72,7 @@ export const MythFact: React.FC<MythFactProps> = ({ myth, fact, counter, areaTop
   const a = ease(frame, 0, 0.4 * fps);
   const strike = qa ? 0 : ease(frame, 0.7 * fps, 1.1 * fps);
   const b = ease(frame, 1.0 * fps, 1.4 * fps);
-  const out = 1 - ease(frame, durationInFrames - 0.3 * fps, durationInFrames);
+  const out = 1 - ease(frame, durationInFrames - 1 - 0.4 * fps, durationInFrames - 1); // last frame fully faded
   const cardW = width * 0.88;
 
   const card = (ok: boolean, text: string, p: number, struck = 0) => (
@@ -97,21 +97,26 @@ export const MythFact: React.FC<MythFactProps> = ({ myth, fact, counter, areaTop
         <div style={{ fontFamily: YAFHO.sans, fontWeight: 500, fontSize: fs * 0.5, color: ok ? YAFHO.tealText : qa ? YAFHO.navy : WRONG, marginBottom: fs * 0.1 }}>
           {qa ? (ok ? "Ответ" : "Вопрос") : ok ? "Правильно" : "Ошибка"}
         </div>
-        <div style={{ position: "relative", fontFamily: YAFHO.sans, fontWeight: 800, fontSize: fs, lineHeight: 1.12, color: YAFHO.navy, whiteSpace: "pre-line" }}>
-          {text}
-          {!ok && !qa && (
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: "52%",
-                height: fs * 0.1,
-                width: `${struck * 100}%`,
-                background: WRONG,
-                borderRadius: 4,
-              }}
-            />
-          )}
+        <div style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: fs, lineHeight: 1.12, color: YAFHO.navy }}>
+          {/* one strike per line, so a two-line mistake is struck through on both lines */}
+          {text.split("\n").map((line, li, all) => (
+            <div key={li} style={{ position: "relative", width: "fit-content" }}>
+              {line}
+              {!ok && !qa && (
+                <div
+                  style={{
+                    position: "absolute",
+                    left: 0,
+                    top: "54%",
+                    height: fs * 0.09,
+                    width: `${Math.max(0, Math.min(1, struck * all.length - li)) * 100}%`,
+                    background: WRONG,
+                    borderRadius: 4,
+                  }}
+                />
+              )}
+            </div>
+          ))}
         </div>
       </div>
     </div>

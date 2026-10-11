@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { AbsoluteFill, continueRender, delayRender, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
+import { AbsoluteFill, cancelRender, continueRender, delayRender, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { ThreeCanvas } from "@remotion/three";
 import { useThree } from "@react-three/fiber";
 import * as THREE from "three";
@@ -91,7 +91,8 @@ const SkinPlane: React.FC<{ url: string }> = ({ url }) => {
         setTex(t);
       },
       undefined,
-      () => continueRender(handle),
+      // a missing skin texture must fail the render, not silently float the sheet over nothing
+      () => cancelRender(new Error(`PatchHero3D: cannot load ${url}`)),
     );
   }, [url, handle]);
   useEffect(() => {

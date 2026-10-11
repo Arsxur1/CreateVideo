@@ -54,8 +54,8 @@ def cues(data: dict) -> list[tuple[float, float, str]]:
             else:
                 out.append((a, b, f"Ошибка: {flat(cut['myth'])}. Правильно: {flat(cut['fact'])}."))
         if cut.get("type") == "day_clock":
-            out.append((a, b, "07:00 наклеить; 07–21 день — под одеждой; 21:00 промыть, сменить; 21–07 ночь — вторая пластина. "
-                              "≈ 23 ч на коже в сутки."))
+            out.append((a, b, "07:00 наклеить; 07–21 день — под одеждой; 21:00 промыть, сменить; 22–07 ночь — вторая пластина. "
+                              "23 ч на коже в сутки."))
         if cut.get("type") == "size_guide":
             out.append((a, b, "4×4 см — лицо, мелкий; 4×13 см — рука; 5×15 см — живот; 10×15 см — ожог."))
         if cut.get("type") == "result_curve":

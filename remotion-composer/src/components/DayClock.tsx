@@ -15,7 +15,7 @@ export interface DayClockProps {
   items?: DayClockItem[];
   /** Where the hand starts (hour). */
   start?: number;
-  /** Centre text once the day is done. */
+  /** Centre text once the day is done (default: the wear hours summed from `items`). */
   summary?: string;
   summaryNote?: string;
 }
@@ -24,15 +24,18 @@ const DEFAULT_ITEMS: DayClockItem[] = [
   { from: 7, label: "наклеить", kind: "event" },
   { from: 7, to: 21, label: "день — под одеждой", kind: "wear" },
   { from: 21, label: "промыть, сменить", kind: "event" },
-  { from: 21.5, to: 31, label: "ночь — вторая пластина", kind: "wearB" },
-];
+  { from: 22, to: 31, label: "ночь — вторая пластина", kind: "wearB" },
+];  // 14 h + 9 h = 23 h — the top of the passport's 12–23 h a day
 
 const fmtH = (h: number) => {
-  const x = ((h % 24) + 24) % 24;
-  const hh = Math.floor(x);
-  const mm = Math.round((x - hh) * 60);
-  return `${String(hh).padStart(2, "0")}:${String(mm === 60 ? 0 : mm).padStart(2, "0")}`;
+  // round to whole minutes first so 7.995 h reads 08:00, not 07:00
+  const total = ((Math.round(h * 60) % 1440) + 1440) % 1440;
+  const hh = Math.floor(total / 60);
+  const mm = total % 60;
+  return `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
 };
+
+const isSpan = (it: DayClockItem) => it.kind !== "event" && it.to !== undefined;
 
 /**
  * Series 2 «День с пластиной»: 24 h dial. The hand runs one full day from
@@ -42,7 +45,7 @@ const fmtH = (h: number) => {
 export const DayClock: React.FC<DayClockProps> = ({
   items = DEFAULT_ITEMS,
   start = 7,
-  summary = "≈ 23 ч",
+  summary,
   summaryNote = "на коже в сутки",
 }) => {
   const frame = useCurrentFrame();
@@ -54,6 +57,8 @@ export const DayClock: React.FC<DayClockProps> = ({
   const run = ease(t, 0.06, 0.8);
   const now = start + 24 * run;
   const done = ease(t, 0.8, 0.88);
+  const worn = items.filter(isSpan).reduce((acc, it) => acc + (it.to! - it.from), 0);
+  const total = summary ?? `${Number.isInteger(worn) ? worn : worn.toFixed(1).replace(".", ",")} ч`;
 
   const D = Math.min(width * 0.7, height * 0.4);
   const R = D / 2 - 30;
@@ -92,7 +97,7 @@ export const DayClock: React.FC<DayClockProps> = ({
             );
           })}
           {items
-            .filter((it) => it.kind !== "event" && it.to !== undefined)
+            .filter(isSpan)
             .map((it) => {
               const a = rel(it.from);
               const b = Math.min(rel(it.from) + (it.to! - it.from), now);
@@ -141,7 +146,7 @@ export const DayClock: React.FC<DayClockProps> = ({
         >
           <div style={{ fontSize: df * 1.6, opacity: 1 - done, marginTop: D * 0.36, background: "rgba(255,255,255,0.9)", borderRadius: 12, padding: "0 10px" }}>{fmtH(now)}</div>
           <div style={{ position: "absolute", textAlign: "center", opacity: done }}>
-            <div style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: df * 2.4, lineHeight: 1 }}>{summary}</div>
+            <div style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: df * 2.4, lineHeight: 1 }}>{total}</div>
             <div style={{ fontFamily: YAFHO.sans, fontWeight: 500, fontSize: df * 0.9, color: YAFHO.muted, marginTop: df * 0.3 }}>{summaryNote}</div>
           </div>
         </div>
@@ -149,7 +154,7 @@ export const DayClock: React.FC<DayClockProps> = ({
       <div style={{ display: "flex", flexDirection: "column", gap: fs * 0.5, marginTop: fs * 1.1, width: width * 0.86 }}>
         {items.map((it) => {
           const p = ease(now, rel(it.from), rel(it.from) + 0.9);
-          const wear = it.kind !== "event";
+          const wear = isSpan(it);
           return (
             <div
               key={it.label}
@@ -176,7 +181,7 @@ export const DayClock: React.FC<DayClockProps> = ({
                   flex: "none",
                 }}
               >
-                {wear ? `${fmtH(it.from).slice(0, 2)}–${fmtH(it.to!).slice(0, 2)}` : fmtH(it.from)}
+                {wear ? `${fmtH(it.from)}–${fmtH(it.to!)}`.replace(/:00/g, "") : fmtH(it.from)}
               </span>
               <span style={{ fontFamily: YAFHO.sans, fontWeight: 800, fontSize: fs * 1.25, color: YAFHO.navy }}>{it.label}</span>
             </div>

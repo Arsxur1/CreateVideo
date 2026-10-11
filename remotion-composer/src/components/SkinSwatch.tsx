@@ -638,8 +638,10 @@ export const SkinSwatch: React.FC<SkinSwatchProps> = ({
                   label="B"
                   sheen={0.4}
                 />
-                {/* rinse drops falling on sheet A */}
+                {/* rinse drops falling on sheet A — it shrinks around its bottom edge, so aim at the visible sheet's centre */}
                 {Array.from({ length: 9 }, (_, i) => {
+                  const sA = 1 - go * 0.55;
+                  const aimY = ay + (shh / 2) * (1 - sA);
                   const st = 0.42 + i * 0.03;
                   const f = T(st, st + 0.12);
                   const dx = ((i * 37) % 9 - 4) * sw * 0.05;
@@ -649,8 +651,8 @@ export const SkinSwatch: React.FC<SkinSwatchProps> = ({
                       key={i}
                       style={{
                         position: "absolute",
-                        left: ax + dx - 0.18 * ppc,
-                        top: ay - 3 * ppc + f * 3 * ppc,
+                        left: ax + dx * sA - 0.18 * ppc,
+                        top: aimY - 3 * ppc + f * 3 * ppc,
                         width: 0.36 * ppc,
                         height: 0.55 * ppc,
                         borderRadius: "50% 50% 50% 50% / 60% 60% 40% 40%",

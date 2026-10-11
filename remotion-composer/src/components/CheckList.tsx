@@ -28,7 +28,7 @@ export const CheckList: React.FC<CheckListProps> = ({ title, items, note, stagge
   const { fps, durationInFrames } = useVideoConfig();
   const { width, height } = useCanvas();
   const fs = Math.round(width * 0.056);
-  const out = 1 - ease(frame, durationInFrames - 0.3 * fps, durationInFrames);
+  const out = 1 - ease(frame, durationInFrames - 1 - 0.4 * fps, durationInFrames - 1); // last frame fully faded
   const head = ease(frame, 0, 0.4 * fps);
   const last = 0.35 + items.length * stagger;
 
