@@ -1,0 +1,353 @@
+{
+  "title": "Yafho-Silicare — тема 23 «Доверие: у вас есть план»",
+  "plan": "projects/yafho/MARKETING.md#23",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 37.5,
+  "backdrop": "linen",
+  "cover_at": 2.6,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_23.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "T1",
+      "start": 0,
+      "end": 3.5,
+      "kind": "CUT",
+      "shot": "кожа сверху: плотный заметный шов",
+      "titles": [
+        {
+          "text": "Шов зажил.\nА рубец — нет?",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "idle",
+        "skinState": "hyper"
+      }
+    },
+    {
+      "id": "T2",
+      "start": 3.5,
+      "end": 7.5,
+      "kind": "CHIPS",
+      "shot": "вопросы пациента",
+      "chips": {
+        "title": "Знакомые вопросы?",
+        "items": [
+          "Это нормально?",
+          "Что делать дома?",
+          "Сколько носить?",
+          "Когда станет лучше?"
+        ]
+      },
+      "titles": []
+    },
+    {
+      "id": "T3",
+      "start": 7.5,
+      "end": 10.5,
+      "kind": "CUT",
+      "shot": "пластина ложится на рубец",
+      "titles": [
+        {
+          "text": "Мы собрали ответы\nв один план",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "idle",
+        "land": true
+      }
+    },
+    {
+      "id": "T4",
+      "start": 10.5,
+      "end": 16.5,
+      "kind": "3D",
+      "phase3d": "seal",
+      "shot": "кожа в разрезе: пластина держит влагу, волокна ровнее",
+      "titles": [
+        {
+          "text": "Силикон\nдержит влагу",
+          "at": 0,
+          "lead": 0.1
+        },
+        {
+          "text": "Сигнал ↓ —\nколлаген ровнее",
+          "at": 0.5,
+          "lead": 0
+        }
+      ],
+      "timeline": {
+        "from": 0.42,
+        "to": 0.6,
+        "highlightWindow": true
+      }
+    },
+    {
+      "id": "T5",
+      "start": 16.5,
+      "end": 20.5,
+      "kind": "CUT",
+      "shot": "сравнение через 6 мес + цифра",
+      "titles": [],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "compare",
+        "progressFrom": 1,
+        "progressTo": 1,
+        "areaTop": 0.035,
+        "areaBottom": 0.5
+      },
+      "stat": {
+        "value": "≈ в 2 раза",
+        "label": "ниже риск\nпатологического рубца",
+        "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158 · RR 0,41",
+        "position": "hero_low",
+        "delay": 0.4
+      }
+    },
+    {
+      "id": "T6",
+      "start": 20.5,
+      "end": 24,
+      "kind": "CHIPS",
+      "shot": "паспорт продукта",
+      "chips": {
+        "title": "Yafho-Silicare —\nэто:",
+        "items": [
+          "Медицинский силикон",
+          "Мягкая и прозрачная",
+          "Многоразовая",
+          "CE"
+        ]
+      },
+      "titles": []
+    },
+    {
+      "id": "T7",
+      "start": 24,
+      "end": 30,
+      "kind": "CUT",
+      "shot": "чек-лист плана (паспорт: старт, ношение)",
+      "titles": [],
+      "cut": {
+        "type": "check_list",
+        "title": "Ваш план:",
+        "checkItems": [
+          {
+            "text": "Сразу после снятия швов"
+          },
+          {
+            "text": "+1 см за край рубца"
+          },
+          {
+            "text": "12–23 ч в сутки"
+          },
+          {
+            "text": "Промывать, чередовать две"
+          }
+        ]
+      }
+    },
+    {
+      "id": "T8",
+      "start": 30,
+      "end": 33.5,
+      "kind": "CUT",
+      "shot": "эффект под пластиной",
+      "titles": [
+        {
+          "text": "Через 3–6 мес —\nмягче, ровнее",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      }
+    },
+    {
+      "id": "T9",
+      "start": 33.5,
+      "end": 37.5,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Остались вопросы?\nНапишите нам"
+    }
+  ],
+  "score": {
+    "bpm": 86,
+    "segments": [
+      {
+        "start": 0,
+        "end": 7.5,
+        "mood": "hold",
+        "chords": [
+          "Am",
+          "F",
+          "Dm"
+        ]
+      },
+      {
+        "start": 7.5,
+        "end": 16.5,
+        "mood": "resolve",
+        "chords": [
+          "C",
+          "G",
+          "F"
+        ]
+      },
+      {
+        "start": 16.5,
+        "end": 30,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G",
+          "C",
+          "Am"
+        ]
+      },
+      {
+        "start": 30,
+        "end": 33.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 33.5,
+        "end": 37.5,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "impact"
+      },
+      {
+        "t": 3.5,
+        "kind": "click"
+      },
+      {
+        "t": 8.9,
+        "kind": "land"
+      },
+      {
+        "t": 10.5,
+        "kind": "whoosh"
+      },
+      {
+        "t": 16.9,
+        "kind": "chime"
+      },
+      {
+        "t": 20.5,
+        "kind": "click"
+      },
+      {
+        "t": 24,
+        "kind": "click"
+      },
+      {
+        "t": 30,
+        "kind": "chime"
+      },
+      {
+        "t": 33.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    },
+    "1x1": {
+      "profile": "instagram_feed",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.4,
+        "fitFrac": 0.85
+      }
+    }
+  },
+  "cut_prefix": "topic_23_story",
+  "cuts": {
+    "S": {
+      "name": "Реклама 15 с",
+      "windows": [
+        [
+          "T1",
+          0,
+          3.5
+        ],
+        [
+          "T5",
+          0.4,
+          4
+        ],
+        [
+          "T8",
+          0,
+          3.5
+        ],
+        [
+          "T9",
+          0,
+          3.2
+        ]
+      ]
+    }
+  }
+}
