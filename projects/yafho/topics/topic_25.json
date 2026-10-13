@@ -1,0 +1,292 @@
+{
+  "title": "Yafho-Silicare — тема 25 «Почему нужна пластина»",
+  "plan": "projects/yafho/LISTICLES.md#25",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 28.5,
+  "backdrop": "linen",
+  "cover_at": 3.0,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_25.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "P0",
+      "start": 0,
+      "end": 3.5,
+      "kind": "CUT",
+      "shot": "плотный заметный шов",
+      "titles": [
+        {
+          "text": "Шов зажил. Зачем\nещё пластина?",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "idle",
+        "skinState": "hyper"
+      }
+    },
+    {
+      "id": "P1",
+      "start": 3.5,
+      "end": 9,
+      "kind": "3D",
+      "phase3d": "alarm",
+      "shot": "кожа в разрезе: кожа бьёт тревогу, лишний коллаген",
+      "titles": [
+        {
+          "text": "1 · Без ухода рубец\nуплотняется",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "timeline": {
+        "from": 0.55,
+        "to": 0.62
+      }
+    },
+    {
+      "id": "P2",
+      "start": 9,
+      "end": 13,
+      "kind": "CUT",
+      "shot": "плотный рубец + цифра",
+      "titles": [],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "idle",
+        "skinState": "hyper",
+        "areaTop": 0.035,
+        "areaBottom": 0.5
+      },
+      "stat": {
+        "value": "39–68 %",
+        "label": "гипертрофический рубец\nпосле операций",
+        "source": "Hsu K-C, Luan C-W, Tsai Y-W. Wounds 2017;29(5):154–158",
+        "position": "hero_low",
+        "delay": 0.2
+      }
+    },
+    {
+      "id": "P3",
+      "start": 13,
+      "end": 16.5,
+      "kind": "CUT",
+      "shot": "сравнение через 6 мес",
+      "titles": [
+        {
+          "text": "2 · Риск рубца\nниже вдвое",
+          "at": 0,
+          "lead": 0,
+          "footnote": true
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "compare",
+        "progressFrom": 1,
+        "progressTo": 1
+      },
+      "footnote": "Hsu K-C и др. Wounds 2017;29(5):154–158 · RR 0,41"
+    },
+    {
+      "id": "P4",
+      "start": 16.5,
+      "end": 20,
+      "kind": "CUT",
+      "shot": "эффект под пластиной",
+      "titles": [
+        {
+          "text": "3 · Рубец мягче,\nсветлее, ровнее",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      }
+    },
+    {
+      "id": "P5",
+      "start": 20,
+      "end": 25,
+      "kind": "CUT",
+      "shot": "чек-лист плана (паспорт: старт, ношение)",
+      "titles": [],
+      "cut": {
+        "type": "check_list",
+        "title": "Это просто:",
+        "checkItems": [
+          {
+            "text": "Сразу после снятия швов"
+          },
+          {
+            "text": "+1 см за край рубца"
+          },
+          {
+            "text": "12–23 ч в сутки"
+          }
+        ]
+      }
+    },
+    {
+      "id": "P6",
+      "start": 25,
+      "end": 28.5,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Отправьте тому,\nу кого свежий шов"
+    }
+  ],
+  "score": {
+    "bpm": 90,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3.5,
+        "mood": "impact",
+        "chords": [
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 3.5,
+        "end": 22.0,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 22.0,
+        "end": 25.0,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 25.0,
+        "end": 28.5,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "impact"
+      },
+      {
+        "t": 3.5,
+        "kind": "click"
+      },
+      {
+        "t": 9,
+        "kind": "click"
+      },
+      {
+        "t": 13,
+        "kind": "click"
+      },
+      {
+        "t": 16.5,
+        "kind": "click"
+      },
+      {
+        "t": 20,
+        "kind": "click"
+      },
+      {
+        "t": 22.0,
+        "kind": "chime"
+      },
+      {
+        "t": 25.0,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    },
+    "1x1": {
+      "profile": "instagram_feed",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.4,
+        "fitFrac": 0.85
+      }
+    }
+  },
+  "cut_prefix": "topic_25_story",
+  "cuts": {
+    "S": {
+      "name": "Почему нужна",
+      "windows": [
+        [
+          "P0",
+          0,
+          3.5
+        ],
+        [
+          "P3",
+          0.3,
+          3.5
+        ],
+        [
+          "P6",
+          0,
+          2.6
+        ]
+      ]
+    }
+  }
+}

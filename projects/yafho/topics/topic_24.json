@@ -1,0 +1,287 @@
+{
+  "title": "Yafho-Silicare — тема 24 «5 фактов о пластине»",
+  "plan": "projects/yafho/LISTICLES.md#24",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 25,
+  "backdrop": "linen",
+  "cover_at": 2.6,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_24.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "F0",
+      "start": 0,
+      "end": 3,
+      "kind": "CUT",
+      "shot": "два исхода одного шва",
+      "titles": [
+        {
+          "text": "5 фактов\nо пластине для рубца",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "compare",
+        "progressFrom": 0,
+        "progressTo": 1
+      }
+    },
+    {
+      "id": "F1",
+      "start": 3,
+      "end": 6.5,
+      "kind": "CUT",
+      "shot": "пластина ложится на рубец",
+      "titles": [
+        {
+          "text": "1 · Медицинский силикон,\nпрозрачная",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "idle",
+        "land": true
+      }
+    },
+    {
+      "id": "F2",
+      "start": 6.5,
+      "end": 11,
+      "kind": "3D",
+      "phase3d": "seal",
+      "shot": "кожа в разрезе: влага остаётся, сигналы реже",
+      "titles": [
+        {
+          "text": "2 · Держит влагу,\nкислород проходит",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "timeline": {
+        "from": 0.45,
+        "to": 0.6,
+        "highlightWindow": true
+      }
+    },
+    {
+      "id": "F3",
+      "start": 11,
+      "end": 14.5,
+      "kind": "CUT",
+      "shot": "сравнение через 6 мес",
+      "titles": [
+        {
+          "text": "3 · Риск рубца\nниже вдвое",
+          "at": 0,
+          "lead": 0,
+          "footnote": true
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "csection",
+        "skinStep": "compare",
+        "progressFrom": 1,
+        "progressTo": 1
+      },
+      "footnote": "Hsu K-C и др. Wounds 2017;29(5):154–158 · RR 0,41"
+    },
+    {
+      "id": "F4",
+      "start": 14.5,
+      "end": 18,
+      "kind": "CUT",
+      "shot": "промыть пластину, наклеить вторую",
+      "titles": [
+        {
+          "text": "4 · Многоразовая:\nпромыть, чередовать",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "rinse"
+      }
+    },
+    {
+      "id": "F5",
+      "start": 18,
+      "end": 21.5,
+      "kind": "CUT",
+      "shot": "эффект под пластиной",
+      "titles": [
+        {
+          "text": "5 · Заметно —\nчерез 1–3 месяца",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      }
+    },
+    {
+      "id": "F6",
+      "start": 21.5,
+      "end": 25,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Сохраните,\nчтобы не забыть"
+    }
+  ],
+  "score": {
+    "bpm": 90,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3,
+        "mood": "impact",
+        "chords": [
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 3,
+        "end": 18.5,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 18.5,
+        "end": 21.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 21.5,
+        "end": 25,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "impact"
+      },
+      {
+        "t": 3,
+        "kind": "click"
+      },
+      {
+        "t": 6.5,
+        "kind": "click"
+      },
+      {
+        "t": 11,
+        "kind": "click"
+      },
+      {
+        "t": 14.5,
+        "kind": "click"
+      },
+      {
+        "t": 18,
+        "kind": "click"
+      },
+      {
+        "t": 18.5,
+        "kind": "chime"
+      },
+      {
+        "t": 21.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    },
+    "1x1": {
+      "profile": "instagram_feed",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.4,
+        "fitFrac": 0.85
+      }
+    }
+  },
+  "cut_prefix": "topic_24_story",
+  "cuts": {
+    "S": {
+      "name": "5 фактов",
+      "windows": [
+        [
+          "F0",
+          0,
+          3
+        ],
+        [
+          "F3",
+          0.3,
+          3.5
+        ],
+        [
+          "F6",
+          0,
+          2.6
+        ]
+      ]
+    }
+  }
+}

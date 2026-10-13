@@ -1,0 +1,274 @@
+{
+  "title": "Yafho-Silicare — тема 26 «5 мифов о рубцах»",
+  "plan": "projects/yafho/LISTICLES.md#26",
+  "brand": "Yafho-Silicare",
+  "output_dir": "output/yafho/topics",
+  "public_dir": "yafho-topics",
+  "duration": 27.0,
+  "backdrop": "linen",
+  "cover_at": 4.8,
+  "audio": "no voice — titles + arrows + music",
+  "music": {
+    "file": "yafho_topic_26.wav",
+    "volume": 1.0,
+    "fadeInSeconds": 0.05,
+    "fadeOutSeconds": 1.5
+  },
+  "scenes": [
+    {
+      "id": "M0",
+      "start": 0,
+      "end": 3,
+      "kind": "CUT",
+      "shot": "плотный рубец",
+      "titles": [
+        {
+          "text": "5 мифов\nо рубцах",
+          "at": 0,
+          "lead": 0.1
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "idle",
+        "skinState": "hyper"
+      }
+    },
+    {
+      "id": "M1",
+      "start": 3.0,
+      "end": 6.5,
+      "kind": "CUT",
+      "shot": "✗ Само пройдёт → ✓ Первые месяцы решают",
+      "titles": [],
+      "cut": {
+        "type": "myth_fact",
+        "myth": "Само\nпройдёт",
+        "fact": "Первые месяцы\nрешают",
+        "counter": "1 / 5"
+      }
+    },
+    {
+      "id": "M2",
+      "start": 6.5,
+      "end": 10.0,
+      "kind": "CUT",
+      "shot": "✗ Кожа не дышит → ✓ Кислород проходит",
+      "titles": [],
+      "cut": {
+        "type": "myth_fact",
+        "myth": "Кожа\nне дышит",
+        "fact": "Кислород\nпроходит",
+        "counter": "2 / 5"
+      }
+    },
+    {
+      "id": "M3",
+      "start": 10.0,
+      "end": 13.5,
+      "kind": "CUT",
+      "shot": "✗ Пару часов хватит → ✓ 12–23 ч в сутки",
+      "titles": [],
+      "cut": {
+        "type": "myth_fact",
+        "myth": "Пару часов\nхватит",
+        "fact": "12–23 ч\nв сутки",
+        "counter": "3 / 5"
+      }
+    },
+    {
+      "id": "M4",
+      "start": 13.5,
+      "end": 17.0,
+      "kind": "CUT",
+      "shot": "✗ Можно на корку → ✓ Только на закрытую кожу",
+      "titles": [],
+      "cut": {
+        "type": "myth_fact",
+        "myth": "Можно\nна корку",
+        "fact": "Только на\nзакрытую кожу",
+        "counter": "4 / 5"
+      }
+    },
+    {
+      "id": "M5",
+      "start": 17.0,
+      "end": 20.5,
+      "kind": "CUT",
+      "shot": "✗ Результат — за неделю → ✓ Заметно — 1–3 мес",
+      "titles": [],
+      "cut": {
+        "type": "myth_fact",
+        "myth": "Результат —\nза неделю",
+        "fact": "Заметно —\n1–3 мес",
+        "counter": "5 / 5"
+      }
+    },
+    {
+      "id": "M6",
+      "start": 20.5,
+      "end": 23.5,
+      "kind": "CUT",
+      "shot": "эффект под пластиной",
+      "titles": [
+        {
+          "text": "Правильно —\nи рубец мягче",
+          "at": 0,
+          "lead": 0
+        }
+      ],
+      "cut": {
+        "type": "skin_demo",
+        "skinShape": "line",
+        "skinStep": "effect",
+        "months": 6,
+        "skinFrom": "hyper"
+      }
+    },
+    {
+      "id": "M7",
+      "start": 23.5,
+      "end": 27.0,
+      "kind": "C",
+      "shot": "эндкард",
+      "titles": [],
+      "cta": "Сохраните\nи проверьте себя"
+    }
+  ],
+  "score": {
+    "bpm": 90,
+    "segments": [
+      {
+        "start": 0,
+        "end": 3,
+        "mood": "impact",
+        "chords": [
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 3,
+        "end": 20.5,
+        "mood": "light",
+        "chords": [
+          "C",
+          "G",
+          "Am",
+          "F"
+        ]
+      },
+      {
+        "start": 20.5,
+        "end": 23.5,
+        "mood": "lift",
+        "chords": [
+          "F",
+          "G"
+        ]
+      },
+      {
+        "start": 23.5,
+        "end": 27.0,
+        "mood": "end",
+        "chords": [
+          "Cadd9"
+        ]
+      }
+    ],
+    "accents": [
+      {
+        "t": 0,
+        "kind": "impact"
+      },
+      {
+        "t": 3.0,
+        "kind": "click"
+      },
+      {
+        "t": 6.5,
+        "kind": "click"
+      },
+      {
+        "t": 10.0,
+        "kind": "click"
+      },
+      {
+        "t": 13.5,
+        "kind": "click"
+      },
+      {
+        "t": 17.0,
+        "kind": "click"
+      },
+      {
+        "t": 20.5,
+        "kind": "chime"
+      },
+      {
+        "t": 23.5,
+        "kind": "chime"
+      }
+    ]
+  },
+  "formats": {
+    "9x16": {
+      "profile": "instagram_reels",
+      "layout": "full"
+    },
+    "16x9": {
+      "profile": "youtube_landscape",
+      "layout": "split",
+      "cut_overrides": {
+        "skin_demo": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        },
+        "result_curve": {
+          "areaTop": 0.035,
+          "areaBottom": 0.965
+        }
+      }
+    },
+    "4x5": {
+      "profile": "instagram_portrait",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.42,
+        "fitFrac": 0.9
+      }
+    },
+    "1x1": {
+      "profile": "instagram_feed",
+      "layout": "full",
+      "cut3d": {
+        "centerY": 0.4,
+        "fitFrac": 0.85
+      }
+    }
+  },
+  "cut_prefix": "topic_26_story",
+  "cuts": {
+    "S": {
+      "name": "5 мифов",
+      "windows": [
+        [
+          "M0",
+          0,
+          3
+        ],
+        [
+          "M1",
+          0.3,
+          3.5
+        ],
+        [
+          "M7",
+          0,
+          2.6
+        ]
+      ]
+    }
+  }
+}

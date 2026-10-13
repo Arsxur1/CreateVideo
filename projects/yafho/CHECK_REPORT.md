@@ -29,6 +29,10 @@
 | `topics/topic_21.json` | 0 | 0 | 0 |
 | `topics/topic_22.json` | 8 | 0 | 0 |
 | `topics/topic_23.json` | 5 | 0 | 0 |
+| `topics/topic_24.json` | 6 | 0 | 0 |
+| `topics/topic_25.json` | 4 | 0 | 0 |
+| `topics/topic_26.json` | 2 | 0 | 0 |
+| `topics/topic_27.json` | 5 | 0 | 0 |
 | `hooks/topic_04_hookB.json` | 7 | 0 | 0 |
 | `hooks/topic_04_hookC.json` | 7 | 0 | 0 |
 | `hooks/topic_05_hookB.json` | 3 | 0 | 0 |
