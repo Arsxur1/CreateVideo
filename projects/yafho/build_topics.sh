@@ -11,7 +11,7 @@ set -euo pipefail
 cd "$(dirname "$0")/../.."
 FORMATS="${1:-9x16}"  # 9x16 · 16x9 · 4x5 · 1x1 (Telegram)
 shift || true
-TOPICS="${*:-04 02 05 03 06 07 08 01 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23}"
+TOPICS="${*:-04 02 05 03 06 07 08 01 09 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27}"
 for n in $TOPICS; do
   data="projects/yafho/topics/topic_${n}.json"
   [ -f "projects/yafho/assets/music/yafho_topic_${n}.wav" ] || python projects/yafho/make_music.py --data "$data"
